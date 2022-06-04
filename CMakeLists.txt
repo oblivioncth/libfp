@@ -1,19 +1,145 @@
-cmake_minimum_required(VERSION 3.14)
+#================= Project Setup ==========================
 
-project(libfp LANGUAGES CXX)
+# CMake
+cmake_minimum_required(VERSION 3.21.1)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
+# Project
+# NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
+set(LIBFP_BASE_VERSION 0.1) # Required for CI/CD
+project(libfp
+    VERSION ${LIBFP_BASE_VERSION}
+    LANGUAGES CXX
+    DESCRIPTION "Command-line Interface for Flashpoint"
+)
+string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LC)
+string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UC)
+set(PROJECT_NAMESPACE "Fp")
+string(TOLOWER ${PROJECT_NAMESPACE} PROJECT_NAMESPACE_LC)
+string(TOUPPER ${PROJECT_NAMESPACE} PROJECT_NAMESPACE_UC)
+
+# Check if top level
+if(${PROJECT_IS_TOP_LEVEL})
+    message(STATUS "NOTE: ${PROJECT_NAME} is being configured as a top-level project")
+else()
+    set(SUB_PROJ_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
+    message(STATUS "NOTE: ${PROJECT_NAME} is being configured as a sub-project")
+endif()
+
+# C++
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Build augmentation
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+# Disable deprecated code
+add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 
-add_library(libfp STATIC)
+# Add local modules
+set(PROJ_SCRIPTS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${PROJ_SCRIPTS_PATH}/module")
+include(Utility)
 
-target_link_libraries(libfp PRIVATE Qt${QT_VERSION_MAJOR}::Core)
+# General Variables
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(TARGET_ARCH x64)
+else()
+  set(TARGET_ARCH x86)
+endif()
 
-target_compile_definitions(libfp PRIVATE LIBFP_LIBRARY)
+#--------------------Setup Paths-------------------
+
+# Cmake scripts
+set(FILE_TEMPLATES_PATH "${PROJ_SCRIPTS_PATH}/file_templates")
+
+# Sub projects
+set(COMPONENTS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/comp")
+
+# Install (override the CMake default, but not a user set value)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/out/install"
+           CACHE PATH "Project install path" FORCE
+    )
+endif()
+
+# Package
+set(PACKAGE_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/out/dist")
+
+#------------Set Global Build Rules----------------
+
+# Clean install when clean target is ran
+set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${CMAKE_INSTALL_PREFIX}")
+
+# Versioning
+include(VerboseVersioning)
+setup_verbose_versioning(PROJECT_VERSION_VERBOSE)
+
+################# Common Build #################
+
+# Enumerate Components
+get_subdirectory_list(${COMPONENTS_PATH} LIB_COMPONENTS)
+set(BUILD_COMPONENTS ${LIB_COMPONENTS})
+
+#================= Top Level Build =========================
+
+# Import Qt
+find_package(Qt6 REQUIRED COMPONENTS
+    Core
+    Sql
+    Gui
+)
+
+# Fetch Qx (build and import from source)
+include(FetchQx)
+fetch_qx(c9524939c12e5e5e4bfb0e548c8c55a5ef462d87) # dev commit
+
+#--------------------Package Config-----------------------
+
+# Create config file
+configure_file("${FILE_TEMPLATES_PATH}/${PROJECT_NAME_LC}-config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME_LC}-config.cmake.cmake"
+    @ONLY
+)
+
+# Create version config file
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME_LC}-version.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMinorVersion
+)
+
+#================= Process Componets =======================
+
+# This lib only has one "component" but this setup is to make
+# expanding to more in the future easier
+
+# Build components
+foreach(component ${BUILD_COMPONENTS})
+    add_subdirectory(${COMPONENTS_PATH}/${component})
+endforeach()
+
+#================= Top Level Install =======================
+
+set(TOP_LEVEL_INSTALL_COMPONENT ${PROJECT_NAME_LC})
+
+# Install Package Config
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME_LC}-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME_LC}-config-version.cmake"
+    COMPONENT ${TOP_LEVEL_INSTALL_COMPONENT}
+    DESTINATION cmake
+    ${SUB_PROJ_EXCLUDE_FROM_ALL} # "EXCLUDE_FROM_ALL" if project is not top-level
+)
+
+# Install README and LICENSE
+install(FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/README.md"
+    "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
+    COMPONENT ${TOP_LEVEL_INSTALL_COMPONENT}
+    DESTINATION .
+    ${SUB_PROJ_EXCLUDE_FROM_ALL} # "EXCLUDE_FROM_ALL" if project is not top-level
+)
+
