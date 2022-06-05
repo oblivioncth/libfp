@@ -85,7 +85,8 @@ set(BUILD_COMPONENTS ${LIB_COMPONENTS})
 #================= Top Level Build =========================
 
 # Import Qt
-find_package(Qt6 REQUIRED COMPONENTS
+include(BetterFindQt6)
+find_qt6_package(REQUIRED COMPONENTS
     Core
     Sql
     Gui
