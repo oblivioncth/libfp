@@ -97,7 +97,7 @@ macro(register_libfp_component)
 
     # Create config file
     configure_file("${FILE_TEMPLATES_PATH}/${PROJECT_NAME_LC}-component-config.cmake.in"
-        "${PROJECT_BINARY_DIR}/cmake/${COMPONENT_NAME}/${PROJECT_NAMESPACE_LC}-component-config.cmake"
+        "${PROJECT_BINARY_DIR}/cmake/${COMPONENT_NAME}/${PROJECT_NAME_LC}-${COMPONENT_NAME_LC}-config.cmake"
         @ONLY
     )
 
@@ -144,7 +144,7 @@ macro(register_libfp_component)
 
     # Install package config
     install(FILES
-        "${PROJECT_BINARY_DIR}/cmake/${COMPONENT_NAME}/${PROJECT_NAME}-${COMPONENT_NAME_LC}-config.cmake"
+        "${PROJECT_BINARY_DIR}/cmake/${COMPONENT_NAME}/${PROJECT_NAME_LC}-${COMPONENT_NAME_LC}-config.cmake"
         COMPONENT ${COMPONENT_TARGET_NAME}
         DESTINATION cmake/${COMPONENT_NAME}
         ${SUB_PROJ_EXCLUDE_FROM_ALL} # "EXCLUDE_FROM_ALL" if project is not top-level
@@ -153,7 +153,7 @@ macro(register_libfp_component)
     #========Export For In-tree Builds =================
     # For in source builds
     export(EXPORT ${COMPONENT_NAME_LC}-targets
-        FILE "${PROJECT_BINARY_DIR}/cmake/${COMPONENT_NAME}/${PROJECT_NAME}-${COMPONENT_NAME_LC}-targets.cmake"
+        FILE "${PROJECT_BINARY_DIR}/cmake/${COMPONENT_NAME}/${PROJECT_NAME_LC}-${COMPONENT_NAME_LC}-targets.cmake"
         NAMESPACE ${PROJECT_NAME}::
     )
 endmacro()
