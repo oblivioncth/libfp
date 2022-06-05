@@ -99,7 +99,7 @@ fetch_qx(c9524939c12e5e5e4bfb0e548c8c55a5ef462d87) # dev commit
 
 # Create config file
 configure_file("${FILE_TEMPLATES_PATH}/${PROJECT_NAME_LC}-config.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME_LC}-config.cmake.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME_LC}-config.cmake"
     @ONLY
 )
 
