@@ -1,0 +1,14 @@
+name: libfp Push Reaction
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore:
+    - 'master'
+
+jobs:
+  trigger-windows-build:
+    name: Build libfp (Windows)
+    uses: ./.github/workflows/build-libfp-windows.yml
+    secrets:
+      qt_shared_dec_key: ${{ secrets.QT_WINDOWS_SHARED_DECRYPT_KEY }}
+      qt_static_dec_key: ${{ secrets.QT_WINDOWS_STATIC_DECRYPT_KEY }}

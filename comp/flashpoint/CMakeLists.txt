@@ -31,7 +31,6 @@ set(COMPONENT_PUBLIC_LINKS
     Qx::Io
 )
 
-
 # Qt Component Dependencies
 set(COMPONENT_QT_DEPENDS
     Core
