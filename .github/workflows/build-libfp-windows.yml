@@ -110,11 +110,9 @@ jobs:
         cmake --build . --target all --config Debug
         echo "Building libfp release..."
         cmake --build . --target all --config Release
-        echo "Building libfp docs..."
-        cmake --build . --target docs --config Release
         echo "Installing libfp Debug"
         cmake --build . --target install --config Debug
-        echo "Installing libfp Release/Docs..."
+        echo "Installing libfp Release..."
         cmake --build . --target install --config Release
         echo "Packaging libfp..."
         cpack -C "Debug;Release"
