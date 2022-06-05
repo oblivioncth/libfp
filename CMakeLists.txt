@@ -106,7 +106,7 @@ configure_file("${FILE_TEMPLATES_PATH}/${PROJECT_NAME_LC}-config.cmake.in"
 # Create version config file
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME_LC}-version.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME_LC}-config-version.cmake"
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMinorVersion
 )

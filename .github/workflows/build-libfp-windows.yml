@@ -103,7 +103,7 @@ jobs:
         popd
         Write-Host "Building libfp..." -ForegroundColor Green
         echo "Configuring CMake..."
-        Start-Process -FilePath "${{ env.qt_cmake }}" -ArgumentList '-G "${{ env.cmake_gen }}" -S "${{ env.libfp_src_dir}}" -B "${{ env.libfp_build_dir }}" -D LIBFP_DOCS_TARGET=ON' -Wait -NoNewWindow
+        Start-Process -FilePath "${{ env.qt_cmake }}" -ArgumentList '-G "${{ env.cmake_gen }}" -S "${{ env.libfp_src_dir}}" -B "${{ env.libfp_build_dir }}"' -Wait -NoNewWindow
         echo "Changing to build directory..."
         cd "$Env:libfp_build_dir"
         echo "Building libfp debug..."
