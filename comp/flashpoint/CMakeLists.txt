@@ -39,5 +39,5 @@ set(COMPONENT_QT_DEPENDS
 )
 
 #=============== Component Handler =======================
-include(FpComponentHelper)
+include(libfp/ComponentHelper)
 register_libfp_component()
