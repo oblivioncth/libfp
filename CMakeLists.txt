@@ -17,14 +17,6 @@ set(PROJECT_NAMESPACE "Fp")
 string(TOLOWER ${PROJECT_NAMESPACE} PROJECT_NAMESPACE_LC)
 string(TOUPPER ${PROJECT_NAMESPACE} PROJECT_NAMESPACE_UC)
 
-# Check if top level
-if(${PROJECT_IS_TOP_LEVEL})
-    message(STATUS "NOTE: ${PROJECT_NAME} is being configured as a top-level project")
-else()
-    set(SUB_PROJ_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
-    message(STATUS "NOTE: ${PROJECT_NAME} is being configured as a sub-project")
-endif()
-
 # C++
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -49,6 +41,25 @@ else()
   set(TARGET_ARCH x86)
 endif()
 
+#--------------Top Level Project Setup-------------
+
+if(${PROJECT_IS_TOP_LEVEL})
+    message(STATUS "NOTE: ${PROJECT_NAME} is being configured as a top-level project")
+
+    # Install (override the CMake default, but not a user set value)
+    if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+        set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/out/install"
+               CACHE PATH "Project install path" FORCE
+        )
+    endif()
+else()
+    message(STATUS "NOTE: ${PROJECT_NAME} is being configured as a sub-project")
+
+    # Keep install components out of 'all' target
+    set(SUB_PROJ_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
+endif()
+
+
 #--------------------Setup Paths-------------------
 
 # Cmake scripts
@@ -56,13 +67,6 @@ set(FILE_TEMPLATES_PATH "${PROJ_SCRIPTS_PATH}/file_templates")
 
 # Sub projects
 set(COMPONENTS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/comp")
-
-# Install (override the CMake default, but not a user set value)
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND PROJECT_IS_TOP_LEVEL)
-    set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/out/install"
-           CACHE PATH "Project install path" FORCE
-    )
-endif()
 
 # Package
 set(PACKAGE_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/out/dist")
