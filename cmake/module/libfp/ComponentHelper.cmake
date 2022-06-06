@@ -1,7 +1,7 @@
 macro(register_libfp_component)
     #================= Setup ==========================
     # Utility functions
-    include(Utility)
+    include(libfp/Utility)
 
     # Determine component name via folder name
     get_filename_component(COMPONENT_NAME_LC "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
@@ -97,14 +97,14 @@ macro(register_libfp_component)
 
     # Create config file
     configure_file("${FILE_TEMPLATES_PATH}/${PROJECT_NAME_LC}-component-config.cmake.in"
-        "${PROJECT_BINARY_DIR}/cmake/${COMPONENT_NAME}/${PROJECT_NAMESPACE_LC}-component-config.cmake"
+        "${PROJECT_BINARY_DIR}/cmake/${COMPONENT_NAME_LC}/${PROJECT_NAME_LC}-${COMPONENT_NAME_LC}-config.cmake"
         @ONLY
     )
 
     #---------- Configure Target Properties------------------
     set_target_properties(${COMPONENT_TARGET_NAME} PROPERTIES
         VERSION ${PROJECT_VERSION}
-        OUTPUT_NAME "${PROJECT_NAME}-${COMPONENT_NAME}"
+        OUTPUT_NAME "${PROJECT_NAME}-${COMPONENT_NAME_LC}"
         DEBUG_POSTFIX "d"
         EXPORT_NAME "${COMPONENT_NAME}"
     )
@@ -138,22 +138,22 @@ macro(register_libfp_component)
         COMPONENT ${COMPONENT_TARGET_NAME}
         FILE "${PROJECT_NAME}-${COMPONENT_NAME_LC}-targets.cmake"
         NAMESPACE ${PROJECT_NAMESPACE}::
-        DESTINATION cmake/${COMPONENT_NAME}
+        DESTINATION cmake/${COMPONENT_NAME_LC}
         ${SUB_PROJ_EXCLUDE_FROM_ALL} # "EXCLUDE_FROM_ALL" if project is not top-level
     )
 
     # Install package config
     install(FILES
-        "${PROJECT_BINARY_DIR}/cmake/${COMPONENT_NAME}/${PROJECT_NAME}-${COMPONENT_NAME_LC}-config.cmake"
+        "${PROJECT_BINARY_DIR}/cmake/${COMPONENT_NAME_LC}/${PROJECT_NAME_LC}-${COMPONENT_NAME_LC}-config.cmake"
         COMPONENT ${COMPONENT_TARGET_NAME}
-        DESTINATION cmake/${COMPONENT_NAME}
+        DESTINATION cmake/${COMPONENT_NAME_LC}
         ${SUB_PROJ_EXCLUDE_FROM_ALL} # "EXCLUDE_FROM_ALL" if project is not top-level
     )
 
     #========Export For In-tree Builds =================
     # For in source builds
     export(EXPORT ${COMPONENT_NAME_LC}-targets
-        FILE "${PROJECT_BINARY_DIR}/cmake/${COMPONENT_NAME}/${PROJECT_NAME}-${COMPONENT_NAME_LC}-targets.cmake"
+        FILE "${PROJECT_BINARY_DIR}/cmake/${COMPONENT_NAME_LC}/${PROJECT_NAME_LC}-${COMPONENT_NAME_LC}-targets.cmake"
         NAMESPACE ${PROJECT_NAME}::
     )
 endmacro()
