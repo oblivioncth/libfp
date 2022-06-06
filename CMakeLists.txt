@@ -58,7 +58,7 @@ set(FILE_TEMPLATES_PATH "${PROJ_SCRIPTS_PATH}/file_templates")
 set(COMPONENTS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/comp")
 
 # Install (override the CMake default, but not a user set value)
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND PROJECT_IS_TOP_LEVEL)
     set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/out/install"
            CACHE PATH "Project install path" FORCE
     )
@@ -94,7 +94,7 @@ find_qt6_package(REQUIRED COMPONENTS
 
 # Fetch Qx (build and import from source)
 include(FetchQx)
-fetch_qx(c9524939c12e5e5e4bfb0e548c8c55a5ef462d87) # dev commit
+fetch_qx(d3f0a902f0d8c2cb2f2a73a60d5d869c3c6a8a20) # dev commit
 
 #--------------------Package Config-----------------------
 
