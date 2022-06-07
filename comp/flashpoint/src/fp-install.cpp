@@ -3,6 +3,7 @@
 
 // Qx Includes
 #include <qx/io/qx-common-io.h>
+#include <qx/utility/qx-helpers.h>
 
 namespace Fp
 {
@@ -97,8 +98,10 @@ Install::Install(QString installPath) :
 //Public:
 Install::~Install()
 {
-    delete mMacroResolver;
-    delete mDatabase;
+    if(mMacroResolver)
+        delete mMacroResolver;
+    if(mDatabase)
+        delete mDatabase;
 }
 
 //-Class Functions------------------------------------------------------------------------------------------------
@@ -155,9 +158,9 @@ void Install::nullify()
     mDataPackMounterFile.reset();
     mVersionFile.reset();
     if(mMacroResolver)
-        delete mMacroResolver;
+        qxDelete(mMacroResolver);
     if(mDatabase)
-        delete mDatabase;
+        qxDelete(mDatabase);
 
     // Settings
     Json::Config mConfig = {};
