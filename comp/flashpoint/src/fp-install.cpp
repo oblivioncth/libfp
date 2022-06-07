@@ -97,7 +97,6 @@ Install::Install(QString installPath) :
 //Public:
 Install::~Install()
 {
-    mDatabase->closeThreadConnection();
     delete mMacroResolver;
     delete mDatabase;
 }
@@ -196,33 +195,7 @@ QString Install::launcherChecksum() const
     return launcherHash;
 }
 
-Db* Install::database(QSqlError* error)
-{
-    /*
-     * Automatically manages opening the database if the thread is different. An error here in unlikely,
-     * given that open capabilities are tested in the DB constructor, but nonetheless they are possible,
-     * so a return state is optionally set here. It is only possible for an error to occur if database
-     * isn't already open in the calling thread since an issue can only occur from opening a connection
-    */
-
-    QSqlError sqlError;
-
-    if(!mDatabase->connectionOpenInThisThread())
-        sqlError = mDatabase->openThreadConnection();
-
-    if(sqlError.isValid())
-    {
-        if(error)
-            *error = sqlError;
-        return nullptr;
-    }
-    else
-    {
-        if(error)
-            *error = QSqlError();
-        return mDatabase;
-    }
-}
+Db* Install::database() { return mDatabase; }
 
 Json::Config Install::config() const { return mConfig; }
 Json::Preferences Install::preferences() const { return mPreferences; }

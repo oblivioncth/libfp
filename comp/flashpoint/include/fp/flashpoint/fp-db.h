@@ -12,8 +12,11 @@
 namespace Fp
 {
 
-class Db
+class Db : public QObject
 {
+//-QObject Macro (Required for all QObject Derived Classes)-----------------------------------------------------------
+    Q_OBJECT
+
 //-Inner Classes-------------------------------------------------------------------------------------------------
 public:
     class Table_Game
@@ -270,7 +273,7 @@ private:
     Qx::GenericError mError;
 
     // Database information
-    QSet<QString> mConnections;
+    QSet<const QThread*> mConnectedThreads;
     const QString mDatabaseName;
     QStringList mPlatformList;
     QStringList mPlaylistList;
@@ -278,12 +281,15 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    explicit Db(const Key&);
     explicit Db(QString databaseName, const Key&);
 
 //-Destructor-------------------------------------------------------------------------------------------------
 public:
     ~Db();
+
+//-Class Functions--------------------------------------------------------------------------------------------
+private:
+    QString threadConnectionName(const QThread* thread);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
@@ -291,13 +297,14 @@ private:
     void nullify();
 
     // Connection
+    void closeConnection(const QThread* thread);
     void closeAllConnections();
-    QSqlDatabase getThreadConnection() const;
+    QSqlError getThreadConnection(QSqlDatabase& connection);
     QSqlError makeNonBindQuery(QueryBuffer& resultBuffer, QSqlDatabase* database, QString queryCommand, QString sizeQueryCommand) const;
 
     // Init
-    QSqlError checkDatabaseForRequiredTables(QSet<QString>& missingTablesBuffer) const;
-    QSqlError checkDatabaseForRequiredColumns(QSet<QString>& missingColumsBuffer) const;
+    QSqlError checkDatabaseForRequiredTables(QSet<QString>& missingTablesBuffer);
+    QSqlError checkDatabaseForRequiredColumns(QSet<QString>& missingColumsBuffer);
     QSqlError populateAvailableItems();
     QSqlError populateTags();
 
@@ -306,28 +313,23 @@ public:
     bool isValid();
     Qx::GenericError error();
 
-    // Connection
-    QSqlError openThreadConnection();
-    void closeThreadConnection();
-    bool connectionOpenInThisThread();
-
     // Queries - OFLIb
     QSqlError queryGamesByPlatform(QList<Db::QueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
-                                   const QList<QUuid>& idInclusionFilter = {}) const;
-    QSqlError queryAllAddApps(QueryBuffer& resultBuffer) const;
-    QSqlError queryPlaylistsByName(QueryBuffer& resultBuffer, QStringList playlists) const;
-    QSqlError queryPlaylistGamesByPlaylist(QList<QueryBuffer>& resultBuffer, const QList<QUuid>& playlistIds) const;
-    QSqlError queryPlaylistGameIds(QueryBuffer& resultBuffer, const QList<QUuid>& playlistIds) const;
-    QSqlError queryAllEntryTags(QueryBuffer& resultBuffer) const;
+                                   const QList<QUuid>& idInclusionFilter = {});
+    QSqlError queryAllAddApps(QueryBuffer& resultBuffer);
+    QSqlError queryPlaylistsByName(QueryBuffer& resultBuffer, QStringList playlists);
+    QSqlError queryPlaylistGamesByPlaylist(QList<QueryBuffer>& resultBuffer, const QList<QUuid>& playlistIds);
+    QSqlError queryPlaylistGameIds(QueryBuffer& resultBuffer, const QList<QUuid>& playlistIds);
+    QSqlError queryAllEntryTags(QueryBuffer& resultBuffer);
 
     // Queries - CLIFp
-    QSqlError queryEntryById(QueryBuffer& resultBuffer, QUuid appId) const;
-    QSqlError queryEntriesByTitle(QueryBuffer& resultBuffer, QString title) const;
-    QSqlError queryEntryDataById(QueryBuffer& resultBuffer, QUuid appId) const;
-    QSqlError queryEntryAddApps(QueryBuffer& resultBuffer, QUuid appId, bool playableOnly = false) const;
-    QSqlError queryDataPackSource(QueryBuffer& resultBuffer) const;
-    QSqlError queryEntrySourceData(QueryBuffer& resultBuffer, QString appSha256Hex) const;
-    QSqlError queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter filter) const;
+    QSqlError queryEntryById(QueryBuffer& resultBuffer, QUuid appId);
+    QSqlError queryEntriesByTitle(QueryBuffer& resultBuffer, QString title);
+    QSqlError queryEntryDataById(QueryBuffer& resultBuffer, QUuid appId);
+    QSqlError queryEntryAddApps(QueryBuffer& resultBuffer, QUuid appId, bool playableOnly = false);
+    QSqlError queryDataPackSource(QueryBuffer& resultBuffer);
+    QSqlError queryEntrySourceData(QueryBuffer& resultBuffer, QString appSha256Hex);
+    QSqlError queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter filter);
 
     // Info
     QStringList platformList() const;
@@ -335,7 +337,11 @@ public:
     QMap<int, TagCategory> tags() const;
 
     // Checks
-    QSqlError entryUsesDataPack(bool& resultBuffer, QUuid gameId) const;
+    QSqlError entryUsesDataPack(bool& resultBuffer, QUuid gameId);
+
+//-Slots ------------------------------------------------------------------------------------------------------
+private:
+    void connectedThreadFinished();
 };
 
 }
