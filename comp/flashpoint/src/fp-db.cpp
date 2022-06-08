@@ -91,7 +91,11 @@ Db::~Db()
 //Private:
 QString Db::threadConnectionName(const QThread* thread)
 {
-   return DATABASE_CONNECTION_NAME + QString::number((quint64)thread, 16);
+    // Important to also salt using instance "id" so that
+    // different instances don't use the same connection
+   return DATABASE_CONNECTION_NAME +
+           "_i" + QString::number((quint64)this, 16) +
+           "_t" + QString::number((quint64)thread, 16);
 }
 
 
@@ -125,7 +129,6 @@ void Db::closeAllConnections()
         i = mConnectedThreads.erase(i);
     }
 }
-
 
 QSqlError Db::getThreadConnection(QSqlDatabase& connection)
 {

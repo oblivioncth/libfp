@@ -249,7 +249,7 @@ public:
 
 //-Class Variables-----------------------------------------------------------------------------------------------
 private:
-    static inline const QString DATABASE_CONNECTION_NAME = "Flashpoint Database";
+    static inline const QString DATABASE_CONNECTION_NAME = "flashpoint_database";
 
     static inline const QList<Db::TableSpecs> DATABASE_SPECS_LIST = {{Db::Table_Game::NAME, Db::Table_Game::COLUMN_LIST},
                                                                         {Db::Table_Add_App::NAME, Db::Table_Add_App::COLUMN_LIST},
