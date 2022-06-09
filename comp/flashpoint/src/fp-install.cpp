@@ -109,10 +109,8 @@ Install::~Install()
 QString Install::standardImageSubPath(ImageType imageType, QUuid gameId)
 {
     QString gameIdString = gameId.toString(QUuid::WithoutBraces);
-    return (imageType == ImageType::Logo ? LOGOS_FOLDER_NAME : SCREENSHOTS_FOLDER_NAME) + '/' +
-           gameIdString.left(2) + '/' + gameIdString.mid(2, 2) + '/' + gameIdString + IMAGE_EXT;
+    return gameIdString.left(2) + '/' + gameIdString.mid(2, 2) + '/' + gameIdString + IMAGE_EXT;
 }
-
 
 //Public:
 Qx::GenericError Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo)
@@ -211,13 +209,14 @@ QDir Install::extrasDirectory() const { return mExtrasDirectory; }
 
 QString Install::imageLocalPath(ImageType imageType, QUuid gameId) const
 {
-    QDir sourceDir = imageType == ImageType::Logo ? mLogosDirectory : mScreenshotsDirectory;
+    const QDir& sourceDir = imageType == ImageType::Logo ? mLogosDirectory : mScreenshotsDirectory;
     return sourceDir.absolutePath() + '/' + standardImageSubPath(imageType, gameId);
 }
 
 QUrl Install::imageRemoteUrl(ImageType imageType, QUuid gameId) const
 {
-    return QUrl(mPreferences.onDemandBaseUrl + standardImageSubPath(imageType, gameId));
+    const QString typeFolder = (imageType == ImageType::Logo ? LOGOS_FOLDER_NAME : SCREENSHOTS_FOLDER_NAME);
+    return QUrl(mPreferences.onDemandBaseUrl + typeFolder + '/' + standardImageSubPath(imageType, gameId));
 }
 
 QString Install::datapackMounterPath() const { return mDataPackMounterFile->fileName(); }
