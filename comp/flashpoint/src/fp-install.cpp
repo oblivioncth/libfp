@@ -178,14 +178,31 @@ Install::Edition Install::edition() const
            nameVer.contains("infinity", Qt::CaseInsensitive) ? Edition::Infinity :
                                                                Edition::Core;
 }
+
 QString Install::nameVersionString() const
 {
     // Check version file
     QString readVersion = QString();
     if(mVersionFile->exists())
-        Qx::readTextFromFile(readVersion, *mVersionFile, Qx::TextPos::START).wasSuccessful();
+        Qx::readTextFromFile(readVersion, *mVersionFile, Qx::TextPos::START);
 
     return readVersion;
+}
+
+Qx::VersionNumber Install::version() const
+{
+    QString nameVer = nameVersionString();
+    QRegularExpressionMatch versionMatch = VERSION_NUMBER_REGEX.match(nameVer);
+
+    if(versionMatch.hasMatch())
+    {
+        Qx::VersionNumber fpVersion = Qx::VersionNumber::fromString(versionMatch.captured("version"));
+        if(!fpVersion.isNull())
+            return fpVersion;
+    }
+
+    qWarning("Could not determine flashpoint version number!");
+    return Qx::VersionNumber();
 }
 
 QString Install::launcherChecksum() const
