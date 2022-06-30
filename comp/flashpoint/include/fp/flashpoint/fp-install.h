@@ -8,6 +8,7 @@
 #include <QtSql>
 
 // Qx Includes
+#include <qx/core/qx-versionnumber.h>
 
 // Project Includes
 #include "fp-json.h"
@@ -56,6 +57,9 @@ public:
 
     // Error
     static inline const QString ERR_INVALID = "Invalid Flashpoint Install:";
+
+    // Regex
+    static inline const QRegularExpression VERSION_NUMBER_REGEX = QRegularExpression("[fF]lashpoint (?<version>.*?) ");
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -114,10 +118,11 @@ public:
     // General information
     Edition edition() const;
     QString nameVersionString() const;
+    Qx::VersionNumber version() const;
     QString launcherChecksum() const;
 
     // Database
-    Db* database(QSqlError* error = nullptr);
+    Db* database();
 
     // Support Application Checks
     Json::Config config() const;

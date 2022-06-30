@@ -17,14 +17,6 @@ set(PROJECT_NAMESPACE "Fp")
 string(TOLOWER ${PROJECT_NAMESPACE} PROJECT_NAMESPACE_LC)
 string(TOUPPER ${PROJECT_NAMESPACE} PROJECT_NAMESPACE_UC)
 
-# Check if top level
-if(${PROJECT_IS_TOP_LEVEL})
-    message(STATUS "NOTE: ${PROJECT_NAME} is being configured as a top-level project")
-else()
-    set(SUB_PROJ_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
-    message(STATUS "NOTE: ${PROJECT_NAME} is being configured as a sub-project")
-endif()
-
 # C++
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -40,7 +32,7 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 # Add local modules
 set(PROJ_SCRIPTS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${PROJ_SCRIPTS_PATH}/module")
-include(Utility)
+include(libfp/Utility)
 
 # General Variables
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -48,6 +40,28 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 else()
   set(TARGET_ARCH x86)
 endif()
+
+#--------------Top Level Project Setup-------------
+
+if(${PROJECT_IS_TOP_LEVEL})
+    message(STATUS "NOTE: ${PROJECT_NAME} is being configured as a top-level project")
+
+    # Install (override the CMake default, but not a user set value)
+    if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+        set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/out/install"
+               CACHE PATH "Project install path" FORCE
+        )
+    endif()
+
+    # Clean install when clean target is ran
+    set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${CMAKE_INSTALL_PREFIX}")
+else()
+    message(STATUS "NOTE: ${PROJECT_NAME} is being configured as a sub-project")
+
+    # Keep install components out of 'all' target
+    set(SUB_PROJ_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
+endif()
+
 
 #--------------------Setup Paths-------------------
 
@@ -57,23 +71,13 @@ set(FILE_TEMPLATES_PATH "${PROJ_SCRIPTS_PATH}/file_templates")
 # Sub projects
 set(COMPONENTS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/comp")
 
-# Install (override the CMake default, but not a user set value)
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/out/install"
-           CACHE PATH "Project install path" FORCE
-    )
-endif()
-
 # Package
-set(PACKAGE_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/out/dist")
+set(PACKAGE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/out/dist")
 
 #------------Set Global Build Rules----------------
 
-# Clean install when clean target is ran
-set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${CMAKE_INSTALL_PREFIX}")
-
 # Versioning
-include(VerboseVersioning)
+include(libfp/VerboseVersioning)
 setup_verbose_versioning(PROJECT_VERSION_VERBOSE)
 
 ################# Common Build #################
@@ -85,28 +89,29 @@ set(BUILD_COMPONENTS ${LIB_COMPONENTS})
 #================= Top Level Build =========================
 
 # Import Qt
-find_package(Qt6 REQUIRED COMPONENTS
+include(libfp/BetterFindQt6)
+find_qt6_package(REQUIRED COMPONENTS
     Core
     Sql
     Gui
 )
 
 # Fetch Qx (build and import from source)
-include(FetchQx)
-fetch_qx(c9524939c12e5e5e4bfb0e548c8c55a5ef462d87) # dev commit
+include(libfp/FetchQx)
+fetch_qx("v0.3.0.2")
 
 #--------------------Package Config-----------------------
 
 # Create config file
 configure_file("${FILE_TEMPLATES_PATH}/${PROJECT_NAME_LC}-config.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME_LC}-config.cmake.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME_LC}-config.cmake"
     @ONLY
 )
 
 # Create version config file
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME_LC}-version.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME_LC}-config-version.cmake"
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMinorVersion
 )
@@ -143,3 +148,12 @@ install(FILES
     ${SUB_PROJ_EXCLUDE_FROM_ALL} # "EXCLUDE_FROM_ALL" if project is not top-level
 )
 
+#====================== CPack ==============================
+
+set(CPACK_PACKAGE_VENDOR "oblivioncth")
+set(CPACK_PACKAGE_DIRECTORY "${PACKAGE_PREFIX}")
+set(CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}_${PROJECT_VERSION_VERBOSE}_(Qt${Qt6_VERSION}-${Qt6_LINKAGE})_${CMAKE_SYSTEM_NAME}_${TARGET_ARCH}")
+set(CPACK_GENERATOR "ZIP")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+include(CPack)

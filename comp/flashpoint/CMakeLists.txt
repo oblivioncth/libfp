@@ -31,7 +31,6 @@ set(COMPONENT_PUBLIC_LINKS
     Qx::Io
 )
 
-
 # Qt Component Dependencies
 set(COMPONENT_QT_DEPENDS
     Core
@@ -40,5 +39,5 @@ set(COMPONENT_QT_DEPENDS
 )
 
 #=============== Component Handler =======================
-include(FpComponentHelper)
+include(libfp/ComponentHelper)
 register_libfp_component()
