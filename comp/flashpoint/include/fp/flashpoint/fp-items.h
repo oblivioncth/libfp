@@ -8,6 +8,8 @@
 
 namespace Fp
 {
+// TODO: Change getters here to property style (no "get")
+
 //-Enums----------------------------------------------------------------------------------------------------------
 enum class ImageType {Logo, Screenshot};
 
