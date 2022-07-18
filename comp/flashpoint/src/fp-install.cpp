@@ -130,7 +130,7 @@ Qx::GenericError Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInf
         Qx::IoOpReport readReport = Qx::fileContainsString(involvesBuffer, batFile, SECURE_PLAYER_INFO.baseName());
 
         // Check for read errors
-        if(!readReport.wasSuccessful())
+        if(readReport.isFailure())
             return Qx::GenericError(Qx::GenericError::Critical, readReport.outcome(), readReport.outcomeInfo());
         else
             return Qx::GenericError();

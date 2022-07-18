@@ -98,7 +98,7 @@ find_qt6_package(REQUIRED COMPONENTS
 
 # Fetch Qx (build and import from source)
 include(libfp/FetchQx)
-fetch_qx("v0.3.0.2")
+fetch_qx("c148272b65da2f364b467200dd166c8d538ef4cd")
 
 #--------------------Package Config-----------------------
 
