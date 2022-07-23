@@ -17,27 +17,27 @@ Game::Game() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid Game::getId() const { return mId; }
-QString Game::getTitle() const { return mTitle; }
-QString Game::getSeries() const { return mSeries; }
-QString Game::getDeveloper() const { return mDeveloper; }
-QString Game::getPublisher() const { return mPublisher; }
-QDateTime Game::getDateAdded() const { return mDateAdded; }
-QDateTime Game::getDateModified() const { return mDateModified; }
-QString Game::getPlatform() const { return mPlatform; }
-QString Game::getPlayMode() const { return mPlayMode; }
+QUuid Game::id() const { return mId; }
+QString Game::title() const { return mTitle; }
+QString Game::series() const { return mSeries; }
+QString Game::developer() const { return mDeveloper; }
+QString Game::publisher() const { return mPublisher; }
+QDateTime Game::dateAdded() const { return mDateAdded; }
+QDateTime Game::dateModified() const { return mDateModified; }
+QString Game::platform() const { return mPlatform; }
+QString Game::playMode() const { return mPlayMode; }
 bool Game::isBroken() const { return mBroken; }
-QString Game::getStatus() const { return mStatus; }
-QString Game::getNotes() const{ return mNotes; }
-QString Game::getSource() const { return mSource; }
-QString Game::getAppPath() const { return mAppPath; }
-QString Game::getLaunchCommand() const { return mLaunchCommand; }
-QDateTime Game::getReleaseDate() const { return mReleaseDate; }
-QString Game::getVersion() const { return mVersion; }
-QString Game::getOriginalDescription() const { return mOriginalDescription; }
-QString Game::getLanguage() const { return mLanguage; }
-QString Game::getOrderTitle() const { return mOrderTitle; }
-QString Game::getLibrary() const { return mLibrary; }
+QString Game::status() const { return mStatus; }
+QString Game::notes() const{ return mNotes; }
+QString Game::source() const { return mSource; }
+QString Game::appPath() const { return mAppPath; }
+QString Game::launchCommand() const { return mLaunchCommand; }
+QDateTime Game::releaseDate() const { return mReleaseDate; }
+QString Game::version() const { return mVersion; }
+QString Game::originalDescription() const { return mOriginalDescription; }
+QString Game::language() const { return mLanguage; }
+QString Game::orderTitle() const { return mOrderTitle; }
+QString Game::library() const { return mLibrary; }
 
 //===============================================================================================================
 // GAME BUILDER
@@ -133,13 +133,13 @@ uint qHash(const AddApp& key, uint seed) noexcept
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QUuid AddApp::getId() const { return mId; }
-QString AddApp::getAppPath() const { return mAppPath; }
+QUuid AddApp::id() const { return mId; }
+QString AddApp::appPath() const { return mAppPath; }
 bool AddApp::isAutorunBefore() const { return  mAutorunBefore; }
-QString AddApp::getLaunchCommand() const { return mLaunchCommand; }
-QString AddApp::getName() const { return mName; }
+QString AddApp::launchCommand() const { return mLaunchCommand; }
+QString AddApp::name() const { return mName; }
 bool AddApp::isWaitExit() const { return mWaitExit; }
-QUuid AddApp::getParentId() const { return mParentId; }
+QUuid AddApp::parentId() const { return mParentId; }
 bool AddApp::isPlayable() const { return mAppPath != SPEC_PATH_EXTRA && mAppPath != SPEC_PATH_MSG && !mAutorunBefore; }
 
 //===============================================================================================================
@@ -172,10 +172,10 @@ Playlist::Playlist() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 //Public:
-QUuid Playlist::getId() const { return mId; }
-QString Playlist::getTitle() const { return mTitle; }
-QString Playlist::getDescription() const { return mDescription; }
-QString Playlist::getAuthor() const { return mAuthor; }
+QUuid Playlist::id() const { return mId; }
+QString Playlist::title() const { return mTitle; }
+QString Playlist::description() const { return mDescription; }
+QString Playlist::author() const { return mAuthor; }
 
 //===============================================================================================================
 // PLAYLIST BUILDER
@@ -205,10 +205,10 @@ PlaylistGame::PlaylistGame() {}
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
 
-int PlaylistGame::getId() const { return mId; }
-QUuid PlaylistGame::getPlaylistId() const { return mPlaylistId; }
-int PlaylistGame::getOrder() const { return mOrder; }
-QUuid PlaylistGame::getGameId() const { return mGameId; }
+int PlaylistGame::id() const { return mId; }
+QUuid PlaylistGame::playlistId() const { return mPlaylistId; }
+int PlaylistGame::order() const { return mOrder; }
+QUuid PlaylistGame::gameId() const { return mGameId; }
 
 //===============================================================================================================
 // PLAYLIST GAME BUILDER

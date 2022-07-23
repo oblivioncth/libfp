@@ -54,27 +54,27 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    QUuid getId() const;
-    QString getTitle() const;
-    QString getSeries() const;
-    QString getDeveloper() const;
-    QString getPublisher() const;
-    QDateTime getDateAdded() const;
-    QDateTime getDateModified() const;
-    QString getPlatform() const;
+    QUuid id() const;
+    QString title() const;
+    QString series() const;
+    QString developer() const;
+    QString publisher() const;
+    QDateTime dateAdded() const;
+    QDateTime dateModified() const;
+    QString platform() const;
     bool isBroken() const;
-    QString getPlayMode() const;
-    QString getStatus() const;
-    QString getNotes() const;
-    QString getSource() const;
-    QString getAppPath() const;
-    QString getLaunchCommand() const;
-    QDateTime getReleaseDate() const;
-    QString getVersion() const;
-    QString getOriginalDescription() const;
-    QString getLanguage() const;
-    QString getOrderTitle() const;
-    QString getLibrary() const;
+    QString playMode() const;
+    QString status() const;
+    QString notes() const;
+    QString source() const;
+    QString appPath() const;
+    QString launchCommand() const;
+    QDateTime releaseDate() const;
+    QString version() const;
+    QString originalDescription() const;
+    QString language() const;
+    QString orderTitle() const;
+    QString library() const;
 };
 
 class GameBuilder
@@ -152,13 +152,13 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QUuid getId() const;
-    QString getAppPath() const;
+    QUuid id() const;
+    QString appPath() const;
     bool isAutorunBefore() const;
-    QString getLaunchCommand() const;
-    QString getName() const;
+    QString launchCommand() const;
+    QString name() const;
     bool isWaitExit() const;
-    QUuid getParentId() const;
+    QUuid parentId() const;
     bool isPlayable() const;
 };
 
@@ -202,10 +202,10 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QUuid getId() const;
-    QString getTitle() const;
-    QString getDescription() const;
-    QString getAuthor() const;
+    QUuid id() const;
+    QString title() const;
+    QString description() const;
+    QString author() const;
 
 };
 
@@ -246,10 +246,10 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    int getId() const;
-    QUuid getPlaylistId() const;
-    int getOrder() const;
-    QUuid getGameId() const;
+    int id() const;
+    QUuid playlistId() const;
+    int order() const;
+    QUuid gameId() const;
 };
 
 class PlaylistGameBuilder
