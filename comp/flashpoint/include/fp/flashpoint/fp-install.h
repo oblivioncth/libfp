@@ -31,7 +31,6 @@ private:
     // Validity check fail reasons
     static inline const QString FILE_DNE = "A required file does not exist: %1";
 
-public:
     // Static paths
     static inline const QString LAUNCHER_PATH = "Launcher/Flashpoint.exe";
     static inline const QString DATABASE_PATH = "Data/flashpoint.sqlite";
