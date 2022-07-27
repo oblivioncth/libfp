@@ -121,6 +121,7 @@ public:
 class AddApp
 {
     friend class AddAppBuilder;
+
 //-Class Variables-----------------------------------------------------------------------------------------------
 private:
     QString SPEC_PATH_MSG = ":message:";
@@ -147,8 +148,6 @@ public:
 //-Hashing-------------------------------------------------------------------------------------------------------------
 public:
     friend uint qHash(const AddApp& key, uint seed) noexcept;
-
-public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
@@ -183,6 +182,43 @@ public:
     AddAppBuilder& wParentId(QString rawParentId);
 
     AddApp build();
+};
+
+class Set
+{
+    friend class SetBuilder;
+
+//-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    Game mGame;
+    QList<AddApp> mAddApps;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    Set();
+
+//-Instance Functions------------------------------------------------------------------------------------------------------
+public:
+    Game game();
+    QList<AddApp> addApps();
+};
+
+class SetBuilder
+{
+//-Instance Variables------------------------------------------------------------------------------------------
+private:
+    Set mSetBlueprint;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    SetBuilder();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    SetBuilder& wGame(const Game& game);
+    SetBuilder& wAddApp(const AddApp& addApp);
+
+    Set build();
 };
 
 class Playlist
