@@ -41,7 +41,7 @@ private:
 
     // File Info
     static inline const QString IMAGE_EXT = ".png";
-    static inline const QFileInfo SECURE_PLAYER_INFO = QFileInfo("FlashpointSecurePlayer.exe");
+
 
     // Dynamic path file names
     static inline const QString SERVICES_JSON_NAME = "services.json";
@@ -61,6 +61,10 @@ private:
 
     // Regex
     static inline const QRegularExpression VERSION_NUMBER_REGEX = QRegularExpression("[fF]lashpoint (?<version>.*?) ");
+
+public:
+    static inline const QFileInfo LAUNCHER_INFO = QFileInfo("Flashpoint.exe");
+    static inline const QFileInfo SECURE_PLAYER_INFO = QFileInfo("FlashpointSecurePlayer.exe");
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
