@@ -172,8 +172,8 @@ Set::Set() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-Game Set::game() { return mGame; }
-QList<AddApp> Set::addApps() { return mAddApps; }
+Game Set::game() const { return mGame; }
+QList<AddApp> Set::addApps() const { return mAddApps; }
 
 //===============================================================================================================
 // SetBuilder

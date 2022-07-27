@@ -199,8 +199,8 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    Game game();
-    QList<AddApp> addApps();
+    Game game() const;
+    QList<AddApp> addApps() const;
 };
 
 class SetBuilder
