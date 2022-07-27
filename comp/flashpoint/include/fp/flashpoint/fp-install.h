@@ -19,6 +19,8 @@
 namespace Fp
 {
 
+const QString NAME = QStringLiteral("Flashpoint");
+
 class Install
 {
 //-Class Enums---------------------------------------------------------------------------------------------------
