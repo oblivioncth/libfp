@@ -187,6 +187,7 @@ SetBuilder::SetBuilder() {}
 //Public:
 SetBuilder& SetBuilder::wGame(const Game& game) { mSetBlueprint.mGame = game; return *this; }
 SetBuilder& SetBuilder::wAddApp(const AddApp& addApp) { mSetBlueprint.mAddApps.append(addApp); return *this; }
+SetBuilder& SetBuilder::wAddApps(const QList<AddApp>& addApps) { mSetBlueprint.mAddApps.append(addApps); return *this; }
 
 Set SetBuilder::build() { return mSetBlueprint; }
 

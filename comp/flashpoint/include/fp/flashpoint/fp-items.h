@@ -217,6 +217,7 @@ public:
 public:
     SetBuilder& wGame(const Game& game);
     SetBuilder& wAddApp(const AddApp& addApp);
+    SetBuilder& wAddApps(const QList<AddApp>& addApps);
 
     Set build();
 };
