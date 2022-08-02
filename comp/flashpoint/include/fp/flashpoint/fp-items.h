@@ -8,21 +8,15 @@
 
 namespace Fp
 {
-// TODO: Change getters here to property style (no "get")
-
 //-Enums----------------------------------------------------------------------------------------------------------
 enum class ImageType {Logo, Screenshot};
-
-//-Class Forward Declarations---------------------------------------------------------------------------------------
-class GameBuilder;
-class AddAppBuilder;
-class PlaylistBuilder;
-class PlaylistGameBuilder;
 
 //-Namespace Global Classes-----------------------------------------------------------------------------------------
 class Game
 {
-    friend class GameBuilder;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -77,7 +71,7 @@ public:
     QString library() const;
 };
 
-class GameBuilder
+class Game::Builder
 {
 //-Instance Variables------------------------------------------------------------------------------------------
 private:
@@ -85,7 +79,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    GameBuilder();
+    Builder();
 
 //-Class Functions---------------------------------------------------------------------------------------------
 private:
@@ -93,34 +87,36 @@ private:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    GameBuilder& wId(QString rawId);
-    GameBuilder& wTitle(QString title);
-    GameBuilder& wSeries(QString series);
-    GameBuilder& wDeveloper(QString developer);
-    GameBuilder& wPublisher(QString publisher);
-    GameBuilder& wDateAdded(QString rawDateAdded);
-    GameBuilder& wDateModified(QString rawDateModified);
-    GameBuilder& wPlatform(QString platform);
-    GameBuilder& wBroken(QString rawBroken);
-    GameBuilder& wPlayMode(QString playMode);
-    GameBuilder& wStatus(QString status);
-    GameBuilder& wNotes(QString notes);
-    GameBuilder& wSource(QString source);
-    GameBuilder& wAppPath(QString appPath);
-    GameBuilder& wLaunchCommand(QString launchCommand);
-    GameBuilder& wReleaseDate(QString rawReleaseDate);
-    GameBuilder& wVersion(QString version);
-    GameBuilder& wOriginalDescription(QString originalDescription);
-    GameBuilder& wLanguage(QString language);
-    GameBuilder& wOrderTitle(QString orderTitle);
-    GameBuilder& wLibrary(QString library);
+    Builder& wId(QString rawId);
+    Builder& wTitle(QString title);
+    Builder& wSeries(QString series);
+    Builder& wDeveloper(QString developer);
+    Builder& wPublisher(QString publisher);
+    Builder& wDateAdded(QString rawDateAdded);
+    Builder& wDateModified(QString rawDateModified);
+    Builder& wPlatform(QString platform);
+    Builder& wBroken(QString rawBroken);
+    Builder& wPlayMode(QString playMode);
+    Builder& wStatus(QString status);
+    Builder& wNotes(QString notes);
+    Builder& wSource(QString source);
+    Builder& wAppPath(QString appPath);
+    Builder& wLaunchCommand(QString launchCommand);
+    Builder& wReleaseDate(QString rawReleaseDate);
+    Builder& wVersion(QString version);
+    Builder& wOriginalDescription(QString originalDescription);
+    Builder& wLanguage(QString language);
+    Builder& wOrderTitle(QString orderTitle);
+    Builder& wLibrary(QString library);
 
     Game build();
 };
 
 class AddApp
 {
-    friend class AddAppBuilder;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Builder;
 
 //-Class Variables-----------------------------------------------------------------------------------------------
 private:
@@ -161,7 +157,7 @@ public:
     bool isPlayable() const;
 };
 
-class AddAppBuilder
+class AddApp::Builder
 {
 //-Instance Variables------------------------------------------------------------------------------------------
 private:
@@ -169,24 +165,26 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    AddAppBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    AddAppBuilder& wId(QString rawId);
-    AddAppBuilder& wAppPath(QString appPath);
-    AddAppBuilder& wAutorunBefore(QString rawAutorunBefore);
-    AddAppBuilder& wLaunchCommand(QString launchCommand);
-    AddAppBuilder& wName(QString name);
-    AddAppBuilder& wWaitExit(QString rawWaitExit);
-    AddAppBuilder& wParentId(QString rawParentId);
+    Builder& wId(QString rawId);
+    Builder& wAppPath(QString appPath);
+    Builder& wAutorunBefore(QString rawAutorunBefore);
+    Builder& wLaunchCommand(QString launchCommand);
+    Builder& wName(QString name);
+    Builder& wWaitExit(QString rawWaitExit);
+    Builder& wParentId(QString rawParentId);
 
     AddApp build();
 };
 
 class Set
 {
-    friend class SetBuilder;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -203,7 +201,7 @@ public:
     const QList<AddApp>& addApps() const;
 };
 
-class SetBuilder
+class Set::Builder
 {
 //-Instance Variables------------------------------------------------------------------------------------------
 private:
@@ -211,20 +209,22 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    SetBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    SetBuilder& wGame(const Game& game);
-    SetBuilder& wAddApp(const AddApp& addApp);
-    SetBuilder& wAddApps(const QList<AddApp>& addApps);
+    Builder& wGame(const Game& game);
+    Builder& wAddApp(const AddApp& addApp);
+    Builder& wAddApps(const QList<AddApp>& addApps);
 
     Set build();
 };
 
 class Playlist
 {
-    friend class PlaylistBuilder;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -246,7 +246,7 @@ public:
 
 };
 
-class PlaylistBuilder
+class Playlist::Builder
 {
 //-Instance Variables------------------------------------------------------------------------------------------
 private:
@@ -254,21 +254,23 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    PlaylistBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    PlaylistBuilder& wId(QString rawId);
-    PlaylistBuilder& wTitle(QString title);
-    PlaylistBuilder& wDescription(QString description);
-    PlaylistBuilder& wAuthor(QString author);
+    Builder& wId(QString rawId);
+    Builder& wTitle(QString title);
+    Builder& wDescription(QString description);
+    Builder& wAuthor(QString author);
 
     Playlist build();
 };
 
 class PlaylistGame
 {
-    friend class PlaylistGameBuilder;
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Builder;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -289,7 +291,7 @@ public:
     QUuid gameId() const;
 };
 
-class PlaylistGameBuilder
+class PlaylistGame::Builder
 {
 //-Instance Variables------------------------------------------------------------------------------------------
 private:
@@ -297,14 +299,14 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    PlaylistGameBuilder();
+    Builder();
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    PlaylistGameBuilder& wId(QString rawId);
-    PlaylistGameBuilder& wPlaylistId(QString rawPlaylistId);
-    PlaylistGameBuilder& wOrder(QString rawOrder);
-    PlaylistGameBuilder& wGameId(QString rawGameId);
+    Builder& wId(QString rawId);
+    Builder& wPlaylistId(QString rawPlaylistId);
+    Builder& wOrder(QString rawOrder);
+    Builder& wGameId(QString rawGameId);
 
     PlaylistGame build();
 };
