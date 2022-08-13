@@ -19,6 +19,8 @@
 namespace Fp
 {
 
+const QString NAME = QStringLiteral("Flashpoint");
+
 class Install
 {
 //-Class Enums---------------------------------------------------------------------------------------------------
@@ -29,7 +31,6 @@ private:
     // Validity check fail reasons
     static inline const QString FILE_DNE = "A required file does not exist: %1";
 
-public:
     // Static paths
     static inline const QString LAUNCHER_PATH = "Launcher/Flashpoint.exe";
     static inline const QString DATABASE_PATH = "Data/flashpoint.sqlite";
@@ -40,7 +41,7 @@ public:
 
     // File Info
     static inline const QString IMAGE_EXT = ".png";
-    static inline const QFileInfo SECURE_PLAYER_INFO = QFileInfo("FlashpointSecurePlayer.exe");
+
 
     // Dynamic path file names
     static inline const QString SERVICES_JSON_NAME = "services.json";
@@ -60,6 +61,10 @@ public:
 
     // Regex
     static inline const QRegularExpression VERSION_NUMBER_REGEX = QRegularExpression("[fF]lashpoint (?<version>.*?) ");
+
+public:
+    static inline const QFileInfo LAUNCHER_INFO = QFileInfo("Flashpoint.exe");
+    static inline const QFileInfo SECURE_PLAYER_INFO = QFileInfo("FlashpointSecurePlayer.exe");
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:

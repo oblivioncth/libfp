@@ -54,7 +54,7 @@ Qx::GenericError Json::SettingsReader::readInto()
     QByteArray settingsData;
     Qx::IoOpReport settingsLoadReport = Qx::readBytesFromFile(settingsData, *mSourceJsonFile);
 
-    if(!settingsLoadReport.wasSuccessful())
+    if(settingsLoadReport.isFailure())
         return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mSourceJsonFile->fileName()), settingsLoadReport.outcomeInfo());
 
     // Parse original JSON data

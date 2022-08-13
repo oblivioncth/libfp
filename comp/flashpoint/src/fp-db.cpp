@@ -113,8 +113,16 @@ void Db::closeConnection(const QThread* thread)
     if(mConnectedThreads.contains(thread))
     {
         QString tcn = threadConnectionName(thread);
-        QSqlDatabase connection = QSqlDatabase::database(tcn, false);
-        connection.close();
+
+        {
+            /* Scoped because the following QSqlDatabase instance must not exist when the database connection
+             * is removed, (as all connection instances must be deleted before using removeDatabase()), or else
+             * Qt will post a warning since any instances that remain then have a stale reference to the database.
+             */
+            QSqlDatabase connection = QSqlDatabase::database(tcn, false);
+            connection.close();
+        }
+
         QSqlDatabase::removeDatabase(tcn);
         mConnectedThreads.remove(thread);
     }
