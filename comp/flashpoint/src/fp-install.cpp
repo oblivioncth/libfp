@@ -24,7 +24,6 @@ Install::Install(QString installPath) :
     mDatabaseFile = std::make_unique<QFile>(installPath + "/" + DATABASE_PATH);
     mConfigJsonFile = std::make_shared<QFile>(installPath + "/" + CONFIG_JSON_PATH);
     mPreferencesJsonFile = std::make_shared<QFile>(installPath + "/" + PREFERENCES_JSON_PATH);
-    mDataPackMounterFile = std::make_shared<QFile>(installPath + "/" + DATA_PACK_MOUNTER_PATH);
     mVersionFile = std::make_unique<QFile>(installPath + "/" + VER_TXT_PATH);
     mExtrasDirectory = QDir(installPath + "/" + EXTRAS_PATH);
 
@@ -40,7 +39,6 @@ Install::Install(QString installPath) :
         mPreferencesJsonFile.get(),
         mLauncherFile.get(),
         mVersionFile.get(),
-        mDataPackMounterFile.get()
     };
 
     for(const QFile* file : filesToCheck)
@@ -153,7 +151,6 @@ void Install::nullify()
     mConfigJsonFile.reset();
     mPreferencesJsonFile.reset();
     mServicesJsonFile.reset();
-    mDataPackMounterFile.reset();
     mVersionFile.reset();
     if(mMacroResolver)
         qxDelete(mMacroResolver);
@@ -236,7 +233,6 @@ QUrl Install::imageRemoteUrl(ImageType imageType, QUuid gameId) const
     return QUrl(mPreferences.onDemandBaseUrl + typeFolder + '/' + standardImageSubPath(imageType, gameId));
 }
 
-QString Install::datapackMounterPath() const { return mDataPackMounterFile->fileName(); }
 const MacroResolver* Install::macroResolver() const { return mMacroResolver; }
 
 }

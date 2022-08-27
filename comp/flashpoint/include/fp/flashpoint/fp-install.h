@@ -36,7 +36,6 @@ private:
     static inline const QString DATABASE_PATH = "Data/flashpoint.sqlite";
     static inline const QString CONFIG_JSON_PATH = "Launcher/config.json";
     static inline const QString PREFERENCES_JSON_PATH = "preferences.json";
-    static inline const QString DATA_PACK_MOUNTER_PATH = "FPSoftware/fpmount/fpmount.exe";
     static inline const QString VER_TXT_PATH = "version.txt";
 
     // File Info
@@ -82,7 +81,6 @@ private:
     std::shared_ptr<QFile> mConfigJsonFile;
     std::shared_ptr<QFile> mPreferencesJsonFile;
     std::shared_ptr<QFile> mServicesJsonFile;
-    std::shared_ptr<QFile> mDataPackMounterFile;
     std::unique_ptr<QFile> mVersionFile;
 
     // Settings
@@ -141,7 +139,6 @@ public:
     QDir extrasDirectory() const;
     QString imageLocalPath(ImageType imageType, QUuid gameId) const;
     QUrl imageRemoteUrl(ImageType imageType, QUuid gameId) const;
-    QString datapackMounterPath() const;
     const MacroResolver* macroResolver() const;
 };
 
