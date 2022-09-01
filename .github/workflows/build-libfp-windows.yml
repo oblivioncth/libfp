@@ -1,4 +1,4 @@
-name: Build libfp - Windows (Qt 6.3.0)
+name: Build libfp - Windows (Qt 6.3.1)
 on:
   workflow_call:
     secrets:

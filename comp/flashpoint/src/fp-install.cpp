@@ -178,10 +178,10 @@ Install::Edition Install::edition() const
 
 QString Install::nameVersionString() const
 {
-    // Check version file
+    // Check version file (only read first line in case there is a trailing newline character)
     QString readVersion = QString();
     if(mVersionFile->exists())
-        Qx::readTextFromFile(readVersion, *mVersionFile, Qx::TextPos::START);
+        Qx::readTextFromFile(readVersion, *mVersionFile, Qx::TextPos::START, Qx::TextPos(Qx::Index32::FIRST, Qx::Index32::LAST));
 
     return readVersion;
 }
