@@ -493,7 +493,7 @@ QSqlError Db::queryAllAddApps(QueryBuffer& resultBuffer)
     return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
 }
 
-QSqlError Db::queryPlaylistsByName(QueryBuffer& resultBuffer, QStringList playlists)
+QSqlError Db::queryPlaylistsByName(QueryBuffer& resultBuffer, QStringList playlists, InclusionOptions inclusionOptions)
 {
     // Return blank result if no playlists are selected
     if(playlists.isEmpty())
@@ -520,7 +520,7 @@ QSqlError Db::queryPlaylistsByName(QueryBuffer& resultBuffer, QStringList playli
         placeHolders.chop(1); // Remove trailing ?
         QString baseQueryCommand = "SELECT %1 FROM " + Table_Playlist::NAME + " WHERE " +
                 Table_Playlist::COL_TITLE + " IN (" + placeHolders + ") AND " +
-                Table_Playlist::COL_LIBRARY + " = '" + Table_Playlist::ENTRY_GAME_LIBRARY + "'";
+                (inclusionOptions.includeAnimations ? GAME_AND_ANIM_FILTER : GAME_ONLY_FILTER);
         QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Playlist::COLUMN_LIST.join("`,`") + "`");
         QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
