@@ -12,3 +12,10 @@ jobs:
     secrets:
       qt_shared_dec_key: ${{ secrets.QT_WINDOWS_SHARED_DECRYPT_KEY }}
       qt_static_dec_key: ${{ secrets.QT_WINDOWS_STATIC_DECRYPT_KEY }}
+
+  trigger-linux-build:
+    name: Build libfp (Linux)
+    uses: ./.github/workflows/build-libfp-linux.yml
+    secrets:
+      qt_shared_dec_key: ${{ secrets.QT_LINUX_SHARED_DECRYPT_KEY }}
+      qt_static_dec_key: ${{ secrets.QT_LINUX_STATIC_DECRYPT_KEY }}
