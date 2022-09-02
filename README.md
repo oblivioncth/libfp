@@ -2,6 +2,8 @@
 
 A C++ interface for instances of [Blue Maxima's Flashpoint](https://bluemaxima.org/flashpoint/)
 
+[![Dev Builds](https://github.com/oblivioncth/libfp/actions/workflows/push-reaction.yml/badge.svg?branch=dev)](https://github.com/oblivioncth/libfp/actions/workflows/push-reaction.yml)
+
 ## WIP
 Currently this library exists explicitly for use with [CLIFp](https://github.com/oblivioncth/CLIFp) and [FIL](https://github.com/oblivioncth/FIL), and as such its feature set has been implemented sporadically as needed and is largely incomplete. Therefore, there is no documentation available for the interface at this time given it is not ready for general purpose use. That being said, given its bareness and somewhat simplistic nature, you can get a sense of how to use its API by reviewing the code directly if you so desire.
 
