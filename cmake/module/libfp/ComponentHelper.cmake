@@ -1,7 +1,5 @@
 macro(register_libfp_component)
     #================= Setup ==========================
-    # Utility functions
-    include(libfp/Utility)
 
     # Determine component name via folder name
     get_filename_component(COMPONENT_NAME_LC "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
