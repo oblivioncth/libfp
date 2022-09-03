@@ -1,7 +1,5 @@
 macro(register_libfp_component)
     #================= Setup ==========================
-    # Utility functions
-    include(libfp/Utility)
 
     # Determine component name via folder name
     get_filename_component(COMPONENT_NAME_LC "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
@@ -129,7 +127,7 @@ macro(register_libfp_component)
     )
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAMESPACE_LC}/${COMPONENT_NAME_LC}.h"
         COMPONENT ${COMPONENT_TARGET_NAME}
-        DESTINATION "${HEADER_INSTALL_SUFFIX}/${COMPONENT_NAME_LC}/${PROJECT_NAMESPACE_LC}"
+        DESTINATION "include/${COMPONENT_NAME_LC}/${PROJECT_NAMESPACE_LC}"
         ${SUB_PROJ_EXCLUDE_FROM_ALL} # "EXCLUDE_FROM_ALL" if project is not top-level
     )
 

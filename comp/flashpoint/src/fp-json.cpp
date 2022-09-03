@@ -133,6 +133,9 @@ Qx::GenericError Json::PreferencesReader::parseDocument(const QJsonDocument &pre
     if((valueError = Qx::Json::checkedKeyRetrieval(targetPreferences->jsonFolderPath, prefDoc.object(), Object_Preferences::KEY_JSON_FOLDER_PATH)).isValid())
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 
+    if((valueError = Qx::Json::checkedKeyRetrieval(targetPreferences->htdocsFolderPath, prefDoc.object(), Object_Preferences::KEY_HTDOCS_FOLDER_PATH)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
     if((valueError = Qx::Json::checkedKeyRetrieval(targetPreferences->dataPacksFolderPath, prefDoc.object(), Object_Preferences::KEY_DATA_PACKS_FOLDER_PATH)).isValid())
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 

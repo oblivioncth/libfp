@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.21.1)
 
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
-set(LIBFP_BASE_VERSION 0.1.1) # Required for CI/CD
+set(LIBFP_BASE_VERSION 0.1.2) # Required for CI/CD
 project(libfp
     VERSION ${LIBFP_BASE_VERSION}
     LANGUAGES CXX
@@ -32,7 +32,13 @@ add_compile_definitions(QT_DISABLE_DEPRECATED_BEFORE=0x060000)
 # Add local modules
 set(PROJ_SCRIPTS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${PROJ_SCRIPTS_PATH}/module")
-include(libfp/Utility)
+
+# Get helper scripts
+include(libfp/FetchOBCMake)
+fetch_ob_cmake("v0.1")
+
+# Include utility functions
+include(OB/Utility)
 
 # General Variables
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -77,7 +83,7 @@ set(PACKAGE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/out/dist")
 #------------Set Global Build Rules----------------
 
 # Versioning
-include(libfp/VerboseVersioning)
+include(OB/VerboseVersioning)
 setup_verbose_versioning(PROJECT_VERSION_VERBOSE)
 
 ################# Common Build #################
@@ -89,7 +95,7 @@ set(BUILD_COMPONENTS ${LIB_COMPONENTS})
 #================= Top Level Build =========================
 
 # Import Qt
-include(libfp/BetterFindQt6)
+include(OB/BetterFindQt6)
 find_qt6_package(REQUIRED COMPONENTS
     Core
     Sql
@@ -97,8 +103,8 @@ find_qt6_package(REQUIRED COMPONENTS
 )
 
 # Fetch Qx (build and import from source)
-include(libfp/FetchQx)
-fetch_qx("v0.3.1")
+include(OB/FetchQx)
+fetch_qx("v0.3.2")
 
 #--------------------Package Config-----------------------
 

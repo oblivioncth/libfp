@@ -317,7 +317,7 @@ public:
     QSqlError queryGamesByPlatform(QList<Db::QueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
                                    const QList<QUuid>& idInclusionFilter = {});
     QSqlError queryAllAddApps(QueryBuffer& resultBuffer);
-    QSqlError queryPlaylistsByName(QueryBuffer& resultBuffer, QStringList playlists);
+    QSqlError queryPlaylistsByName(QueryBuffer& resultBuffer, QStringList playlists, InclusionOptions inclusionOptions);
     QSqlError queryPlaylistGamesByPlaylist(QList<QueryBuffer>& resultBuffer, const QList<QUuid>& playlistIds);
     QSqlError queryPlaylistGameIds(QueryBuffer& resultBuffer, const QList<QUuid>& playlistIds);
     QSqlError queryAllEntryTags(QueryBuffer& resultBuffer);
