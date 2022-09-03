@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.21.1)
 
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
-set(LIBFP_BASE_VERSION 0.1.1) # Required for CI/CD
+set(LIBFP_BASE_VERSION 0.1.2) # Required for CI/CD
 project(libfp
     VERSION ${LIBFP_BASE_VERSION}
     LANGUAGES CXX
@@ -104,7 +104,7 @@ find_qt6_package(REQUIRED COMPONENTS
 
 # Fetch Qx (build and import from source)
 include(OB/FetchQx)
-fetch_qx("v0.3.1")
+fetch_qx("v0.3.2")
 
 #--------------------Package Config-----------------------
 
