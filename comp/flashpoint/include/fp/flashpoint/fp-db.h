@@ -341,7 +341,7 @@ public:
 
 //-Slots ------------------------------------------------------------------------------------------------------
 private:
-    void connectedThreadFinished();
+    void connectedThreadDestroyed(QObject* thread);
 };
 
 }

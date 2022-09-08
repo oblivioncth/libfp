@@ -22,6 +22,7 @@ bool operator< (const Db::TagCategory& lhs, const Db::TagCategory& rhs) noexcept
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 Db::Db(QString databaseName, const Key&) :
+    QObject(),
     mValid(false), // Instance is invalid until proven otherwise
     mDatabaseName(databaseName)
 {
@@ -157,7 +158,7 @@ QSqlError Db::getThreadConnection(QSqlDatabase& connection)
         if(connection.open())
         {
             mConnectedThreads.insert(thread);
-            connect(thread, &QThread::finished, this, &Db::connectedThreadFinished);
+            connect(thread, &QThread::destroyed, this, &Db::connectedThreadDestroyed);
             return QSqlError();
         }
         else
@@ -873,17 +874,16 @@ QSqlError Db::entryUsesDataPack(bool& resultBuffer, QUuid gameId)
 
 //-Slots ------------------------------------------------------------------------------------------------------
 //Private:
-void Db::connectedThreadFinished()
+void Db::connectedThreadDestroyed(QObject* thread)
 {
-    // Get the object that called this slot
-    QThread* senderThread = qobject_cast<QThread*>(sender());
+    QThread* pThread = qobject_cast<QThread*>(thread);
 
     // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
-    if(senderThread == nullptr)
+    if(pThread == nullptr)
         throw std::runtime_error("Pointer conversion to thread failed");
 
     // Close connection
-    closeConnection(senderThread);
+    closeConnection(pThread);
 }
 
 }
