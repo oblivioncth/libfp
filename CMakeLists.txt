@@ -104,7 +104,7 @@ find_qt6_package(REQUIRED COMPONENTS
 
 # Fetch Qx (build and import from source)
 include(OB/FetchQx)
-fetch_qx("v0.3.2")
+fetch_qx("c460363e21f97f4a0d66ea8daf5769e19da1263b")
 
 #--------------------Package Config-----------------------
 

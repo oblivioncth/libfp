@@ -140,6 +140,9 @@ public:
     QString imageLocalPath(ImageType imageType, QUuid gameId) const;
     QUrl imageRemoteUrl(ImageType imageType, QUuid gameId) const;
     const MacroResolver* macroResolver() const;
+
+    // Helper
+    QString resolveAppPathOverrides(const QString& appPath) const;
 };
 
 }

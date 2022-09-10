@@ -18,13 +18,21 @@ namespace Fp
 class Json
 {
 //-Inner Classes-------------------------------------------------------------------------------------------------
-public:
+private:
     class Object_Config
     {
     public:
         static inline const QString KEY_FLASHPOINT_PATH = "flashpointPath"; // Reading this value is current redundant and unused, but this may change in the future
         static inline const QString KEY_START_SERVER = "startServer";
         static inline const QString KEY_SERVER = "server";
+    };
+
+    class Object_AppPathOverrides
+    {
+    public:
+        static inline const QString KEY_PATH = "path";
+        static inline const QString KEY_OVERRIDE = "override";
+        static inline const QString KEY_ENABLED = "enabled";
     };
 
     class Object_Preferences
@@ -36,6 +44,7 @@ public:
         static inline const QString KEY_DATA_PACKS_FOLDER_PATH = "dataPacksFolderPath";
         static inline const QString KEY_ON_DEMAND_IMAGES = "onDemandImages";
         static inline const QString KEY_ON_DEMAND_BASE_URL = "onDemandBaseUrl";
+        static inline const QString KEY_APP_PATH_OVERRIDES = "appPathOverrides";
     };
 
     class Object_Server
@@ -76,6 +85,9 @@ public:
         static inline const QString KEY_STOP = "stop";
     };
 
+    struct Settings {};
+
+public:
     struct ServerDaemon
     {
         QString name;
@@ -95,13 +107,18 @@ public:
         friend size_t qHash(const StartStop& key, size_t seed) noexcept;
     };
 
-    struct Settings {};
-
     struct Config : public Settings
     {
         QString flashpointPath;
         bool startServer;
         QString server;
+    };
+
+    struct AppPathOverride
+    {
+        QString path;
+        QString override;
+        bool enabled;
     };
 
     struct Preferences : public Settings
@@ -112,6 +129,7 @@ public:
         QString dataPacksFolderPath;
         bool onDemandImages;
         QString onDemandBaseUrl;
+        QList<AppPathOverride> appPathOverrides;
     };
 
     struct Services : public Settings

@@ -119,7 +119,7 @@ Json::PreferencesReader::PreferencesReader(Preferences* targetPreferences, std::
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-Qx::GenericError Json::PreferencesReader::parseDocument(const QJsonDocument &prefDoc)
+Qx::GenericError Json::PreferencesReader::parseDocument(const QJsonDocument& prefDoc)
 {
     // Get derivation specific target
     Preferences* targetPreferences = static_cast<Preferences*>(mTargetSettings);
@@ -127,6 +127,7 @@ Qx::GenericError Json::PreferencesReader::parseDocument(const QJsonDocument &pre
     // Get values
     Qx::GenericError valueError;
 
+    // Single value
     if((valueError = Qx::Json::checkedKeyRetrieval(targetPreferences->imageFolderPath, prefDoc.object(), Object_Preferences::KEY_IMAGE_FOLDER_PATH)).isValid())
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 
@@ -145,6 +146,31 @@ Qx::GenericError Json::PreferencesReader::parseDocument(const QJsonDocument &pre
     if((valueError = Qx::Json::checkedKeyRetrieval(targetPreferences->onDemandBaseUrl, prefDoc.object(), Object_Preferences::KEY_ON_DEMAND_BASE_URL)).isValid())
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 
+    // App path overrides
+    QJsonArray appPathOverrides;
+    if((valueError = Qx::Json::checkedKeyRetrieval(appPathOverrides, prefDoc.object(), Object_Preferences::KEY_APP_PATH_OVERRIDES)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    QList<QJsonObject> checkedAppPathOverrides;
+    if((valueError = Qx::Json::checkedArrayConversion(checkedAppPathOverrides, appPathOverrides)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    for(const QJsonObject& appPathOverride : checkedAppPathOverrides)
+    {
+        AppPathOverride apo;
+
+        if((valueError = Qx::Json::checkedKeyRetrieval(apo.path, appPathOverride, Object_AppPathOverrides::KEY_PATH)).isValid())
+            return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+        if((valueError = Qx::Json::checkedKeyRetrieval(apo.override, appPathOverride, Object_AppPathOverrides::KEY_OVERRIDE)).isValid())
+            return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+        if((valueError = Qx::Json::checkedKeyRetrieval(apo.enabled, appPathOverride, Object_AppPathOverrides::KEY_ENABLED)).isValid())
+            return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+        targetPreferences->appPathOverrides.append(apo);
+    }
+
     // Return invalid error on success
     return Qx::GenericError();
 }
@@ -162,7 +188,7 @@ Json::ServicesReader::ServicesReader(Services* targetServices, std::shared_ptr<Q
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-Qx::GenericError Json::ServicesReader::parseDocument(const QJsonDocument &servicesDoc)
+Qx::GenericError Json::ServicesReader::parseDocument(const QJsonDocument& servicesDoc)
 {
     // Get derivation specific target
     Services* targetServices = static_cast<Services*>(mTargetSettings);

@@ -235,4 +235,16 @@ QUrl Install::imageRemoteUrl(ImageType imageType, QUuid gameId) const
 
 const MacroResolver* Install::macroResolver() const { return mMacroResolver; }
 
+QString Install::resolveAppPathOverrides(const QString& appPath) const
+{
+    // Check if path has an associated override
+    for(const Json::AppPathOverride& override : qAsConst(mPreferences.appPathOverrides))
+    {
+        if(override.path == appPath && override.enabled)
+            return override.override;
+    }
+
+    return appPath;
+}
+
 }
