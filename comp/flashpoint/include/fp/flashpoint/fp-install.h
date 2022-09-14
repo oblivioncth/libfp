@@ -44,6 +44,7 @@ private:
 
     // Dynamic path file names
     static inline const QString SERVICES_JSON_NAME = "services.json";
+    static inline const QString EXECS_JSON_NAME = "execs.json";
 
     // Static Folders
     static inline const QString EXTRAS_PATH = "Extras";
@@ -81,12 +82,14 @@ private:
     std::shared_ptr<QFile> mConfigJsonFile;
     std::shared_ptr<QFile> mPreferencesJsonFile;
     std::shared_ptr<QFile> mServicesJsonFile;
+    std::shared_ptr<QFile> mExecsJsonFile;
     std::unique_ptr<QFile> mVersionFile;
 
     // Settings
     Json::Config mConfig;
     Json::Preferences mPreferences;
     Json::Services mServices;
+    Json::Execs mExecs;
 
     // Database
     Db* mDatabase = nullptr;
@@ -131,6 +134,7 @@ public:
     Json::Config config() const;
     Json::Preferences preferences() const;
     Json::Services services() const;
+    Json::Execs execs() const;
 
     // Data access
     QString fullPath() const;
@@ -143,6 +147,7 @@ public:
 
     // Helper
     QString resolveAppPathOverrides(const QString& appPath) const;
+    QString resolveExecSwaps(const QString& appPath, const QString& platform) const;
 };
 
 }

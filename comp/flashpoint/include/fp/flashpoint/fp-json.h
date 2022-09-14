@@ -45,6 +45,7 @@ private:
         static inline const QString KEY_ON_DEMAND_IMAGES = "onDemandImages";
         static inline const QString KEY_ON_DEMAND_BASE_URL = "onDemandBaseUrl";
         static inline const QString KEY_APP_PATH_OVERRIDES = "appPathOverrides";
+        static inline const QString KEY_NATIVE_PLATFORMS = "nativePlatforms";
     };
 
     class Object_Server
@@ -83,6 +84,20 @@ private:
         static inline const QString KEY_DAEMON = "daemon";
         static inline const QString KEY_START = "start";
         static inline const QString KEY_STOP = "stop";
+    };
+
+    class Object_Execs
+    {
+    public:
+        static inline const QString KEY_EXECS = "execs";
+    };
+
+    class Object_Exec
+    {
+    public:
+        static inline const QString KEY_WIN32 = "win32";
+        static inline const QString KEY_LINUX = "linux";
+        static inline const QString KEY_WINE = "wine";
     };
 
     struct Settings {};
@@ -130,6 +145,7 @@ public:
         bool onDemandImages;
         QString onDemandBaseUrl;
         QList<AppPathOverride> appPathOverrides;
+        QSet<QString> nativePlatforms;
     };
 
     struct Services : public Settings
@@ -139,6 +155,18 @@ public:
         QHash<QString, ServerDaemon> daemons;
         QSet<StartStop> starts;
         QSet<StartStop> stops;
+    };
+
+    struct Exec
+    {
+        QString linux;
+        QString win32;
+        QString wine;
+    };
+
+    struct Execs : public Settings
+    {
+        QList<Exec> list;
     };
 
     class SettingsReader
@@ -186,6 +214,8 @@ public:
     //-Instance Functions-------------------------------------------------------------------------------------------------
     private:
         Qx::GenericError parseDocument(const QJsonDocument& prefDoc);
+        Qx::GenericError parseAppPathOverride(AppPathOverride& apoBuffer, const QJsonValue& jvApo);
+        Qx::GenericError parseNativePlatform(QString& nativePlatformBuffer, const QJsonValue& jvNativePlatform);
     };
 
     class ServicesReader : public SettingsReader
@@ -203,6 +233,18 @@ public:
         Qx::GenericError parseDocument(const QJsonDocument& servicesDoc);
         Qx::GenericError parseServerDaemon(ServerDaemon& serverBuffer, const QJsonValue& jvServer);
         Qx::GenericError parseStartStop(StartStop& startStopBuffer, const QJsonValue& jvStartStop);
+    };
+
+    class ExecsReader : public SettingsReader
+    {
+    //-Constructor--------------------------------------------------------------------------------------------------------
+    public:
+        ExecsReader(Execs* targetExecs, std::shared_ptr<QFile> sourceJsonFile);
+
+    //-Instance Functions-------------------------------------------------------------------------------------------------
+    private:
+        Qx::GenericError parseDocument(const QJsonDocument& execsDoc);
+        Qx::GenericError parseExec(Exec& execBuffer, const QJsonValue& jvExec);
     };
 };
 }
