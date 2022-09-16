@@ -459,15 +459,13 @@ Qx::GenericError Json::ExecsReader::parseExec(Exec& execBuffer, const QJsonValue
     // Value error checking buffer
     Qx::GenericError valueError;
 
-    // Get direct values
+    // Get direct values (ignore errors for optional values)
     if((valueError = Qx::Json::checkedKeyRetrieval(execBuffer.win32, joExec , Object_Exec::KEY_WIN32)).isValid())
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 
-    if((valueError = Qx::Json::checkedKeyRetrieval(execBuffer.linux, joExec , Object_Exec::KEY_LINUX)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);
+    Qx::Json::checkedKeyRetrieval(execBuffer.linux, joExec , Object_Exec::KEY_LINUX);
+    Qx::Json::checkedKeyRetrieval(execBuffer.wine, joExec , Object_Exec::KEY_WINE);
 
-    if((valueError = Qx::Json::checkedKeyRetrieval(execBuffer.wine, joExec , Object_Exec::KEY_WINE)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     // Return invalid error on success
     return Qx::GenericError();

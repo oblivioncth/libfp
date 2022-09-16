@@ -271,7 +271,7 @@ QString Install::resolveExecSwaps(const QString& appPath, const QString& platfor
         {
             if(preferNative && !swap.linux.isEmpty())
                 return swap.linux;
-            else
+            else if(!swap.wine.isEmpty())
                 return swap.wine;
         }
     }
