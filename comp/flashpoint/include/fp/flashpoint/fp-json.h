@@ -51,6 +51,7 @@ private:
         static inline const QString KEY_ON_DEMAND_BASE_URL = "onDemandBaseUrl";
         static inline const QString KEY_APP_PATH_OVERRIDES = "appPathOverrides";
         static inline const QString KEY_NATIVE_PLATFORMS = "nativePlatforms";
+        static inline const QString KEY_BROWSER_MODE_PROXY = "browserModeProxy";
     };
 
     class Object_Server
@@ -151,6 +152,7 @@ public:
         QString onDemandBaseUrl;
         QList<AppPathOverride> appPathOverrides;
         QSet<QString> nativePlatforms;
+        QString browserModeProxy;
     };
 
     struct Services : public Settings

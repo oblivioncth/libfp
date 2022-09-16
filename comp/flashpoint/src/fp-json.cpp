@@ -146,6 +146,9 @@ Qx::GenericError Json::PreferencesReader::parseDocument(const QJsonDocument& pre
     if((valueError = Qx::Json::checkedKeyRetrieval(targetPreferences->onDemandBaseUrl, prefDoc.object(), Object_Preferences::KEY_ON_DEMAND_BASE_URL)).isValid())
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 
+    if((valueError = Qx::Json::checkedKeyRetrieval(targetPreferences->browserModeProxy, prefDoc.object(), Object_Preferences::KEY_BROWSER_MODE_PROXY)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
     // Get app path overrides
     QJsonArray appPathOverrides;
     if((valueError = Qx::Json::checkedKeyRetrieval(appPathOverrides, prefDoc.object(), Object_Preferences::KEY_APP_PATH_OVERRIDES)).isValid())
