@@ -223,10 +223,10 @@ QString Install::launcherChecksum() const
 
 Db* Install::database() { return mDatabase; }
 
-Json::Config Install::config() const { return mConfig; }
-Json::Preferences Install::preferences() const { return mPreferences; }
-Json::Services Install::services() const { return mServices; }
-Json::Execs Install::execs() const { return mExecs; }
+const Json::Config& Install::config() const { return mConfig; }
+const Json::Preferences& Install::preferences() const { return mPreferences; }
+const Json::Services& Install::services() const { return mServices; }
+const Json::Execs& Install::execs() const { return mExecs; }
 
 QString Install::fullPath() const { return mRootDirectory.absolutePath(); }
 QDir Install::logosDirectory() const { return mLogosDirectory; }

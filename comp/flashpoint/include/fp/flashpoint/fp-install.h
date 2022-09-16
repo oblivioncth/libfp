@@ -131,10 +131,10 @@ public:
     Db* database();
 
     // Support Application Checks
-    Json::Config config() const;
-    Json::Preferences preferences() const;
-    Json::Services services() const;
-    Json::Execs execs() const;
+    const Json::Config& config() const;
+    const Json::Preferences& preferences() const;
+    const Json::Services& services() const;
+    const Json::Execs& execs() const;
 
     // Data access
     QString fullPath() const;
