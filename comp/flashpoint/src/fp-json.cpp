@@ -349,10 +349,6 @@ Qx::GenericError Json::ServicesReader::parseServerDaemon(ServerDaemon& serverBuf
         serverBuffer.arguments.append(jvArg.toString());
     }
 
-    // Ensure filename has extension (assuming exe)
-    if(QFileInfo(serverBuffer.filename).suffix().isEmpty())
-        serverBuffer.filename += ".exe";
-
     // Resolve macros for relevant variables
     serverBuffer.path = mHostMacroResolver->resolve(serverBuffer.path);
     for(QString& arg : serverBuffer.arguments)
@@ -397,10 +393,6 @@ Qx::GenericError Json::ServicesReader::parseStartStop(StartStop& startStopBuffer
 
         startStopBuffer.arguments.append(jvArg.toString());
     }
-
-    // Ensure filename has extension (assuming exe)
-    if(QFileInfo(startStopBuffer.filename).suffix().isEmpty())
-        startStopBuffer.filename += ".exe";
 
     // Resolve macros for relevant variables
     startStopBuffer.path = mHostMacroResolver->resolve(startStopBuffer.path);
