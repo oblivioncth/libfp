@@ -27,12 +27,20 @@ class Install
 enum class Edition {Ultimate, Infinity, Core};
 
 //-Class Variables-----------------------------------------------------------------------------------------------
+public: // Ugh
+#if defined _WIN32
+    static inline const QString LAUNCHER_NAME =  "Flashpoint.exe";
+#elif defined __linux__
+    static inline const QString LAUNCHER_NAME =  "flashpoint-launcher";
+#endif
+
 private:
+
     // Validity check fail reasons
     static inline const QString FILE_DNE = "A required file does not exist: %1";
 
     // Static paths
-    static inline const QString LAUNCHER_PATH = "Launcher/Flashpoint.exe";
+    static inline const QString LAUNCHER_PATH =  "Launcher/" + LAUNCHER_NAME;
     static inline const QString DATABASE_PATH = "Data/flashpoint.sqlite";
     static inline const QString CONFIG_JSON_PATH = "Launcher/config.json";
     static inline const QString PREFERENCES_JSON_PATH = "preferences.json";
@@ -63,7 +71,6 @@ private:
     static inline const QRegularExpression VERSION_NUMBER_REGEX = QRegularExpression("[fF]lashpoint (?<version>.*?) ");
 
 public:
-    static inline const QFileInfo LAUNCHER_INFO = QFileInfo("Flashpoint.exe");
     static inline const QFileInfo SECURE_PLAYER_INFO = QFileInfo("FlashpointSecurePlayer.exe");
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
