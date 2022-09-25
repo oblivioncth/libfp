@@ -82,7 +82,7 @@ Install::Install(QString installPath) :
     if(mExecsJsonFile->exists()) // Optional
     {
         Json::ExecsReader execsReader(&mExecs, mExecsJsonFile);
-        if((readReport = servicesReader.readInto()).isValid())
+        if((readReport = execsReader.readInto()).isValid())
         {
             mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
             return;
