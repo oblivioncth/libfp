@@ -9,6 +9,8 @@ env:
   ci_bot_email: 104651589+ObyBotCI@users.noreply.github.com
   libfp_qtd_win_artifact_path: ${{ github.workspace }}/libfpQtDWin
   libfp_qts_win_artifact_path: ${{ github.workspace }}/libfpQtSWin
+  libfp_qtd_linux_artifact_path: ${{ github.workspace }}/libfpQtDLinux
+  libfp_qts_linux_artifact_path: ${{ github.workspace }}/libfpQtSLinux
   
 jobs:
   tag_master_and_sync_dev:
@@ -68,10 +70,19 @@ jobs:
     secrets:
       qt_shared_dec_key: ${{ secrets.QT_WINDOWS_SHARED_DECRYPT_KEY }}
       qt_static_dec_key: ${{ secrets.QT_WINDOWS_STATIC_DECRYPT_KEY }}
+      
+  build_libfp_release_linux:
+    name: Build libfp Release (Linux)
+    needs: tag_master_and_sync_dev
+    if: github.event.pull_request.merged == true
+    uses: ./.github/workflows/build-libfp-linux.yml
+    secrets:
+      qt_shared_dec_key: ${{ secrets.QT_LINUX_SHARED_DECRYPT_KEY }}
+      qt_static_dec_key: ${{ secrets.QT_LINUX_STATIC_DECRYPT_KEY }}
 
   create-release:
     name: Create GitHub release
-    needs: [build_libfp_release_windows, tag_master_and_sync_dev]
+    needs: [build_libfp_release_windows, build_libfp_release_linux, tag_master_and_sync_dev]
     if: github.event.pull_request.merged == true
     runs-on: windows-latest
     steps:
@@ -79,6 +90,8 @@ jobs:
       run: |
         echo "release_qtd_win_package_name=${{ needs.build_libfp_release_windows.outputs.qt_shared_artifact_name }}" >> $Env:GITHUB_ENV
         echo "release_qts_win_package_name=${{ needs.build_libfp_release_windows.outputs.qt_static_artifact_name }}" >> $Env:GITHUB_ENV
+        echo "release_qtd_linux_package_name=${{ needs.build_libfp_release_linux.outputs.qt_shared_artifact_name }}" >> $Env:GITHUB_ENV
+        echo "release_qts_linux_package_name=${{ needs.build_libfp_release_linux.outputs.qt_static_artifact_name }}" >> $Env:GITHUB_ENV
     - name: Download built shared libfp artifact (Windows)
       uses: actions/download-artifact@v3
       with:
@@ -88,11 +101,23 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: ${{ env.release_qts_win_package_name }}
-        path: ${{ env.libfp_qts_win_artifact_path }}
+        path: ${{ env.libfp_qts_win_artifact_path }}    
+    - name: Download built shared libfp artifact (Linux)
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ env.release_qtd_linux_package_name }}
+        path: ${{ env.libfp_qtd_linux_artifact_path }}
+    - name: Download built static libfp artifact (Linux)
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ env.release_qts_linux_package_name }}
+        path: ${{ env.libfp_qts_linux_artifact_path }}
     - name: Zip up release artifacts
       run: |
         7z a "${{ env.release_qtd_win_package_name }}.zip" "${{ env.libfp_qtd_win_artifact_path }}/*"
         7z a "${{ env.release_qts_win_package_name }}.zip" "${{ env.libfp_qts_win_artifact_path }}/*"
+        7z a "${{ env.release_qtd_linux_package_name }}.zip" "${{ env.libfp_qtd_linux_artifact_path }}/*"
+        7z a "${{ env.release_qts_linux_package_name }}.zip" "${{ env.libfp_qts_linux_artifact_path }}/*"
     - name: Generate release
       uses: softprops/action-gh-release@v1
       with:
@@ -103,5 +128,7 @@ jobs:
         files: |
           ${{ env.release_qtd_win_package_name }}.zip
           ${{ env.release_qts_win_package_name }}.zip
+          ${{ env.release_qtd_linux_package_name }}.zip
+          ${{ env.release_qts_linux_package_name }}.zip
     
         
