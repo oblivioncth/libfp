@@ -98,6 +98,8 @@ jobs:
       run: sudo apt-get install libxkbcommon-dev libxcb-xkb-dev
     - name: Install Ninja
       run: sudo apt-get install ninja-build
+    - name: Install Harfbuzz
+      run: sudo apt-get install libharfbuzz-dev
     - name: Checkout libfp
       uses: actions/checkout@v3
       with:
