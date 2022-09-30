@@ -22,6 +22,7 @@ bool operator< (const Db::TagCategory& lhs, const Db::TagCategory& rhs) noexcept
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 Db::Db(QString databaseName, const Key&) :
+    QObject(),
     mValid(false), // Instance is invalid until proven otherwise
     mDatabaseName(databaseName)
 {
@@ -157,7 +158,7 @@ QSqlError Db::getThreadConnection(QSqlDatabase& connection)
         if(connection.open())
         {
             mConnectedThreads.insert(thread);
-            connect(thread, &QThread::finished, this, &Db::connectedThreadFinished);
+            connect(thread, &QThread::destroyed, this, &Db::connectedThreadDestroyed);
             return QSqlError();
         }
         else
@@ -842,6 +843,20 @@ QMap<int, Db::TagCategory> Db::tags() const { return mTagMap; }
 
 QSqlError Db::entryUsesDataPack(bool& resultBuffer, QUuid gameId)
 {
+    /* NOTE: The launcher performs this check and other data pack tasks by checking if the `activeDataId` column
+     * of the `game` table has a value, and if it does that matching that to the `id` column in the `game_data`
+     * table to get the game's data pack info. This requires slightly less processing, but the way it's done here
+     * is ultimately fine and technically handles typos/errors in the database slightly better since it's a more
+     * direct check. Ultimately this should be switched over to the official method though.
+     *
+     * Also not sure what the `activeDataOnDisk` (`game`) and `presentOnDisk` (`game_data`) columns are for. At
+     * first glance they seem to keep track on if the data pack for a given game is available (has been downloaded),
+     * as the Launcher's setup for removing data packs manipulates these fields
+     * (see https://github.com/FlashpointProject/launcher/blob/9937201594ace7aeccea6e511127d91f6deefd4e/src/back/responses.ts#L570)m
+     * but this doesn't make entire sense given that Infinity comes with no data packs installed and yet many entries
+     * in the database have these values set to 1 by default.
+     */
+
     // Default return buffer to false
     resultBuffer = false;
 
@@ -873,17 +888,16 @@ QSqlError Db::entryUsesDataPack(bool& resultBuffer, QUuid gameId)
 
 //-Slots ------------------------------------------------------------------------------------------------------
 //Private:
-void Db::connectedThreadFinished()
+void Db::connectedThreadDestroyed(QObject* thread)
 {
-    // Get the object that called this slot
-    QThread* senderThread = qobject_cast<QThread*>(sender());
+    QThread* pThread = qobject_cast<QThread*>(thread);
 
     // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
-    if(senderThread == nullptr)
+    if(pThread == nullptr)
         throw std::runtime_error("Pointer conversion to thread failed");
 
     // Close connection
-    closeConnection(senderThread);
+    closeConnection(pThread);
 }
 
 }

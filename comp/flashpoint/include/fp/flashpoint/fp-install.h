@@ -27,12 +27,20 @@ class Install
 enum class Edition {Ultimate, Infinity, Core};
 
 //-Class Variables-----------------------------------------------------------------------------------------------
+public: // Ugh
+#if defined _WIN32
+    static inline const QString LAUNCHER_NAME =  "Flashpoint.exe";
+#elif defined __linux__
+    static inline const QString LAUNCHER_NAME =  "flashpoint-launcher";
+#endif
+
 private:
+
     // Validity check fail reasons
     static inline const QString FILE_DNE = "A required file does not exist: %1";
 
     // Static paths
-    static inline const QString LAUNCHER_PATH = "Launcher/Flashpoint.exe";
+    static inline const QString LAUNCHER_PATH =  "Launcher/" + LAUNCHER_NAME;
     static inline const QString DATABASE_PATH = "Data/flashpoint.sqlite";
     static inline const QString CONFIG_JSON_PATH = "Launcher/config.json";
     static inline const QString PREFERENCES_JSON_PATH = "preferences.json";
@@ -44,6 +52,7 @@ private:
 
     // Dynamic path file names
     static inline const QString SERVICES_JSON_NAME = "services.json";
+    static inline const QString EXECS_JSON_NAME = "execs.json";
 
     // Static Folders
     static inline const QString EXTRAS_PATH = "Extras";
@@ -62,7 +71,6 @@ private:
     static inline const QRegularExpression VERSION_NUMBER_REGEX = QRegularExpression("[fF]lashpoint (?<version>.*?) ");
 
 public:
-    static inline const QFileInfo LAUNCHER_INFO = QFileInfo("Flashpoint.exe");
     static inline const QFileInfo SECURE_PLAYER_INFO = QFileInfo("FlashpointSecurePlayer.exe");
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
@@ -81,12 +89,14 @@ private:
     std::shared_ptr<QFile> mConfigJsonFile;
     std::shared_ptr<QFile> mPreferencesJsonFile;
     std::shared_ptr<QFile> mServicesJsonFile;
+    std::shared_ptr<QFile> mExecsJsonFile;
     std::unique_ptr<QFile> mVersionFile;
 
     // Settings
     Json::Config mConfig;
     Json::Preferences mPreferences;
     Json::Services mServices;
+    Json::Execs mExecs;
 
     // Database
     Db* mDatabase = nullptr;
@@ -128,9 +138,10 @@ public:
     Db* database();
 
     // Support Application Checks
-    Json::Config config() const;
-    Json::Preferences preferences() const;
-    Json::Services services() const;
+    const Json::Config& config() const;
+    const Json::Preferences& preferences() const;
+    const Json::Services& services() const;
+    const Json::Execs& execs() const;
 
     // Data access
     QString fullPath() const;
@@ -140,6 +151,10 @@ public:
     QString imageLocalPath(ImageType imageType, QUuid gameId) const;
     QUrl imageRemoteUrl(ImageType imageType, QUuid gameId) const;
     const MacroResolver* macroResolver() const;
+
+    // Helper
+    QString resolveAppPathOverrides(const QString& appPath) const;
+    QString resolveExecSwaps(const QString& appPath, const QString& platform) const;
 };
 
 }

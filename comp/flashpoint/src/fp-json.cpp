@@ -97,10 +97,10 @@ Qx::GenericError Json::ConfigReader::parseDocument(const QJsonDocument& configDo
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     if((valueError = Qx::Json::checkedKeyRetrieval(targetConfig->startServer, configDoc.object(), Object_Config::KEY_START_SERVER)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     if((valueError = Qx::Json::checkedKeyRetrieval(targetConfig->server, configDoc.object(), Object_Config::KEY_SERVER)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     // Return invalid error on success
     return Qx::GenericError();
@@ -119,7 +119,7 @@ Json::PreferencesReader::PreferencesReader(Preferences* targetPreferences, std::
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-Qx::GenericError Json::PreferencesReader::parseDocument(const QJsonDocument &prefDoc)
+Qx::GenericError Json::PreferencesReader::parseDocument(const QJsonDocument& prefDoc)
 {
     // Get derivation specific target
     Preferences* targetPreferences = static_cast<Preferences*>(mTargetSettings);
@@ -127,6 +127,7 @@ Qx::GenericError Json::PreferencesReader::parseDocument(const QJsonDocument &pre
     // Get values
     Qx::GenericError valueError;
 
+    // Single value
     if((valueError = Qx::Json::checkedKeyRetrieval(targetPreferences->imageFolderPath, prefDoc.object(), Object_Preferences::KEY_IMAGE_FOLDER_PATH)).isValid())
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 
@@ -145,6 +146,78 @@ Qx::GenericError Json::PreferencesReader::parseDocument(const QJsonDocument &pre
     if((valueError = Qx::Json::checkedKeyRetrieval(targetPreferences->onDemandBaseUrl, prefDoc.object(), Object_Preferences::KEY_ON_DEMAND_BASE_URL)).isValid())
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 
+    if((valueError = Qx::Json::checkedKeyRetrieval(targetPreferences->browserModeProxy, prefDoc.object(), Object_Preferences::KEY_BROWSER_MODE_PROXY)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    // Get app path overrides
+    QJsonArray appPathOverrides;
+    if((valueError = Qx::Json::checkedKeyRetrieval(appPathOverrides, prefDoc.object(), Object_Preferences::KEY_APP_PATH_OVERRIDES)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    // Parse app path overrides
+    for(const QJsonValue& jvApo : qAsConst(appPathOverrides))
+    {
+        AppPathOverride apoBuffer;
+        if((valueError = parseAppPathOverride(apoBuffer, jvApo)).isValid())
+            return valueError;
+
+        targetPreferences->appPathOverrides.append(apoBuffer);
+    }
+
+    // Get native platforms
+    QJsonArray nativePlatforms;
+    if((valueError = Qx::Json::checkedKeyRetrieval(nativePlatforms, prefDoc.object(), Object_Preferences::KEY_NATIVE_PLATFORMS)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    // Parse native platforms
+    for(const QJsonValue& jvNativePlatform : qAsConst(nativePlatforms))
+    {
+        QString nativePlatformBuffer;
+        if((valueError = parseNativePlatform(nativePlatformBuffer, jvNativePlatform)).isValid())
+            return valueError;
+
+        targetPreferences->nativePlatforms.insert(nativePlatformBuffer);
+    }
+
+    // Return invalid error on success
+    return Qx::GenericError();
+}
+
+Qx::GenericError Json::PreferencesReader::parseAppPathOverride(AppPathOverride& apoBuffer, const QJsonValue& jvApo)
+{
+    // Ensure array element is Object
+    if(!jvApo.isObject())
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mSourceJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+
+    // Get app path override Object
+    QJsonObject joApo = jvApo.toObject();
+
+    // Value error checking buffer
+    Qx::GenericError valueError;
+
+    // Get direct values
+    if((valueError = Qx::Json::checkedKeyRetrieval(apoBuffer.path, joApo, Object_AppPathOverrides::KEY_PATH)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(apoBuffer.override, joApo, Object_AppPathOverrides::KEY_OVERRIDE)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    if((valueError = Qx::Json::checkedKeyRetrieval(apoBuffer.enabled, joApo, Object_AppPathOverrides::KEY_ENABLED)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    // Return invalid error on success
+    return Qx::GenericError();
+}
+
+Qx::GenericError Json::PreferencesReader::parseNativePlatform(QString& nativePlatformBuffer, const QJsonValue& jvNativePlatform)
+{
+    // Ensure array element is String
+    if(!jvNativePlatform.isString())
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mSourceJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+
+    // Get native platform string
+    nativePlatformBuffer = jvNativePlatform.toString();
+
     // Return invalid error on success
     return Qx::GenericError();
 }
@@ -162,7 +235,7 @@ Json::ServicesReader::ServicesReader(Services* targetServices, std::shared_ptr<Q
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-Qx::GenericError Json::ServicesReader::parseDocument(const QJsonDocument &servicesDoc)
+Qx::GenericError Json::ServicesReader::parseDocument(const QJsonDocument& servicesDoc)
 {
     // Get derivation specific target
     Services* targetServices = static_cast<Services*>(mTargetSettings);
@@ -176,7 +249,7 @@ Qx::GenericError Json::ServicesReader::parseDocument(const QJsonDocument &servic
     // Get servers
     QJsonArray jaServers;
     if((valueError = Qx::Json::checkedKeyRetrieval(jaServers, servicesDoc.object(), Object_Services::KEY_SERVER)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     // Parse servers
     for(const QJsonValue& jvServer : qAsConst(jaServers))
@@ -191,7 +264,7 @@ Qx::GenericError Json::ServicesReader::parseDocument(const QJsonDocument &servic
     // Get daemons
     QJsonArray jaDaemons;
     if((valueError = Qx::Json::checkedKeyRetrieval(jaDaemons, servicesDoc.object(), Object_Services::KEY_DAEMON)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     // Parse daemons
     for(const QJsonValue& jvDaemon : qAsConst(jaDaemons))
@@ -206,7 +279,7 @@ Qx::GenericError Json::ServicesReader::parseDocument(const QJsonDocument &servic
     // Get starts
     QJsonArray jaStarts;
     if((valueError = Qx::Json::checkedKeyRetrieval(jaStarts, servicesDoc.object(), Object_Services::KEY_START)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     // Parse starts
     for(const QJsonValue& jvStart : qAsConst(jaStarts))
@@ -221,7 +294,7 @@ Qx::GenericError Json::ServicesReader::parseDocument(const QJsonDocument &servic
     // Get stops
     QJsonArray jaStops;
     if((valueError = Qx::Json::checkedKeyRetrieval(jaStops, servicesDoc.object(), Object_Services::KEY_STOP)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     // Parse starts
     for(const QJsonValue& jvStop : qAsConst(jaStops))
@@ -251,21 +324,21 @@ Qx::GenericError Json::ServicesReader::parseServerDaemon(ServerDaemon& serverBuf
 
     // Get direct values
     if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.name, joServer, Object_Server::KEY_NAME)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.path, joServer, Object_Server::KEY_PATH)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.filename, joServer, Object_Server::KEY_FILENAME)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.kill, joServer, Object_Server::KEY_KILL)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     // Get arguments
     QJsonArray jaArgs;
     if((valueError = Qx::Json::checkedKeyRetrieval(jaArgs, joServer, Object_Server::KEY_ARGUMENTS)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     for(const QJsonValue& jvArg : qAsConst(jaArgs))
     {
@@ -275,10 +348,6 @@ Qx::GenericError Json::ServicesReader::parseServerDaemon(ServerDaemon& serverBuf
 
         serverBuffer.arguments.append(jvArg.toString());
     }
-
-    // Ensure filename has extension (assuming exe)
-    if(QFileInfo(serverBuffer.filename).suffix().isEmpty())
-        serverBuffer.filename += ".exe";
 
     // Resolve macros for relevant variables
     serverBuffer.path = mHostMacroResolver->resolve(serverBuffer.path);
@@ -306,15 +375,15 @@ Qx::GenericError Json::ServicesReader::parseStartStop(StartStop& startStopBuffer
 
     // Get direct values
     if((valueError = Qx::Json::checkedKeyRetrieval(startStopBuffer.path, joStartStop , Object_StartStop::KEY_PATH)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     if((valueError = Qx::Json::checkedKeyRetrieval(startStopBuffer.filename, joStartStop, Object_StartStop::KEY_FILENAME)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     // Get arguments
     QJsonArray jaArgs;
     if((valueError = Qx::Json::checkedKeyRetrieval(jaArgs, joStartStop, Object_StartStop::KEY_ARGUMENTS)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);;
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     for(const QJsonValue& jvArg : qAsConst(jaArgs))
     {
@@ -325,10 +394,6 @@ Qx::GenericError Json::ServicesReader::parseStartStop(StartStop& startStopBuffer
         startStopBuffer.arguments.append(jvArg.toString());
     }
 
-    // Ensure filename has extension (assuming exe)
-    if(QFileInfo(startStopBuffer.filename).suffix().isEmpty())
-        startStopBuffer.filename += ".exe";
-
     // Resolve macros for relevant variables
     startStopBuffer.path = mHostMacroResolver->resolve(startStopBuffer.path);
     for(QString& arg : startStopBuffer.arguments)
@@ -337,4 +402,68 @@ Qx::GenericError Json::ServicesReader::parseStartStop(StartStop& startStopBuffer
     // Return invalid error on success
     return Qx::GenericError();
 }
+
+//===============================================================================================================
+// JSON::EXECS_READER
+//===============================================================================================================
+
+//-Constructor--------------------------------------------------------------------------------------------------------
+//Public:
+Json::ExecsReader::ExecsReader(Execs* targetExecs, std::shared_ptr<QFile> sourceJsonFile) :
+    SettingsReader(targetExecs, sourceJsonFile)
+{}
+
+//-Instance Functions-------------------------------------------------------------------------------------------------
+//Private:
+Qx::GenericError Json::ExecsReader::parseDocument(const QJsonDocument& execsDoc)
+{
+    // Get derivation specific target
+    Execs* targetExecs = static_cast<Execs*>(mTargetSettings);
+
+    // Value error checking buffer
+    Qx::GenericError valueError;
+
+    // Get exec entries
+    QJsonArray jaExecs;
+    if((valueError = Qx::Json::checkedKeyRetrieval(jaExecs, execsDoc.object(), Object_Execs::KEY_EXECS)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    // Parse starts
+    for(const QJsonValue& jvExec : qAsConst(jaExecs))
+    {
+        Exec execBuffer;
+        if((valueError = parseExec(execBuffer, jvExec)).isValid())
+            return valueError;
+
+        targetExecs->list.append(execBuffer);
+    }
+
+    // Return invalid error on success
+    return Qx::GenericError();
+}
+
+Qx::GenericError Json::ExecsReader::parseExec(Exec& execBuffer, const QJsonValue& jvExec)
+{
+    // Ensure array element is Object
+    if(!jvExec.isObject())
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mSourceJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
+
+    // Get exec Object
+    QJsonObject joExec = jvExec.toObject();
+
+    // Value error checking buffer
+    Qx::GenericError valueError;
+
+    // Get direct values (ignore errors for optional values)
+    if((valueError = Qx::Json::checkedKeyRetrieval(execBuffer.win32, joExec , Object_Exec::KEY_WIN32)).isValid())
+        return valueError.setErrorLevel(Qx::GenericError::Critical);
+
+    Qx::Json::checkedKeyRetrieval(execBuffer.linux, joExec , Object_Exec::KEY_LINUX);
+    Qx::Json::checkedKeyRetrieval(execBuffer.wine, joExec , Object_Exec::KEY_WINE);
+
+
+    // Return invalid error on success
+    return Qx::GenericError();
+}
+
 }

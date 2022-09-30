@@ -12,19 +12,32 @@
 // Project Includes
 #include "fp-macro.h"
 
+/* Remove the ancient built-in 'linux' define to avoid clash with exec.linux.
+ * No one should still be using it anyway and instead using __linux__.
+ */
+#undef linux
+
 namespace Fp
 {
 
 class Json
 {
 //-Inner Classes-------------------------------------------------------------------------------------------------
-public:
+private:
     class Object_Config
     {
     public:
         static inline const QString KEY_FLASHPOINT_PATH = "flashpointPath"; // Reading this value is current redundant and unused, but this may change in the future
         static inline const QString KEY_START_SERVER = "startServer";
         static inline const QString KEY_SERVER = "server";
+    };
+
+    class Object_AppPathOverrides
+    {
+    public:
+        static inline const QString KEY_PATH = "path";
+        static inline const QString KEY_OVERRIDE = "override";
+        static inline const QString KEY_ENABLED = "enabled";
     };
 
     class Object_Preferences
@@ -36,6 +49,9 @@ public:
         static inline const QString KEY_DATA_PACKS_FOLDER_PATH = "dataPacksFolderPath";
         static inline const QString KEY_ON_DEMAND_IMAGES = "onDemandImages";
         static inline const QString KEY_ON_DEMAND_BASE_URL = "onDemandBaseUrl";
+        static inline const QString KEY_APP_PATH_OVERRIDES = "appPathOverrides";
+        static inline const QString KEY_NATIVE_PLATFORMS = "nativePlatforms";
+        static inline const QString KEY_BROWSER_MODE_PROXY = "browserModeProxy";
     };
 
     class Object_Server
@@ -76,6 +92,23 @@ public:
         static inline const QString KEY_STOP = "stop";
     };
 
+    class Object_Execs
+    {
+    public:
+        static inline const QString KEY_EXECS = "execs";
+    };
+
+    class Object_Exec
+    {
+    public:
+        static inline const QString KEY_WIN32 = "win32";
+        static inline const QString KEY_LINUX = "linux";
+        static inline const QString KEY_WINE = "wine";
+    };
+
+    struct Settings {};
+
+public:
     struct ServerDaemon
     {
         QString name;
@@ -95,13 +128,18 @@ public:
         friend size_t qHash(const StartStop& key, size_t seed) noexcept;
     };
 
-    struct Settings {};
-
     struct Config : public Settings
     {
         QString flashpointPath;
         bool startServer;
         QString server;
+    };
+
+    struct AppPathOverride
+    {
+        QString path;
+        QString override;
+        bool enabled;
     };
 
     struct Preferences : public Settings
@@ -112,6 +150,9 @@ public:
         QString dataPacksFolderPath;
         bool onDemandImages;
         QString onDemandBaseUrl;
+        QList<AppPathOverride> appPathOverrides;
+        QSet<QString> nativePlatforms;
+        QString browserModeProxy;
     };
 
     struct Services : public Settings
@@ -121,6 +162,18 @@ public:
         QHash<QString, ServerDaemon> daemons;
         QSet<StartStop> starts;
         QSet<StartStop> stops;
+    };
+
+    struct Exec
+    {
+        QString linux;
+        QString win32;
+        QString wine;
+    };
+
+    struct Execs : public Settings
+    {
+        QList<Exec> list;
     };
 
     class SettingsReader
@@ -168,6 +221,8 @@ public:
     //-Instance Functions-------------------------------------------------------------------------------------------------
     private:
         Qx::GenericError parseDocument(const QJsonDocument& prefDoc);
+        Qx::GenericError parseAppPathOverride(AppPathOverride& apoBuffer, const QJsonValue& jvApo);
+        Qx::GenericError parseNativePlatform(QString& nativePlatformBuffer, const QJsonValue& jvNativePlatform);
     };
 
     class ServicesReader : public SettingsReader
@@ -185,6 +240,18 @@ public:
         Qx::GenericError parseDocument(const QJsonDocument& servicesDoc);
         Qx::GenericError parseServerDaemon(ServerDaemon& serverBuffer, const QJsonValue& jvServer);
         Qx::GenericError parseStartStop(StartStop& startStopBuffer, const QJsonValue& jvStartStop);
+    };
+
+    class ExecsReader : public SettingsReader
+    {
+    //-Constructor--------------------------------------------------------------------------------------------------------
+    public:
+        ExecsReader(Execs* targetExecs, std::shared_ptr<QFile> sourceJsonFile);
+
+    //-Instance Functions-------------------------------------------------------------------------------------------------
+    private:
+        Qx::GenericError parseDocument(const QJsonDocument& execsDoc);
+        Qx::GenericError parseExec(Exec& execBuffer, const QJsonValue& jvExec);
     };
 };
 }

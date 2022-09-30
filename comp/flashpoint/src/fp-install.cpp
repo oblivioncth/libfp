@@ -68,6 +68,7 @@ Install::Install(QString installPath) :
         return;
     }
     mServicesJsonFile = std::make_shared<QFile>(installPath + "/" + mPreferences.jsonFolderPath + "/" + SERVICES_JSON_NAME);
+    mExecsJsonFile = std::make_shared<QFile>(installPath + "/" + mPreferences.jsonFolderPath + "/" + EXECS_JSON_NAME);
     mLogosDirectory = QDir(installPath + "/" + mPreferences.imageFolderPath + '/' + LOGOS_FOLDER_NAME);
     mScreenshotsDirectory = QDir(installPath + "/" + mPreferences.imageFolderPath + '/' + SCREENSHOTS_FOLDER_NAME);
 
@@ -76,6 +77,16 @@ Install::Install(QString installPath) :
     {
         mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
         return;
+    }
+
+    if(mExecsJsonFile->exists()) // Optional
+    {
+        Json::ExecsReader execsReader(&mExecs, mExecsJsonFile);
+        if((readReport = execsReader.readInto()).isValid())
+        {
+            mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
+            return;
+        }
     }
 
     // Add database
@@ -212,9 +223,10 @@ QString Install::launcherChecksum() const
 
 Db* Install::database() { return mDatabase; }
 
-Json::Config Install::config() const { return mConfig; }
-Json::Preferences Install::preferences() const { return mPreferences; }
-Json::Services Install::services() const { return mServices; }
+const Json::Config& Install::config() const { return mConfig; }
+const Json::Preferences& Install::preferences() const { return mPreferences; }
+const Json::Services& Install::services() const { return mServices; }
+const Json::Execs& Install::execs() const { return mExecs; }
 
 QString Install::fullPath() const { return mRootDirectory.absolutePath(); }
 QDir Install::logosDirectory() const { return mLogosDirectory; }
@@ -234,5 +246,37 @@ QUrl Install::imageRemoteUrl(ImageType imageType, QUuid gameId) const
 }
 
 const MacroResolver* Install::macroResolver() const { return mMacroResolver; }
+
+QString Install::resolveAppPathOverrides(const QString& appPath) const
+{
+    // Check if path has an associated override
+    for(const Json::AppPathOverride& override : qAsConst(mPreferences.appPathOverrides))
+    {
+        if(override.path == appPath && override.enabled)
+            return override.override;
+    }
+
+    return appPath;
+}
+
+QString Install::resolveExecSwaps(const QString& appPath, const QString& platform) const
+{
+    // Get swap preference
+    bool preferNative = mPreferences.nativePlatforms.contains(platform);
+
+    // Check if path has an associated swap
+    for(const Json::Exec& swap : qAsConst(mExecs.list))
+    {
+        if(swap.win32 == appPath)
+        {
+            if(preferNative && !swap.linux.isEmpty())
+                return swap.linux;
+            else if(!swap.wine.isEmpty())
+                return swap.wine;
+        }
+    }
+
+    return appPath;
+}
 
 }
