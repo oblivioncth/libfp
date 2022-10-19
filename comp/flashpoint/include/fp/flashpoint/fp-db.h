@@ -315,7 +315,7 @@ public:
 
     // Queries - OFLIb
     QSqlError queryGamesByPlatform(QList<Db::QueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
-                                   const QList<QUuid>& idInclusionFilter = {});
+                                   std::optional<const QList<QUuid>*> idInclusionFilter = std::nullopt);
     QSqlError queryAllAddApps(QueryBuffer& resultBuffer);
     QSqlError queryPlaylistsByName(QueryBuffer& resultBuffer, QStringList playlists, InclusionOptions inclusionOptions);
     QSqlError queryPlaylistGamesByPlaylist(QList<QueryBuffer>& resultBuffer, const QList<QUuid>& playlistIds);

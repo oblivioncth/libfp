@@ -387,10 +387,14 @@ QSqlError Db::populateTags()
 }
 
 QSqlError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
-                                        const QList<QUuid>& idInclusionFilter)
+                                   std::optional<const QList<QUuid>*> idInclusionFilter)
 {
     // Ensure return buffer is reset
     resultBuffer.clear();
+
+    // Empty shortcuts
+    if(platforms.isEmpty() || (idInclusionFilter.has_value() && idInclusionFilter.value()->isEmpty()))
+        return QSqlError();
 
     // Get database
     QSqlDatabase fpDb;
@@ -416,7 +420,7 @@ QSqlError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, QStringList
             idExclusionFilter.insert(tagQuery.value(Table_Game_Tags_Tag::COL_GAME_ID).toUuid());
     }
 
-    for(const QString& platform : platforms) // Naturally returns empty list if no platforms are selected
+    for(const QString& platform : platforms)
     {
         // Create platform query string
         QString placeholder = ":platform";
@@ -432,9 +436,9 @@ QSqlError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, QStringList
             filteredQueryCommand += " AND " + Table_Game::COL_ID + " NOT IN('" + gameIdCSV + "')";
         }
 
-        if(!idInclusionFilter.isEmpty())
+        if(idInclusionFilter.has_value())
         {
-            QString gameIdCSV = Qx::String::join(idInclusionFilter, [](QUuid id){return id.toString(QUuid::WithoutBraces);}, "','");
+            QString gameIdCSV = Qx::String::join(*idInclusionFilter.value(), [](QUuid id){return id.toString(QUuid::WithoutBraces);}, "','");
             filteredQueryCommand += " AND " + Table_Game::COL_ID + " IN('" + gameIdCSV + "')";
         }
 
