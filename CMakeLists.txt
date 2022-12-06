@@ -5,9 +5,8 @@ cmake_minimum_required(VERSION 3.21.1)
 
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
-set(LIBFP_BASE_VERSION 0.1.4) # Required for CI/CD
 project(libfp
-    VERSION ${LIBFP_BASE_VERSION}
+    VERSION 0.1.4
     LANGUAGES CXX
     DESCRIPTION "Command-line Interface for Flashpoint"
 )
