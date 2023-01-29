@@ -66,8 +66,7 @@ jobs:
     if: github.event.pull_request.merged == true
     uses: ./.github/workflows/build-libfp-windows.yml
     secrets:
-      qt_shared_url: ${{ secrets.QT_WINDOWS_SHARED_URL }}
-      qt_static_url: ${{ secrets.QT_WINDOWS_STATIC_URL }}
+      qt_ffynnon_cred: ${{ secrets.OBYBOT_FFYNNON_CREDS }}
       
   build_libfp_release_linux:
     name: Build libfp Release (Linux)
@@ -75,8 +74,7 @@ jobs:
     if: github.event.pull_request.merged == true
     uses: ./.github/workflows/build-libfp-linux.yml
     secrets:
-      qt_shared_url: ${{ secrets.QT_LINUX_SHARED_URL }}
-      qt_static_url: ${{ secrets.QT_LINUX_STATIC_URL }}
+      qt_ffynnon_cred: ${{ secrets.OBYBOT_FFYNNON_CREDS }}
 
   create-release:
     name: Create GitHub release
