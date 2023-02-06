@@ -34,7 +34,7 @@ list(APPEND CMAKE_MODULE_PATH "${PROJ_SCRIPTS_PATH}/module")
 
 # Get helper scripts
 include(libfp/FetchOBCMake)
-fetch_ob_cmake("v0.1")
+fetch_ob_cmake("100e0e42f85024f051eebbe800af9b1e213180d3")
 
 # Include utility functions
 include(OB/Utility)
@@ -103,7 +103,12 @@ find_qt6_package(REQUIRED COMPONENTS
 
 # Fetch Qx (build and import from source)
 include(OB/FetchQx)
-fetch_qx("v0.4")
+fetch_qx(
+    REF "v0.4.2"
+    COMPONENTS
+        Core
+        Io
+)
 
 #--------------------Package Config-----------------------
 
