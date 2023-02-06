@@ -138,6 +138,7 @@ public:
     Db* database();
 
     // Support Application Checks
+    // TODO: At some point create a "Settings" object that wraps all of these, would need to rename existing Fp::Settings
     const Json::Config& config() const;
     const Json::Preferences& preferences() const;
     const Json::Services& services() const;

@@ -274,6 +274,14 @@ Qx::GenericError Json::ServicesReader::parseDocument(const QJsonDocument& servic
             return valueError;
 
         targetServices->daemons.insert(daemonBuffer.name, daemonBuffer);
+
+        /* NOTE: If for some reason this list becomes large, use a hash instead
+         * (e.g. if(hash.contains("NAME")){ recognizedDaemons.setFlag(hash["NAME]); } )
+         */
+        if(daemonBuffer.name == Object_Daemon::KNOWN_DAEMON_DOCKER_NAME)
+            targetServices->recognizedDaemons.setFlag(KnownDaemon::Docker);
+        else if(daemonBuffer.name == Object_Daemon::KNOWN_DAEMON_QEMU_NAME)
+            targetServices->recognizedDaemons.setFlag(KnownDaemon::Qemu);
     }
 
     // Get starts

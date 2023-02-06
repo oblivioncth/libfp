@@ -20,6 +20,14 @@
 namespace Fp
 {
 
+enum KnownDaemon{
+    None = 0x0,
+    Docker = 0x1,
+    Qemu = 0x2
+};
+Q_DECLARE_FLAGS(KnownDaemons, KnownDaemon);
+Q_DECLARE_OPERATORS_FOR_FLAGS(KnownDaemons);
+
 class Json
 {
 //-Inner Classes-------------------------------------------------------------------------------------------------
@@ -75,11 +83,16 @@ private:
     class Object_Daemon
     {
     public:
-        static inline const QString KEY_NAME = "name";
-        static inline const QString KEY_PATH = "path";
-        static inline const QString KEY_FILENAME = "filename";
-        static inline const QString KEY_ARGUMENTS = "arguments";
-        static inline const QString KEY_KILL = "kill";
+/*        NOTE: Unused since daemons/server are handled the same, maybe remove this
+ *
+ *        static inline const QString KEY_NAME = "name";
+ *        static inline const QString KEY_PATH = "path";
+ *        static inline const QString KEY_FILENAME = "filename";
+ *        static inline const QString KEY_ARGUMENTS = "arguments";
+ *        static inline const QString KEY_KILL = "kill";
+ */
+        static inline const QString KNOWN_DAEMON_DOCKER_NAME = "Docker GameZip";
+        static inline const QString KNOWN_DAEMON_QEMU_NAME = "QEMU GameZip";
     };
 
     class Object_Services
@@ -162,6 +175,8 @@ public:
         QHash<QString, ServerDaemon> daemons;
         QSet<StartStop> starts;
         QSet<StartStop> stops;
+        KnownDaemons recognizedDaemons; // Non-standard
+        // TODO: If Settings container obj is made (see other todo), move this there
     };
 
     struct Exec
