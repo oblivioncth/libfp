@@ -169,9 +169,9 @@ void Install::nullify()
         qxDelete(mDatabase);
 
     // Settings
-    Json::Config mConfig = {};
-    Json::Preferences mPreferences = {};
-    Json::Services mServices = {};
+    mConfig = {};
+    mPreferences = {};
+    mServices = {};
 }
 
 //Public:

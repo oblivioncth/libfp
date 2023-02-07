@@ -5,9 +5,8 @@ cmake_minimum_required(VERSION 3.21.1)
 
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
-set(LIBFP_BASE_VERSION 0.1.4) # Required for CI/CD
 project(libfp
-    VERSION ${LIBFP_BASE_VERSION}
+    VERSION 0.1.5
     LANGUAGES CXX
     DESCRIPTION "Command-line Interface for Flashpoint"
 )
@@ -35,7 +34,7 @@ list(APPEND CMAKE_MODULE_PATH "${PROJ_SCRIPTS_PATH}/module")
 
 # Get helper scripts
 include(libfp/FetchOBCMake)
-fetch_ob_cmake("v0.1")
+fetch_ob_cmake("v0.2")
 
 # Include utility functions
 include(OB/Utility)
@@ -104,7 +103,12 @@ find_qt6_package(REQUIRED COMPONENTS
 
 # Fetch Qx (build and import from source)
 include(OB/FetchQx)
-fetch_qx("v0.4")
+fetch_qx(
+    REF "v0.4.3"
+    COMPONENTS
+        Core
+        Io
+)
 
 #--------------------Package Config-----------------------
 
