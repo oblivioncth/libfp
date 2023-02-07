@@ -898,7 +898,7 @@ void Db::connectedThreadDestroyed(QObject* thread)
 
     // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
     if(pThread == nullptr)
-        throw std::runtime_error("Pointer conversion to thread failed");
+        qFatal("Pointer conversion to thread failed");
 
     // Close connection
     closeConnection(pThread);
