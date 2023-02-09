@@ -6,7 +6,6 @@ on:
         description: 'Credentials for getting Qt from Ffynnon'
         required: true
 env:
-  general_download_dir: ${{ github.workspace }}/Download
   qt_install_dir: ${{ github.workspace }}/Qt/Install
   libfp_src_suffix: libfp/Source
   libfp_src_dir: ${{ github.workspace }}/libfp/Source
@@ -71,7 +70,6 @@ jobs:
         cpack -C "Debug;Release"
         echo Build complete.
     - name: Get libfp artifact name
-      id: get_artifact_name
       run: |
         cpack_name=$(find "${{ env.libfp_package_path }}" -type f -name "*.zip")
         artifact_name=$(basename "$cpack_name" .zip)
