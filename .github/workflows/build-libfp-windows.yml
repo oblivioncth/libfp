@@ -5,13 +5,6 @@ on:
       qt_ffynnon_cred:
         description: 'Credentials for getting Qt from Ffynnon'
         required: true
-    outputs:
-      qt_shared_artifact_name:
-        description: "libfp (Qt shared) build artifact"
-        value: ${{ jobs.build-libfp.outputs.qt_shared_artifact_name }}
-      qt_static_artifact_name:
-        description: "libfp (Qt static) build artifact"
-        value: ${{ jobs.build-libfp.outputs.qt_static_artifact_name }}
 env:
   qt_install_dir: ${{ github.workspace }}/Qt/Install
   libfp_src_suffix: libfp/Source
@@ -28,9 +21,6 @@ jobs:
     env:
       vs_dev_dir: C:/Program Files/Microsoft Visual Studio/2022/Enterprise
       cmake_gen: Ninja Multi-Config
-    outputs:
-      qt_shared_artifact_name: ${{ steps.get_artifact_name.outputs.qt_shared_artifact_name }}
-      qt_static_artifact_name: ${{ steps.get_artifact_name.outputs.qt_static_artifact_name }}
     steps:
     - name: Set derived variables with shell because GitHub Actions env context sucks
       run: |
@@ -77,11 +67,10 @@ jobs:
       id: get_artifact_name
       run: |
         $artifact_name=$((Get-ChildItem -Path "${{ env.libfp_package_path }}" -Filter *.zip)[0].BaseName)
-        echo "libfp_current_artifact_name=$artifact_name" >> $Env:GITHUB_ENV
-        echo "qt_${{ matrix.qt_linkage }}_artifact_name=$artifact_name" >> $Env:GITHUB_OUTPUT
+        echo "current_artifact_name=$artifact_name" >> $Env:GITHUB_ENV
     - name: Upload libfp build artifact
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ env.libfp_current_artifact_name }}
+        name: ${{ env.current_artifact_name }}
         path: ${{ env.libfp_install_path }}
         if-no-files-found: error
