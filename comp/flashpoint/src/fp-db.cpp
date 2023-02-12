@@ -772,6 +772,33 @@ QSqlError Db::queryEntryAddApps(QueryBuffer& resultBuffer, QUuid appId, bool pla
     return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
 }
 
+// TODO: This can definitely be combined with the above later
+QSqlError Db::queryEntryAddAppsByName(QueryBuffer& resultBuffer, QUuid appId, QString name, bool playableOnly)
+{
+    // Ensure return buffer is effectively null
+    resultBuffer = QueryBuffer();
+
+    // Get database
+    QSqlDatabase fpDb;
+    QSqlError dbError = getThreadConnection(fpDb);
+    if(dbError.isValid())
+        return dbError;
+
+    // Make query
+    QString baseQueryCommand = "SELECT %1 FROM " + Table_Add_App::NAME + " WHERE " +
+            Table_Add_App::COL_PARENT_ID + " == '" + appId.toString(QUuid::WithoutBraces) + "'" +
+            " AND " + Table_Add_App::COL_NAME + " == '" + name + "'";
+    if(playableOnly)
+        baseQueryCommand += " AND " + Table_Add_App::COL_APP_PATH + " NOT IN ('" + Table_Add_App::ENTRY_EXTRAS +
+                            "','" + Table_Add_App::ENTRY_MESSAGE + "') AND " + Table_Add_App::COL_AUTORUN +
+                            " != 1";
+    QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Add_App::COLUMN_LIST.join("`,`") + "`");
+    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+
+    resultBuffer.source = Table_Add_App::NAME;
+    return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
+}
+
 QSqlError Db::queryDataPackSource(QueryBuffer& resultBuffer)
 {
     // Ensure return buffer is effectively null

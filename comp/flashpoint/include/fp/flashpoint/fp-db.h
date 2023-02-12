@@ -313,6 +313,8 @@ public:
     bool isValid();
     Qx::GenericError error();
 
+    // TODO: See if these query functions can be consolidated via by better filtration arguments
+
     // Queries - OFLIb
     QSqlError queryGamesByPlatform(QList<Db::QueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
                                    std::optional<const QList<QUuid>*> idInclusionFilter = std::nullopt);
@@ -327,6 +329,7 @@ public:
     QSqlError queryEntriesByTitle(QueryBuffer& resultBuffer, QString title);
     QSqlError queryEntryDataById(QueryBuffer& resultBuffer, QUuid appId);
     QSqlError queryEntryAddApps(QueryBuffer& resultBuffer, QUuid appId, bool playableOnly = false);
+    QSqlError queryEntryAddAppsByName(QueryBuffer& resultBuffer, QUuid appId, QString name, bool playableOnly = false);
     QSqlError queryDataPackSource(QueryBuffer& resultBuffer);
     QSqlError queryEntrySourceData(QueryBuffer& resultBuffer, QString appSha256Hex);
     QSqlError queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter filter);
