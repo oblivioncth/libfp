@@ -25,6 +25,7 @@ public:
         static inline const QString NAME = "game";
 
         static inline const QString COL_ID = "id";
+        static inline const QString COL_PARENT_ID = "parentGameId";
         static inline const QString COL_TITLE = "title";
         static inline const QString COL_SERIES = "series";
         static inline const QString COL_DEVELOPER = "developer";
@@ -210,15 +211,17 @@ public:
 //-Class Enums---------------------------------------------------------------------------------------------------
 public:
     enum class LibraryFilter{ Game, Anim, Either };
+    enum class EntryType{ Primary, AddApp, PrimaryThenAddApp };
 
 //-Structs-----------------------------------------------------------------------------------------------------
-public:
+private:
     struct TableSpecs
     {
         QString name;
         QStringList columns;
     };
 
+public:
     struct QueryBuffer
     {
         QString source;
@@ -245,6 +248,16 @@ public:
     {
         QSet<int> excludedTagIds;
         bool includeAnimations;
+    };
+
+    struct EntryFilter
+    {
+        EntryType type = EntryType::PrimaryThenAddApp;
+        QUuid id;
+        QUuid parent;
+        QString name;
+        bool playableOnly = false;
+        bool exactName = true;
     };
 
 //-Class Variables-----------------------------------------------------------------------------------------------
@@ -313,6 +326,8 @@ public:
     bool isValid();
     Qx::GenericError error();
 
+    // TODO: See if these query functions can be consolidated via by better filtration arguments
+
     // Queries - OFLIb
     QSqlError queryGamesByPlatform(QList<Db::QueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
                                    std::optional<const QList<QUuid>*> idInclusionFilter = std::nullopt);
@@ -323,10 +338,8 @@ public:
     QSqlError queryAllEntryTags(QueryBuffer& resultBuffer);
 
     // Queries - CLIFp
-    QSqlError queryEntryById(QueryBuffer& resultBuffer, QUuid appId);
-    QSqlError queryEntriesByTitle(QueryBuffer& resultBuffer, QString title);
+    QSqlError queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter);
     QSqlError queryEntryDataById(QueryBuffer& resultBuffer, QUuid appId);
-    QSqlError queryEntryAddApps(QueryBuffer& resultBuffer, QUuid appId, bool playableOnly = false);
     QSqlError queryDataPackSource(QueryBuffer& resultBuffer);
     QSqlError queryEntrySourceData(QueryBuffer& resultBuffer, QString appSha256Hex);
     QSqlError queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter filter);
