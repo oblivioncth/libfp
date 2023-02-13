@@ -25,6 +25,7 @@ public:
         static inline const QString NAME = "game";
 
         static inline const QString COL_ID = "id";
+        static inline const QString COL_PARENT_ID = "parentGameId";
         static inline const QString COL_TITLE = "title";
         static inline const QString COL_SERIES = "series";
         static inline const QString COL_DEVELOPER = "developer";
@@ -210,15 +211,17 @@ public:
 //-Class Enums---------------------------------------------------------------------------------------------------
 public:
     enum class LibraryFilter{ Game, Anim, Either };
+    enum class EntryType{ Primary, AddApp, PrimaryThenAddApp };
 
 //-Structs-----------------------------------------------------------------------------------------------------
-public:
+private:
     struct TableSpecs
     {
         QString name;
         QStringList columns;
     };
 
+public:
     struct QueryBuffer
     {
         QString source;
@@ -245,6 +248,15 @@ public:
     {
         QSet<int> excludedTagIds;
         bool includeAnimations;
+    };
+
+    struct EntryFilter
+    {
+        EntryType type = EntryType::PrimaryThenAddApp;
+        QUuid id;
+        QUuid parent;
+        QString name;
+        bool playableOnly = false;
     };
 
 //-Class Variables-----------------------------------------------------------------------------------------------
@@ -325,11 +337,8 @@ public:
     QSqlError queryAllEntryTags(QueryBuffer& resultBuffer);
 
     // Queries - CLIFp
-    QSqlError queryEntryById(QueryBuffer& resultBuffer, QUuid appId);
-    QSqlError queryEntriesByTitle(QueryBuffer& resultBuffer, QString title);
+    QSqlError queryEntry(QueryBuffer& resultBuffer, EntryFilter filter);
     QSqlError queryEntryDataById(QueryBuffer& resultBuffer, QUuid appId);
-    QSqlError queryEntryAddApps(QueryBuffer& resultBuffer, QUuid appId, bool playableOnly = false);
-    QSqlError queryEntryAddAppsByName(QueryBuffer& resultBuffer, QUuid appId, QString name, bool playableOnly = false);
     QSqlError queryDataPackSource(QueryBuffer& resultBuffer);
     QSqlError queryEntrySourceData(QueryBuffer& resultBuffer, QString appSha256Hex);
     QSqlError queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter filter);

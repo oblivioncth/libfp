@@ -657,10 +657,14 @@ QSqlError Db::queryAllEntryTags(QueryBuffer& resultBuffer)
     return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
 }
 
-QSqlError Db::queryEntryById(QueryBuffer& resultBuffer, QUuid appId)
+QSqlError Db::queryEntry(QueryBuffer& resultBuffer, EntryFilter filter)
 {
     // Ensure return buffer is effectively null
     resultBuffer = QueryBuffer();
+
+    // Query Constants
+    const QString where = " WHERE ";
+    const QString nd = " AND ";
 
     // Get database
     QSqlDatabase fpDb;
@@ -669,58 +673,87 @@ QSqlError Db::queryEntryById(QueryBuffer& resultBuffer, QUuid appId)
         return dbError;
 
     // Check for entry as a game first
-    QString baseQueryCommand = "SELECT %1 FROM " + Table_Game::NAME + " WHERE " +
-            Table_Game::COL_ID + " == '" + appId.toString(QUuid::WithoutBraces) + "'";
-    QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Game::COLUMN_LIST.join("`,`") + "`");
-    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+    if(filter.type != EntryType::AddApp)
+    {
+        // Assemble Base Query Command
+        QString baseQueryCommand = "SELECT %1 FROM " + Table_Game::NAME;
 
-    // Make query
-    QSqlError queryError;
-    resultBuffer.source = Table_Game::NAME;
+        if(!filter.parent.isNull() || !filter.id.isNull() || !filter.name.isNull())
+        {
+            baseQueryCommand += where;
 
-    if((queryError = makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand)).isValid())
-        return queryError;
+            if(!filter.id.isNull())
+                baseQueryCommand += Table_Game::COL_ID + " == '" + filter.id.toString(QUuid::WithoutBraces) + "'" + nd;
+            if(!filter.parent.isNull())
+                baseQueryCommand += Table_Game::COL_PARENT_ID + " == '" + filter.parent.toString(QUuid::WithoutBraces) + "'" + nd;
+            if(!filter.name.isNull())
+                baseQueryCommand += Table_Game::COL_TITLE + " == '" + filter.name + "'" + nd;
 
-    // Return result if one or more results were found (receiver handles situation in latter case)
-    if(resultBuffer.size >= 1)
-        return QSqlError();
+            // Remove trailing AND
+            baseQueryCommand.chop(nd.size());
+        }
+
+        // Assemble final query commands
+        QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Game::COLUMN_LIST.join("`,`") + "`");
+        QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+
+        // Make query
+        QSqlError queryError;
+        resultBuffer.source = Table_Game::NAME;
+
+        if((queryError = makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand)).isValid())
+            return queryError;
+
+        // Return result if one or more results were found (receiver handles situation in latter case)
+        if(resultBuffer.size >= 1)
+            return QSqlError();
+    }
 
     // Check for entry as an additional app second
-    baseQueryCommand = "SELECT %1 FROM " + Table_Add_App::NAME + " WHERE " +
-        Table_Add_App::COL_ID + " == '" + appId.toString(QUuid::WithoutBraces) + "'";
-    mainQueryCommand = baseQueryCommand.arg("`" + Table_Add_App::COLUMN_LIST.join("`,`") + "`");
-    sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+    if(filter.type != EntryType::Primary)
+    {
+        // Assemble Base Query Command
+        QString baseQueryCommand = "SELECT %1 FROM " + Table_Add_App::NAME;
 
-    // Make query and return result regardless of outcome
-    resultBuffer.source = Table_Add_App::NAME;
-    return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
-}
+        if(!filter.parent.isNull() || !filter.id.isNull() || !filter.name.isNull())
+        {
+            baseQueryCommand += where;
 
-QSqlError Db::queryEntriesByTitle(QueryBuffer& resultBuffer, QString title)
-{
-    // Ensure return buffer is effectively null
-    resultBuffer = QueryBuffer();
+            if(!filter.id.isNull())
+                baseQueryCommand += Table_Add_App::COL_ID + " == '" + filter.id.toString(QUuid::WithoutBraces) + "'" + nd;
+            if(!filter.parent.isNull())
+                baseQueryCommand += Table_Add_App::COL_PARENT_ID + " == '" + filter.parent.toString(QUuid::WithoutBraces) + "'" + nd;
+            if(!filter.name.isNull())
+                baseQueryCommand += Table_Add_App::COL_NAME + " == '" + filter.name + "'" + nd;
+            if(filter.playableOnly)
+            {
+                baseQueryCommand += Table_Add_App::COL_APP_PATH + " NOT IN ('" + Table_Add_App::ENTRY_EXTRAS + "','" +
+                                    Table_Add_App::ENTRY_MESSAGE + "') AND " + Table_Add_App::COL_AUTORUN + " != 1" +
+                                    nd;
+            }
 
-    // Escape title
-    title.replace(R"(')", R"('')");
+            // Remove trailing AND
+            baseQueryCommand.chop(nd.size());
+        }
 
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return dbError;
+        // Assemble final query commands
+        QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Add_App::COLUMN_LIST.join("`,`") + "`");
+        QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
-    // Check for entry as a game first
-    QString baseQueryCommand = "SELECT %1 FROM " + Table_Game::NAME + " WHERE " +
-            Table_Game::COL_TITLE + " == '" + title + "'";
-    QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Game::COLUMN_LIST.join("`,`") + "`");
-    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+        // Make query
+        QSqlError queryError;
+        resultBuffer.source = Table_Add_App::NAME;
 
-    // Make query
-    QSqlError queryError;
-    resultBuffer.source = Table_Game::NAME;
+        if((queryError = makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand)).isValid())
+            return queryError;
 
-    return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
+        // Return result if one or more results were found (receiver handles situation in latter case)
+        if(resultBuffer.size >= 1)
+            return QSqlError();
+    }
+
+    // No result found, return
+    return QSqlError();
 }
 
 QSqlError Db::queryEntryDataById(QueryBuffer& resultBuffer, QUuid appId)
@@ -744,58 +777,6 @@ QSqlError Db::queryEntryDataById(QueryBuffer& resultBuffer, QUuid appId)
     QSqlError queryError;
     resultBuffer.source = Table_Game_Data::NAME;
 
-    return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
-}
-
-QSqlError Db::queryEntryAddApps(QueryBuffer& resultBuffer, QUuid appId, bool playableOnly)
-{
-    // Ensure return buffer is effectively null
-    resultBuffer = QueryBuffer();
-
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return dbError;
-
-    // Make query
-    QString baseQueryCommand = "SELECT %1 FROM " + Table_Add_App::NAME + " WHERE " +
-            Table_Add_App::COL_PARENT_ID + " == '" + appId.toString(QUuid::WithoutBraces) + "'";
-    if(playableOnly)
-        baseQueryCommand += " AND " + Table_Add_App::COL_APP_PATH + " NOT IN ('" + Table_Add_App::ENTRY_EXTRAS +
-                            "','" + Table_Add_App::ENTRY_MESSAGE + "') AND " + Table_Add_App::COL_AUTORUN +
-                            " != 1";
-    QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Add_App::COLUMN_LIST.join("`,`") + "`");
-    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
-
-    resultBuffer.source = Table_Add_App::NAME;
-    return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
-}
-
-// TODO: This can definitely be combined with the above later
-QSqlError Db::queryEntryAddAppsByName(QueryBuffer& resultBuffer, QUuid appId, QString name, bool playableOnly)
-{
-    // Ensure return buffer is effectively null
-    resultBuffer = QueryBuffer();
-
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return dbError;
-
-    // Make query
-    QString baseQueryCommand = "SELECT %1 FROM " + Table_Add_App::NAME + " WHERE " +
-            Table_Add_App::COL_PARENT_ID + " == '" + appId.toString(QUuid::WithoutBraces) + "'" +
-            " AND " + Table_Add_App::COL_NAME + " == '" + name + "'";
-    if(playableOnly)
-        baseQueryCommand += " AND " + Table_Add_App::COL_APP_PATH + " NOT IN ('" + Table_Add_App::ENTRY_EXTRAS +
-                            "','" + Table_Add_App::ENTRY_MESSAGE + "') AND " + Table_Add_App::COL_AUTORUN +
-                            " != 1";
-    QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Add_App::COLUMN_LIST.join("`,`") + "`");
-    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
-
-    resultBuffer.source = Table_Add_App::NAME;
     return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
 }
 
