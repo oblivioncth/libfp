@@ -257,6 +257,7 @@ public:
         QUuid parent;
         QString name;
         bool playableOnly = false;
+        bool exactName = false;
     };
 
 //-Class Variables-----------------------------------------------------------------------------------------------

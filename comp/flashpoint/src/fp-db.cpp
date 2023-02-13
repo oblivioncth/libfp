@@ -665,6 +665,7 @@ QSqlError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
     // Query Constants
     const QString where = " WHERE ";
     const QString nd = " AND ";
+    const QString likeTempl = " LIKE '%%1%' ESCAPE '\'";
 
     // Get database
     QSqlDatabase fpDb;
@@ -687,7 +688,19 @@ QSqlError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
             if(!filter.parent.isNull())
                 baseQueryCommand += Table_Game::COL_PARENT_ID + " == '" + filter.parent.toString(QUuid::WithoutBraces) + "'" + nd;
             if(!filter.name.isNull())
-                baseQueryCommand += Table_Game::COL_TITLE + " == '" + filter.name + "'" + nd;
+            {
+                if(filter.exactName)
+                    baseQueryCommand += Table_Game::COL_TITLE + " == '" + filter.name + "'" + nd;
+                else
+                {
+                    // Escape name to account for SQL LITE %
+                    QString escapedName = filter.name;
+                    escapedName.replace(R"(\)", R"(\\)"); // Have to escape the escape char
+                    escapedName.replace(R"(%)",R"(\%)");
+
+                    baseQueryCommand += Table_Game::COL_TITLE + likeTempl.arg(escapedName) + nd;
+                }
+            }
 
             // Remove trailing AND
             baseQueryCommand.chop(nd.size());
@@ -724,7 +737,19 @@ QSqlError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
             if(!filter.parent.isNull())
                 baseQueryCommand += Table_Add_App::COL_PARENT_ID + " == '" + filter.parent.toString(QUuid::WithoutBraces) + "'" + nd;
             if(!filter.name.isNull())
-                baseQueryCommand += Table_Add_App::COL_NAME + " == '" + filter.name + "'" + nd;
+            {
+                if(filter.exactName)
+                    baseQueryCommand += Table_Add_App::COL_NAME + " == '" + filter.name + "'" + nd;
+                else
+                {
+                    // Escape name to account for SQL LITE %
+                    QString escapedName = filter.name;
+                    escapedName.replace(R"(\)", R"(\\)"); // Have to escape the escape char
+                    escapedName.replace(R"(%)",R"(\%)");
+
+                    baseQueryCommand += Table_Add_App::COL_NAME + likeTempl.arg(escapedName) + nd;
+                }
+            }
             if(filter.playableOnly)
             {
                 baseQueryCommand += Table_Add_App::COL_APP_PATH + " NOT IN ('" + Table_Add_App::ENTRY_EXTRAS + "','" +
