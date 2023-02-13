@@ -665,7 +665,7 @@ QSqlError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
     // Query Constants
     const QString where = " WHERE ";
     const QString nd = " AND ";
-    const QString likeTempl = " LIKE '%%1%' ESCAPE '\'";
+    const QString likeTempl = " LIKE '%%1%' ESCAPE '\\'";
 
     // Get database
     QSqlDatabase fpDb;
