@@ -337,7 +337,7 @@ public:
     QSqlError queryAllEntryTags(QueryBuffer& resultBuffer);
 
     // Queries - CLIFp
-    QSqlError queryEntry(QueryBuffer& resultBuffer, EntryFilter filter);
+    QSqlError queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter);
     QSqlError queryEntryDataById(QueryBuffer& resultBuffer, QUuid appId);
     QSqlError queryDataPackSource(QueryBuffer& resultBuffer);
     QSqlError queryEntrySourceData(QueryBuffer& resultBuffer, QString appSha256Hex);

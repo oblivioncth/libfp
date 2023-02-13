@@ -657,7 +657,7 @@ QSqlError Db::queryAllEntryTags(QueryBuffer& resultBuffer)
     return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
 }
 
-QSqlError Db::queryEntry(QueryBuffer& resultBuffer, EntryFilter filter)
+QSqlError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
 {
     // Ensure return buffer is effectively null
     resultBuffer = QueryBuffer();
