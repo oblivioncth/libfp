@@ -222,6 +222,10 @@ private:
     };
 
 public:
+    /* TODO: Make this a proper class that abstracts away the direct interactions with the database.
+     * Automatically advance to the first record, have a hasNext() like function, size() function,
+     * direct value() function, etc.
+     */
     struct QueryBuffer
     {
         QString source;
