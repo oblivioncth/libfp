@@ -11,10 +11,10 @@
 #include <qx/core/qx-versionnumber.h>
 
 // Project Includes
-#include "fp-json.h"
-#include "fp-macro.h"
-#include "fp-db.h"
-#include "fp-items.h"
+#include "fp/fp-json.h"
+#include "fp/fp-macro.h"
+#include "fp/fp-db.h"
+#include "fp/fp-items.h"
 
 namespace Fp
 {

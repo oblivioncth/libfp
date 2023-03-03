@@ -10,7 +10,7 @@
 #include <qx/core/qx-genericerror.h>
 
 // Project Includes
-#include "fp-macro.h"
+#include "fp/fp-macro.h"
 
 /* Remove the ancient built-in 'linux' define to avoid clash with exec.linux.
  * No one should still be using it anyway and instead using __linux__.
