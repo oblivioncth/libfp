@@ -1,6 +1,9 @@
 #ifndef FLASHPOINT_INSTALL_H
 #define FLASHPOINT_INSTALL_H
 
+// Shared Lib Support
+#include "fp/fp_export.h"
+
 // Qt Includes
 #include <QString>
 #include <QDir>
@@ -19,9 +22,9 @@
 namespace Fp
 {
 
-const QString NAME = QStringLiteral("Flashpoint");
+inline const QString NAME = QStringLiteral("Flashpoint");
 
-class Install
+class FP_FP_EXPORT Install
 {
 //-Class Enums---------------------------------------------------------------------------------------------------
 enum class Edition {Ultimate, Infinity, Core};
