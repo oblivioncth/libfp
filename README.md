@@ -12,7 +12,7 @@ Currently this library exists explicitly for use with [CLIFp](https://github.com
 ### Summary
 
  - C++20
- - CMake 3.21.1
+ - CMake 3.24.0
  - Targets Windows 10 and above
 
 ### Dependencies
