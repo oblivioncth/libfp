@@ -1,6 +1,9 @@
 #ifndef FLASHPOINT_JSON_H
 #define FLASHPOINT_JSON_H
 
+// Shared Lib Support
+#include "fp/fp_export.h"
+
 // Qt Includes
 #include <QString>
 #include <QSet>
@@ -28,7 +31,7 @@ enum KnownDaemon{
 Q_DECLARE_FLAGS(KnownDaemons, KnownDaemon);
 Q_DECLARE_OPERATORS_FOR_FLAGS(KnownDaemons);
 
-class Json
+class FP_FP_EXPORT Json
 {
 //-Inner Classes-------------------------------------------------------------------------------------------------
 private:

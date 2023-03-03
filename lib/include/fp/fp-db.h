@@ -1,6 +1,9 @@
 #ifndef FLASHPOINT_DB_H
 #define FLASHPOINT_DB_H
 
+// Shared Lib Support
+#include "fp/fp_export.h"
+
 // Qt Includes
 #include <QStringList>
 #include <QtSql>
@@ -12,7 +15,7 @@
 namespace Fp
 {
 
-class Db : public QObject
+class FP_FP_EXPORT Db : public QObject
 {
 //-QObject Macro (Required for all QObject Derived Classes)-----------------------------------------------------------
     Q_OBJECT
