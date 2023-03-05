@@ -13,7 +13,7 @@ env:
 
 jobs:
   build-libfp:
-    name: Build libfp - Linux (Debug/Release)
+    name: Build libfp - Linux (Release)
     strategy:
       fail-fast: false
       matrix:
@@ -87,16 +87,12 @@ jobs:
         "$qt_cmake" -G "$cmake_gen" -S "$libfp_src_dir" -B "$libfp_build_dir" -D BUILD_SHARED_LIBS="${{ matrix.cmake_bsl }}" -D CMAKE_CXX_COMPILER="${{ matrix.cxx_comp }}" -D CMAKE_C_COMPILER="${{ matrix.c_comp }}"
         echo Changing to build directory...
         cd "$libfp_build_dir"
-        echo Building libfp debug...
-        cmake --build . --target all --config Debug
         echo Building libfp release...
         cmake --build . --target all --config Release
-        echo Installing libfp Debug
-        cmake --install . --config Debug
         echo Installing libfp Release
         cmake --install . --config Release
         echo Packaging libfp...
-        cpack -C "Debug;Release"
+        cpack -C "Release"
         echo Build complete.
     - name: Get libfp artifact name
       run: |
