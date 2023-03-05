@@ -55,7 +55,7 @@ jobs:
         echo Setup C++ Build Environment...
         CALL "${{ env.vs_dev_dir }}\Common7\Tools\VsDevCmd.bat" -arch=amd64
         echo Configure CMake using Qt wrapper...
-        CALL "${{ env.qt_cmake }}" -G "${{ env.cmake_gen }}" -S "${{ env.libfp_src_dir}}" -B "${{ env.libfp_build_dir }}" -D BUILD_SHARED_LIBS=${{ matrix.cmake_bsl }}"  
+        CALL "${{ env.qt_cmake }}" -G "${{ env.cmake_gen }}" -S "${{ env.libfp_src_dir}}" -B "${{ env.libfp_build_dir }}" -D BUILD_SHARED_LIBS=${{ matrix.cmake_bsl }}
         echo "Changing to build directory..."
         cd "%libfp_build_dir%"
         echo "Building libfp debug..."
