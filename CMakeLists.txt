@@ -13,7 +13,7 @@ project(libfp
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("6894de98114622206d5ac38679b019fcf1418ee6")
+fetch_ob_cmake("bf49028442a0945020c4c024721f7657442dd612")
 
 # Initialize project according to standard rules
 include(OB/Project)
