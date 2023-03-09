@@ -13,14 +13,16 @@ Currently this library exists explicitly for use with [CLIFp](https://github.com
 
  - C++20
  - CMake 3.24.0
- - Targets Windows 10 and above
+ - Targets:
+    - Windows 10 and above
+    - Linux (mainly Debian-based)
 
 ### Dependencies
 - Qt6
 - [Qx](https://github.com/oblivioncth/Qx/)
 
 ### Builds
-Tested with MSVC2022.
+See Actions artifacts or releases.
 
 ### Details
 The source for this project is managed by a sensible CMake configuration that allows for straightforward compilation and consumption of its target(s), either as a sub-project or as an imported package. All required dependencies except for Qt6 are automatically acquired via CMake's FetchContent mechanism.
