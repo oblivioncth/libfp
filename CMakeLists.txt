@@ -19,6 +19,9 @@ fetch_ob_cmake("202d606507f26a95c10d15ea170c7aed9e5c5341")
 include(OB/Project)
 ob_standard_project_setup(NAMESPACE "Fp")
 
+# Configuration options
+option(BUILD_SHARED_LIBS "Build shared libraries." OFF) # Redundant due to OB, but explicit
+
 # C++
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
