@@ -1,12 +1,16 @@
 #ifndef FLASHPOINT_MACRO_H
 #define FLASHPOINT_MACRO_H
 
+// Shared Lib Support
+#include "fp/fp_export.h"
+
+// Qt Includes
 #include <QHash>
 
 namespace Fp
 {
 
-class MacroResolver
+class FP_FP_EXPORT MacroResolver
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:

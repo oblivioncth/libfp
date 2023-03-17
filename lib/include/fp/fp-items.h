@@ -1,6 +1,9 @@
 #ifndef FLASHPOINT_ITEMS_H
 #define FLASHPOINT_ITEMS_H
 
+// Shared Lib Support
+#include "fp/fp_export.h"
+
 // Qt Includes
 #include <QString>
 #include <QDateTime>
@@ -12,7 +15,7 @@ namespace Fp
 enum class ImageType {Logo, Screenshot};
 
 //-Namespace Global Classes-----------------------------------------------------------------------------------------
-class Game
+class FP_FP_EXPORT Game
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -71,7 +74,7 @@ public:
     QString library() const;
 };
 
-class Game::Builder
+class FP_FP_EXPORT Game::Builder
 {
 //-Instance Variables------------------------------------------------------------------------------------------
 private:
@@ -112,7 +115,7 @@ public:
     Game build();
 };
 
-class AddApp
+class FP_FP_EXPORT AddApp
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -157,7 +160,7 @@ public:
     bool isPlayable() const;
 };
 
-class AddApp::Builder
+class FP_FP_EXPORT AddApp::Builder
 {
 //-Instance Variables------------------------------------------------------------------------------------------
 private:
@@ -180,7 +183,7 @@ public:
     AddApp build();
 };
 
-class Set
+class FP_FP_EXPORT Set
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -201,7 +204,7 @@ public:
     const QList<AddApp>& addApps() const;
 };
 
-class Set::Builder
+class FP_FP_EXPORT Set::Builder
 {
 //-Instance Variables------------------------------------------------------------------------------------------
 private:
@@ -220,7 +223,7 @@ public:
     Set build();
 };
 
-class Playlist
+class FP_FP_EXPORT Playlist
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -246,7 +249,7 @@ public:
 
 };
 
-class Playlist::Builder
+class FP_FP_EXPORT Playlist::Builder
 {
 //-Instance Variables------------------------------------------------------------------------------------------
 private:
@@ -266,7 +269,7 @@ public:
     Playlist build();
 };
 
-class PlaylistGame
+class FP_FP_EXPORT PlaylistGame
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
 public:
@@ -291,7 +294,7 @@ public:
     QUuid gameId() const;
 };
 
-class PlaylistGame::Builder
+class FP_FP_EXPORT PlaylistGame::Builder
 {
 //-Instance Variables------------------------------------------------------------------------------------------
 private:

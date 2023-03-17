@@ -1,6 +1,9 @@
 #ifndef FLASHPOINT_INSTALL_H
 #define FLASHPOINT_INSTALL_H
 
+// Shared Lib Support
+#include "fp/fp_export.h"
+
 // Qt Includes
 #include <QString>
 #include <QDir>
@@ -11,17 +14,17 @@
 #include <qx/core/qx-versionnumber.h>
 
 // Project Includes
-#include "fp-json.h"
-#include "fp-macro.h"
-#include "fp-db.h"
-#include "fp-items.h"
+#include "fp/fp-json.h"
+#include "fp/fp-macro.h"
+#include "fp/fp-db.h"
+#include "fp/fp-items.h"
 
 namespace Fp
 {
 
-const QString NAME = QStringLiteral("Flashpoint");
+inline const QString NAME = QStringLiteral("Flashpoint");
 
-class Install
+class FP_FP_EXPORT Install
 {
 //-Class Enums---------------------------------------------------------------------------------------------------
 enum class Edition {Ultimate, Infinity, Core};

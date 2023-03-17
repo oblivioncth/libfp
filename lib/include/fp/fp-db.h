@@ -1,6 +1,9 @@
 #ifndef FLASHPOINT_DB_H
 #define FLASHPOINT_DB_H
 
+// Shared Lib Support
+#include "fp/fp_export.h"
+
 // Qt Includes
 #include <QStringList>
 #include <QtSql>
@@ -12,7 +15,7 @@
 namespace Fp
 {
 
-class Db : public QObject
+class FP_FP_EXPORT Db : public QObject
 {
 //-QObject Macro (Required for all QObject Derived Classes)-----------------------------------------------------------
     Q_OBJECT
@@ -222,6 +225,10 @@ private:
     };
 
 public:
+    /* TODO: Make this a proper class that abstracts away the direct interactions with the database.
+     * Automatically advance to the first record, have a hasNext() like function, size() function,
+     * direct value() function, etc.
+     */
     struct QueryBuffer
     {
         QString source;
