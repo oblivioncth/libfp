@@ -13,16 +13,11 @@ project(libfp
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("990d4c4a3987722a173f948b59fd45ce924a7d9c")
+fetch_ob_cmake("202d606507f26a95c10d15ea170c7aed9e5c5341")
 
 # Initialize project according to standard rules
 include(OB/Project)
-ob_standard_project_setup()
-
-# Standard setup overrides
-set(PROJECT_NAMESPACE "Fp")
-string(TOLOWER ${PROJECT_NAMESPACE} PROJECT_NAMESPACE_LC)
-string(TOUPPER ${PROJECT_NAMESPACE} PROJECT_NAMESPACE_UC)
+ob_standard_project_setup(NAMESPACE "Fp")
 
 # C++
 set(CMAKE_CXX_STANDARD 20)
@@ -54,7 +49,7 @@ set(LIBFP_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "a290fd23bb36779aeccf2ae881b542d22d716829"
+    REF "5b184c1ccea191ae6a885ea9a240a0d15b77b08c"
     COMPONENTS
         ${LIBFP_QX_COMPONENTS}
 )
@@ -71,7 +66,7 @@ ob_standard_project_package_config(
     COMPATIBILITY "SameMinorVersion"
     CONFIG STANDARD
         TARGET_CONFIGS
-            "${PROJECT_NAMESPACE}::${LIB_ALIAS_NAME}"
+            TARGET "${PROJECT_NAMESPACE}::${LIB_ALIAS_NAME}" COMPONENT "${LIB_ALIAS_NAME}" DEFAULT
         DEPENDS
             PACKAGE "Qt6" COMPONENTS ${LIBFP_QT_COMPONENTS}
             PACKAGE "Qx" VERSION ${Qx_VERSION} COMPONENTS ${LIBFP_QX_COMPONENTS}
