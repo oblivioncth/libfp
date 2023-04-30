@@ -278,10 +278,12 @@ Qx::GenericError Json::ServicesReader::parseDocument(const QJsonDocument& servic
         /* NOTE: If for some reason this list becomes large, use a hash instead
          * (e.g. if(hash.contains("NAME")){ recognizedDaemons.setFlag(hash["NAME]); } )
          */
-        if(daemonBuffer.name == Object_Daemon::KNOWN_DAEMON_DOCKER_NAME)
-            targetServices->recognizedDaemons.setFlag(KnownDaemon::Docker);
-        else if(daemonBuffer.name == Object_Daemon::KNOWN_DAEMON_QEMU_NAME)
+        if(daemonBuffer.name.contains("qemu", Qt::CaseInsensitive) ||
+           daemonBuffer.filename.contains("qemu", Qt::CaseInsensitive))
             targetServices->recognizedDaemons.setFlag(KnownDaemon::Qemu);
+        else if(daemonBuffer.name.contains("docker", Qt::CaseInsensitive) ||
+                daemonBuffer.filename.contains("docker", Qt::CaseInsensitive))
+            targetServices->recognizedDaemons.setFlag(KnownDaemon::Docker);
     }
 
     // Get starts
