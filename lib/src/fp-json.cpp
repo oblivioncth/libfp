@@ -333,21 +333,21 @@ Qx::GenericError Json::ServicesReader::parseServerDaemon(ServerDaemon& serverBuf
     Qx::GenericError valueError;
 
     // Get direct values
-    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.name, joServer, Object_Server::KEY_NAME)).isValid())
+    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.name, joServer, Object_ServerDaemon::KEY_NAME)).isValid())
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 
-    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.path, joServer, Object_Server::KEY_PATH)).isValid())
+    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.path, joServer, Object_ServerDaemon::KEY_PATH)).isValid())
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 
-    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.filename, joServer, Object_Server::KEY_FILENAME)).isValid())
+    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.filename, joServer, Object_ServerDaemon::KEY_FILENAME)).isValid())
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 
-    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.kill, joServer, Object_Server::KEY_KILL)).isValid())
+    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.kill, joServer, Object_ServerDaemon::KEY_KILL)).isValid())
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     // Get arguments
     QJsonArray jaArgs;
-    if((valueError = Qx::Json::checkedKeyRetrieval(jaArgs, joServer, Object_Server::KEY_ARGUMENTS)).isValid())
+    if((valueError = Qx::Json::checkedKeyRetrieval(jaArgs, joServer, Object_ServerDaemon::KEY_ARGUMENTS)).isValid())
         return valueError.setErrorLevel(Qx::GenericError::Critical);
 
     for(const QJsonValue& jvArg : qAsConst(jaArgs))
