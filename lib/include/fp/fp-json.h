@@ -65,7 +65,7 @@ private:
         static inline const QString KEY_BROWSER_MODE_PROXY = "browserModeProxy";
     };
 
-    class Object_Server
+    class Object_ServerDaemon
     {
     public:
         static inline const QString KEY_NAME = "name";
@@ -81,21 +81,6 @@ private:
         static inline const QString KEY_PATH = "path";
         static inline const QString KEY_FILENAME = "filename";
         static inline const QString KEY_ARGUMENTS = "arguments";
-    };
-
-    class Object_Daemon
-    {
-    public:
-/*        NOTE: Unused since daemons/server are handled the same, maybe remove this
- *
- *        static inline const QString KEY_NAME = "name";
- *        static inline const QString KEY_PATH = "path";
- *        static inline const QString KEY_FILENAME = "filename";
- *        static inline const QString KEY_ARGUMENTS = "arguments";
- *        static inline const QString KEY_KILL = "kill";
- */
-        static inline const QString KNOWN_DAEMON_DOCKER_NAME = "Docker GameZip";
-        static inline const QString KNOWN_DAEMON_QEMU_NAME = "QEMU GameZip";
     };
 
     class Object_Services
