@@ -67,7 +67,7 @@ jobs:
     - name: Install OpenGL lib
       run: sudo apt-get install libglu1-mesa-dev
     - name: Install XCB-XKB
-      run: sudo apt-get install libxkbcommon-dev libxcb-xkb-dev
+      run: sudo apt-get install libx11-xcb-dev libxkbcommon-dev libxkbcommon-x11-dev libxcb-*-dev
     - name: Install Ninja
       run: sudo apt-get install ninja-build
     - name: Install Harfbuzz
