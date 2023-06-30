@@ -35,7 +35,6 @@ public:
         static inline const QString COL_PUBLISHER = "publisher";
         static inline const QString COL_DATE_ADDED = "dateAdded";
         static inline const QString COL_DATE_MODIFIED = "dateModified";
-        static inline const QString COL_PLATFORM = "platform";
         static inline const QString COL_BROKEN = "broken";
         static inline const QString COL_EXTREME = "extreme";
         static inline const QString COL_PLAY_MODE = "playMode";
@@ -50,10 +49,11 @@ public:
         static inline const QString COL_LANGUAGE = "language";
         static inline const QString COL_LIBRARY = "library";
         static inline const QString COL_ORDER_TITLE = "orderTitle";
+        static inline const QString COL_PLATFORM_NAME = "platformName";
 
-        static inline const QStringList COLUMN_LIST = {COL_ID, COL_TITLE, COL_SERIES, COL_DEVELOPER, COL_PUBLISHER, COL_DATE_ADDED, COL_DATE_MODIFIED, COL_PLATFORM,
+        static inline const QStringList COLUMN_LIST = {COL_ID, COL_PARENT_ID, COL_TITLE, COL_SERIES, COL_DEVELOPER, COL_PUBLISHER, COL_DATE_ADDED, COL_DATE_MODIFIED,
                                                COL_BROKEN, COL_EXTREME, COL_PLAY_MODE, COL_STATUS, COL_NOTES, COL_SOURCE, COL_APP_PATH, COL_LAUNCH_COMMAND, COL_RELEASE_DATE,
-                                               COL_VERSION, COL_ORIGINAL_DESC, COL_LANGUAGE, COL_LIBRARY, COL_ORDER_TITLE};
+                                               COL_VERSION, COL_ORIGINAL_DESC, COL_LANGUAGE, COL_LIBRARY, COL_ORDER_TITLE, COL_PLATFORM_NAME};
 
         static inline const QString ENTRY_GAME_LIBRARY = "arcade";
         static inline const QString ENTRY_ANIM_LIBRARY = "theatre";
@@ -98,62 +98,6 @@ public:
         static inline const QString ENTRY_MESSAGE = ":message:";
     };
 
-    class Table_Playlist
-    {
-    public:
-        static inline const QString NAME = "playlist";
-        static inline const QString COL_ID = "id";
-        static inline const QString COL_TITLE = "title";
-        static inline const QString COL_DESCRIPTION = "description";
-        static inline const QString COL_AUTHOR = "author";
-        static inline const QString COL_LIBRARY = "library";
-
-        static inline const QString ENTRY_GAME_LIBRARY = "arcade";
-
-        static inline const QStringList COLUMN_LIST = {COL_ID, COL_TITLE, COL_DESCRIPTION, COL_AUTHOR, COL_LIBRARY};
-    };
-
-    class Table_Playlist_Game
-    {
-    public:
-        static inline const QString NAME = "playlist_game";
-
-        static inline const QString COL_ID = "id";
-        static inline const QString COL_PLAYLIST_ID = "playlistId";
-        static inline const QString COL_ORDER = "order";
-        static inline const QString COL_GAME_ID = "gameId";
-
-        static inline const QStringList COLUMN_LIST = {COL_ID, COL_PLAYLIST_ID, COL_ORDER, COL_GAME_ID};
-    };
-
-    class Table_Source
-    {
-    public:
-        static inline const QString NAME = "source";
-
-        static inline const QString COL_ID = "id";
-        static inline const QString COL_NAME = "name";
-        static inline const QString COL_DATE_ADDED = "dateAdded";
-        static inline const QString COL_LAST_UPDATED = "lastUpdated";
-        static inline const QString COL_SRC_FILE_URL = "sourceFileUrl";
-        static inline const QString COL_BASE_URL = "baseUrl";
-        static inline const QString COL_COUNT = "count";
-
-        static inline const QStringList COLUMN_LIST = {COL_ID, COL_NAME, COL_DATE_ADDED, COL_LAST_UPDATED, COL_SRC_FILE_URL, COL_BASE_URL, COL_COUNT};
-    };
-
-    class Table_Source_Data
-    {
-    public:
-        static inline const QString NAME = "source_data";
-
-        static inline const QString COL_ID = "id";
-        static inline const QString COL_SOURCE_ID = "sourceId";
-        static inline const QString COL_SHA256 = "sha256";
-        static inline const QString COL_URL_PATH = "urlPath";
-
-        static inline const QStringList COLUMN_LIST = {COL_ID, COL_SOURCE_ID, COL_SHA256, COL_URL_PATH};
-    };
 
     class Table_Game_Tags_Tag
     {
@@ -271,10 +215,17 @@ public:
 private:
     static inline const QString DATABASE_CONNECTION_NAME = "flashpoint_database";
 
-    static inline const QList<Db::TableSpecs> DATABASE_SPECS_LIST = {{Db::Table_Game::NAME, Db::Table_Game::COLUMN_LIST},
-                                                                        {Db::Table_Add_App::NAME, Db::Table_Add_App::COLUMN_LIST},
-                                                                        {Db::Table_Playlist::NAME, Db::Table_Playlist::COLUMN_LIST},
-                                                                        {Db::Table_Playlist_Game::NAME, Db::Table_Playlist_Game::COLUMN_LIST}};
+    // TODO: Self register this somehow so that it doesnt need to be modified when tables are added or removed.
+    // Might require wrapping tables in actual classes
+    static inline const QList<Db::TableSpecs> DATABASE_SPECS_LIST = {
+        {Db::Table_Game::NAME, Db::Table_Game::COLUMN_LIST},
+        {Db::Table_Add_App::NAME, Db::Table_Add_App::COLUMN_LIST},
+        {Db::Table_Game_Data::NAME, Db::Table_Game_Data::COLUMN_LIST},
+        {Db::Table_Game_Tags_Tag::NAME, Db::Table_Game_Tags_Tag::COLUMN_LIST},
+        {Db::Table_Tag::NAME, Db::Table_Tag::COLUMN_LIST},
+        {Db::Table_Tag_Alias::NAME, Db::Table_Tag_Alias::COLUMN_LIST},
+        {Db::Table_Tag_Category::NAME, Db::Table_Tag_Category::COLUMN_LIST},
+    };
     static inline const QString GENERAL_QUERY_SIZE_COMMAND = "COUNT(1)";
 
     static inline const QString GAME_ONLY_FILTER = Db::Table_Game::COL_LIBRARY + " = '" + Db::Table_Game::ENTRY_GAME_LIBRARY + "'";
@@ -339,21 +290,15 @@ public:
     QSqlError queryGamesByPlatform(QList<Db::QueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
                                    std::optional<const QList<QUuid>*> idInclusionFilter = std::nullopt);
     QSqlError queryAllAddApps(QueryBuffer& resultBuffer);
-    QSqlError queryPlaylistsByName(QueryBuffer& resultBuffer, QStringList playlists, InclusionOptions inclusionOptions);
-    QSqlError queryPlaylistGamesByPlaylist(QList<QueryBuffer>& resultBuffer, const QList<QUuid>& playlistIds);
-    QSqlError queryPlaylistGameIds(QueryBuffer& resultBuffer, const QList<QUuid>& playlistIds);
     QSqlError queryAllEntryTags(QueryBuffer& resultBuffer);
 
     // Queries - CLIFp
     QSqlError queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter);
     QSqlError queryEntryDataById(QueryBuffer& resultBuffer, QUuid appId);
-    QSqlError queryDataPackSource(QueryBuffer& resultBuffer);
-    QSqlError queryEntrySourceData(QueryBuffer& resultBuffer, QString appSha256Hex);
     QSqlError queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter filter);
 
     // Info
     QStringList platformList() const;
-    QStringList playlistList() const;
     QMap<int, TagCategory> tags() const;
 
     // Checks

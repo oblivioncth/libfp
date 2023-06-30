@@ -292,7 +292,7 @@ QSqlError Db::populateAvailableItems()
     mPlaylistList.clear();
 
     // Make platform query
-    QSqlQuery platformQuery("SELECT DISTINCT " + Table_Game::COL_PLATFORM + " FROM " + Table_Game::NAME, fpDb);
+    QSqlQuery platformQuery("SELECT DISTINCT " + Table_Game::COL_PLATFORM_NAME + " FROM " + Table_Game::NAME, fpDb);
 
     // Return if error occurs
     if(platformQuery.lastError().isValid())
@@ -300,24 +300,10 @@ QSqlError Db::populateAvailableItems()
 
     // Parse query
     while(platformQuery.next())
-        mPlatformList.append(platformQuery.value(Table_Game::COL_PLATFORM).toString());
+        mPlatformList.append(platformQuery.value(Table_Game::COL_PLATFORM_NAME).toString());
 
     // Sort list
     mPlatformList.sort();
-
-    // Make playlist query
-    QSqlQuery playlistQuery("SELECT DISTINCT " + Table_Playlist::COL_TITLE + " FROM " + Table_Playlist::NAME, fpDb);
-
-    // Return if error occurs
-    if(playlistQuery.lastError().isValid())
-        return playlistQuery.lastError();
-
-    // Parse query
-    while(playlistQuery.next())
-        mPlaylistList.append(playlistQuery.value(Db::Table_Playlist::COL_TITLE).toString());
-
-    // Sort list
-    mPlaylistList.sort();
 
     // Return invalid SqlError
     return QSqlError();
@@ -425,7 +411,7 @@ QSqlError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, QStringList
         // Create platform query string
         QString placeholder = ":platform";
         QString baseQueryCommand = "SELECT %1 FROM " + Table_Game::NAME + " WHERE " +
-                                   Table_Game::COL_PLATFORM + " = " + placeholder + " AND ";
+                                   Table_Game::COL_PLATFORM_NAME + " = " + placeholder + " AND ";
 
         // Handle filtering
         QString filteredQueryCommand = baseQueryCommand.append(inclusionOptions.includeAnimations ? GAME_AND_ANIM_FILTER : GAME_ONLY_FILTER);
@@ -495,165 +481,6 @@ QSqlError Db::queryAllAddApps(QueryBuffer& resultBuffer)
     QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
     resultBuffer.source = Table_Add_App::NAME;
-    return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
-}
-
-QSqlError Db::queryPlaylistsByName(QueryBuffer& resultBuffer, QStringList playlists, InclusionOptions inclusionOptions)
-{
-    // Return blank result if no playlists are selected
-    if(playlists.isEmpty())
-    {
-        resultBuffer.source = QString();
-        resultBuffer.result = QSqlQuery();
-        resultBuffer.size = 0;
-
-        return QSqlError();
-    }
-    else
-    {
-        // Ensure return buffer is effectively null
-        resultBuffer = QueryBuffer();
-
-        // Get database
-        QSqlDatabase fpDb;
-        QSqlError dbError = getThreadConnection(fpDb);
-        if(dbError.isValid())
-            return dbError;
-
-        // Create selected playlists query string
-        QString placeHolders = QString("?,").repeated(playlists.size());
-        placeHolders.chop(1); // Remove trailing ?
-        QString baseQueryCommand = "SELECT %1 FROM " + Table_Playlist::NAME + " WHERE " +
-                Table_Playlist::COL_TITLE + " IN (" + placeHolders + ") AND " +
-                (inclusionOptions.includeAnimations ? GAME_AND_ANIM_FILTER : GAME_ONLY_FILTER);
-        QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Playlist::COLUMN_LIST.join("`,`") + "`");
-        QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
-
-        // Create main query and bind selected playlists
-        QSqlQuery mainQuery(fpDb);
-        mainQuery.setForwardOnly(true);
-        mainQuery.prepare(mainQueryCommand);
-        for(const QString& playlist : playlists)
-            mainQuery.addBindValue(playlist);
-
-        // Execute query and return if error occurs
-        if(!mainQuery.exec())
-            return mainQuery.lastError();
-
-        // Create size query and bind selected playlists
-        QSqlQuery sizeQuery(fpDb);
-        sizeQuery.setForwardOnly(true);
-        sizeQuery.prepare(sizeQueryCommand);
-        for(const QString& playlist : playlists)
-            sizeQuery.addBindValue(playlist);
-
-        // Execute query and return if error occurs
-        if(!sizeQuery.exec())
-            return sizeQuery.lastError();
-
-        // Get query size
-        sizeQuery.next();
-        int querySize = sizeQuery.value(0).toInt();
-
-        // Set buffer instance to result
-        resultBuffer.source = Table_Playlist::NAME;
-        resultBuffer.result = mainQuery;
-        resultBuffer.size = querySize;
-
-        // Return invalid SqlError
-        return QSqlError();
-    }
-}
-
-QSqlError Db::queryPlaylistGamesByPlaylist(QList<QueryBuffer>& resultBuffer, const QList<QUuid>& playlistIds)
-{
-    // Ensure return buffer is empty
-    resultBuffer.clear();
-
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return dbError;
-
-    for(QUuid playlistId : playlistIds) // Naturally returns empty list if no playlists are selected
-    {
-        // Query all games for the current playlist
-        QString baseQueryCommand = "SELECT %1 FROM " + Table_Playlist_Game::NAME + " WHERE " +
-                Table_Playlist_Game::COL_PLAYLIST_ID + " = '" + playlistId.toString(QUuid::WithoutBraces) + "'";
-        QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Playlist_Game::COLUMN_LIST.join("`,`") + "`");
-        QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
-
-        // Make query
-        QSqlError queryError;
-        QueryBuffer queryResult;
-        queryResult.source = playlistId.toString();
-
-        if((queryError = makeNonBindQuery(queryResult, &fpDb, mainQueryCommand, sizeQueryCommand)).isValid())
-            return queryError;
-
-        // Add result to buffer if there were any hits
-        if(queryResult.size > 0)
-            resultBuffer.append(queryResult);
-    }
-
-    // Return invalid SqlError
-    return QSqlError();
-}
-
-QSqlError Db::queryPlaylistGameIds(QueryBuffer& resultBuffer, const QList<QUuid>& playlistIds)
-{
-    // Ensure return buffer is empty
-    resultBuffer = QueryBuffer();
-
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return dbError;
-
-    // Create playlist ID query string
-    QString idCSV = Qx::String::join(playlistIds, [](QUuid id){return id.toString(QUuid::WithoutBraces);}, "','");
-
-    // Query all game IDs that fall under given the playlists
-    QString baseQueryCommand = "SELECT %1 FROM " + Table_Playlist_Game::NAME + " WHERE " +
-            Table_Playlist_Game::COL_PLAYLIST_ID + " IN('" + idCSV + "')";
-    QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Playlist_Game::COL_GAME_ID + "`");
-    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
-
-    // Make query
-    QSqlError queryError;
-    resultBuffer.source = Table_Playlist_Game::NAME;
-
-    if((queryError = makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand)).isValid())
-        return queryError;
-
-    // Return invalid SqlError
-    return QSqlError();
-
-}
-
-QSqlError Db::queryAllEntryTags(QueryBuffer& resultBuffer)
-{
-    // Ensure return buffer is empty
-    resultBuffer = QueryBuffer();
-
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return dbError;
-
-    // Query all tags tied to game IDs
-    QString baseQueryCommand = "SELECT %1 FROM " + Table_Game_Tags_Tag::NAME;
-    QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Game_Tags_Tag::COL_GAME_ID + "`");
-    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
-
-    // Make query
-    QSqlError queryError;
-    resultBuffer.source = Table_Playlist_Game::NAME;
-
-    // Return invalid SqlError
     return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
 }
 
@@ -805,53 +632,6 @@ QSqlError Db::queryEntryDataById(QueryBuffer& resultBuffer, QUuid appId)
     return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
 }
 
-QSqlError Db::queryDataPackSource(QueryBuffer& resultBuffer)
-{
-    // Ensure return buffer is effectively null
-    resultBuffer = QueryBuffer();
-
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return dbError;
-
-    // Setup ID query
-    QString baseQueryCommand = "SELECT %1 FROM " + Table_Source::NAME;
-    QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Source::COLUMN_LIST.join("`,`") + "`");
-    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
-
-    // Make query
-    QSqlError queryError;
-    resultBuffer.source = Table_Source::NAME;
-
-    return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
-}
-
-QSqlError Db::queryEntrySourceData(QueryBuffer& resultBuffer, QString appSha256Hex)
-{
-    // Ensure return buffer is effectively null
-    resultBuffer = QueryBuffer();
-
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return dbError;
-
-    // Setup ID query
-    QString baseQueryCommand = "SELECT %1 FROM " + Table_Source_Data::NAME + " WHERE " +
-            Table_Source_Data::COL_SHA256 + " == '" + appSha256Hex + "'";
-    QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Source_Data::COLUMN_LIST.join("`,`") + "`");
-    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
-
-    // Make query
-    QSqlError queryError;
-    resultBuffer.source = Table_Source_Data::NAME;
-
-    return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
-}
-
 QSqlError Db::queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter includeFilter)
 {
     // Ensure return buffer is effectively null
@@ -874,14 +654,13 @@ QSqlError Db::queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter includeFi
     return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
 }
 
-QStringList Db::platformList() const { return mPlatformList; }
-QStringList Db::playlistList() const { return mPlaylistList; }
+QStringList Db::platformList() const { return mPlatformList; } //TODO: Probably should use RAII for this.
 QMap<int, Db::TagCategory> Db::tags() const { return mTagMap; }
 
 QSqlError Db::entryUsesDataPack(bool& resultBuffer, QUuid gameId)
 {
     /* NOTE: The launcher performs this check and other data pack tasks by checking if the `activeDataId` column
-     * of the `game` table has a value, and if it does that matching that to the `id` column in the `game_data`
+     * of the `game` table has a value, and if it does, then matching that to the `id` column in the `game_data`
      * table to get the game's data pack info. This requires slightly less processing, but the way it's done here
      * is ultimately fine and technically handles typos/errors in the database slightly better since it's a more
      * direct check. Ultimately this should be switched over to the official method though.
