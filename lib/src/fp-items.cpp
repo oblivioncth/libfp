@@ -24,7 +24,6 @@ QString Game::developer() const { return mDeveloper; }
 QString Game::publisher() const { return mPublisher; }
 QDateTime Game::dateAdded() const { return mDateAdded; }
 QDateTime Game::dateModified() const { return mDateModified; }
-QString Game::platform() const { return mPlatform; }
 QString Game::playMode() const { return mPlayMode; }
 bool Game::isBroken() const { return mBroken; }
 QString Game::status() const { return mStatus; }
@@ -38,6 +37,7 @@ QString Game::originalDescription() const { return mOriginalDescription; }
 QString Game::language() const { return mLanguage; }
 QString Game::orderTitle() const { return mOrderTitle; }
 QString Game::library() const { return mLibrary; }
+QString Game::platformName() const { return mPlatformName; }
 
 //===============================================================================================================
 // Game::Builder
@@ -78,7 +78,6 @@ Game::Builder& Game::Builder::wDeveloper(QString developer) { mGameBlueprint.mDe
 Game::Builder& Game::Builder::wPublisher(QString publisher) { mGameBlueprint.mPublisher = publisher; return *this; }
 Game::Builder& Game::Builder::wDateAdded(QString rawDateAdded) { mGameBlueprint.mDateAdded = QDateTime::fromString(rawDateAdded, Qt::ISODateWithMs); return *this; }
 Game::Builder& Game::Builder::wDateModified(QString rawDateModified) { mGameBlueprint.mDateModified = QDateTime::fromString(rawDateModified, Qt::ISODateWithMs); return *this; }
-Game::Builder& Game::Builder::wPlatform(QString platform) { mGameBlueprint.mPlatform = platform; return *this; }
 Game::Builder& Game::Builder::wBroken(QString rawBroken)  { mGameBlueprint.mBroken = rawBroken.toInt() != 0; return *this; }
 Game::Builder& Game::Builder::wPlayMode(QString playMode) { mGameBlueprint.mPlayMode = playMode; return *this; }
 Game::Builder& Game::Builder::wStatus(QString status) { mGameBlueprint.mStatus = status; return *this; }
@@ -92,6 +91,7 @@ Game::Builder& Game::Builder::wOriginalDescription(QString originalDescription) 
 Game::Builder& Game::Builder::wLanguage(QString language)  { mGameBlueprint.mLanguage = language; return *this; }
 Game::Builder& Game::Builder::wOrderTitle(QString orderTitle)  { mGameBlueprint.mOrderTitle = orderTitle; return *this; }
 Game::Builder& Game::Builder::wLibrary(QString library) { mGameBlueprint.mLibrary = library; return *this; }
+Game::Builder& Game::Builder::wPlatformName(QString platformName) { mGameBlueprint.mPlatformName = platformName; return *this; }
 
 Game Game::Builder::build() { return mGameBlueprint; }
 

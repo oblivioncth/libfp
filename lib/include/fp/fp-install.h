@@ -14,7 +14,10 @@
 #include <qx/core/qx-versionnumber.h>
 
 // Project Includes
-#include "fp/fp-json.h"
+#include "fp/settings/fp-config.h"
+#include "fp/settings/fp-execs.h"
+#include "fp/settings/fp-preferences.h"
+#include "fp/settings/fp-services.h"
 #include "fp/fp-macro.h"
 #include "fp/fp-db.h"
 #include "fp/fp-items.h"
@@ -96,10 +99,10 @@ private:
     std::unique_ptr<QFile> mVersionFile;
 
     // Settings
-    Json::Config mConfig;
-    Json::Preferences mPreferences;
-    Json::Services mServices;
-    Json::Execs mExecs;
+    Config mConfig;
+    Preferences mPreferences;
+    Services mServices;
+    Execs mExecs;
 
     // Database
     Db* mDatabase = nullptr;
@@ -142,10 +145,10 @@ public:
 
     // Support Application Checks
     // TODO: At some point create a "Settings" object that wraps all of these, would need to rename existing Fp::Settings
-    const Json::Config& config() const;
-    const Json::Preferences& preferences() const;
-    const Json::Services& services() const;
-    const Json::Execs& execs() const;
+    const Config& config() const;
+    const Preferences& preferences() const;
+    const Services& services() const;
+    const Execs& execs() const;
 
     // Data access
     QString fullPath() const;

@@ -54,14 +54,14 @@ Install::Install(QString installPath) :
     // Get settings
     Qx::GenericError readReport;
 
-    Json::ConfigReader configReader(&mConfig, mConfigJsonFile);
+    ConfigReader configReader(&mConfig, mConfigJsonFile);
     if((readReport = configReader.readInto()).isValid())
     {
         mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
         return;
     }
 
-    Json::PreferencesReader prefReader(&mPreferences, mPreferencesJsonFile);
+    PreferencesReader prefReader(&mPreferences, mPreferencesJsonFile);
     if((readReport = prefReader.readInto()).isValid())
     {
         mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
@@ -72,7 +72,7 @@ Install::Install(QString installPath) :
     mLogosDirectory = QDir(installPath + "/" + mPreferences.imageFolderPath + '/' + LOGOS_FOLDER_NAME);
     mScreenshotsDirectory = QDir(installPath + "/" + mPreferences.imageFolderPath + '/' + SCREENSHOTS_FOLDER_NAME);
 
-    Json::ServicesReader servicesReader(&mServices, mServicesJsonFile, mMacroResolver);
+    ServicesReader servicesReader(&mServices, mServicesJsonFile, mMacroResolver);
     if((readReport = servicesReader.readInto()).isValid())
     {
         mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
@@ -81,7 +81,7 @@ Install::Install(QString installPath) :
 
     if(mExecsJsonFile->exists()) // Optional
     {
-        Json::ExecsReader execsReader(&mExecs, mExecsJsonFile);
+        ExecsReader execsReader(&mExecs, mExecsJsonFile);
         if((readReport = execsReader.readInto()).isValid())
         {
             mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
@@ -223,10 +223,10 @@ QString Install::launcherChecksum() const
 
 Db* Install::database() { return mDatabase; }
 
-const Json::Config& Install::config() const { return mConfig; }
-const Json::Preferences& Install::preferences() const { return mPreferences; }
-const Json::Services& Install::services() const { return mServices; }
-const Json::Execs& Install::execs() const { return mExecs; }
+const Config& Install::config() const { return mConfig; }
+const Preferences& Install::preferences() const { return mPreferences; }
+const Services& Install::services() const { return mServices; }
+const Execs& Install::execs() const { return mExecs; }
 
 QString Install::fullPath() const { return mRootDirectory.absolutePath(); }
 QDir Install::logosDirectory() const { return mLogosDirectory; }
@@ -250,7 +250,7 @@ const MacroResolver* Install::macroResolver() const { return mMacroResolver; }
 QString Install::resolveAppPathOverrides(const QString& appPath) const
 {
     // Check if path has an associated override
-    for(const Json::AppPathOverride& override : qAsConst(mPreferences.appPathOverrides))
+    for(const AppPathOverride& override : qAsConst(mPreferences.appPathOverrides))
     {
         if(override.path == appPath && override.enabled)
             return override.override;
@@ -265,7 +265,7 @@ QString Install::resolveExecSwaps(const QString& appPath, const QString& platfor
     bool preferNative = mPreferences.nativePlatforms.contains(platform);
 
     // Check if path has an associated swap
-    for(const Json::Exec& swap : qAsConst(mExecs.list))
+    for(const Exec& swap : qAsConst(mExecs.list))
     {
         if(swap.win32 == appPath)
         {

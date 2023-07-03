@@ -11,14 +11,22 @@ ob_add_standard_library(${LIB_TARGET_NAME}
             fp-db.h
             fp-install.h
             fp-items.h
-            fp-json.h
             fp-macro.h
+            settings/fp-config.h
+            settings/fp-execs.h
+            settings/fp-preferences.h
+            settings/fp-services.h
+            settings/fp-settings.h
     IMPLEMENTATION
         fp-db.cpp
         fp-install.cpp
-        fp-items.cpp
-        fp-json.cpp
         fp-macro.cpp
+        fp-items.cpp
+        settings/fp-config.cpp
+        settings/fp-execs.cpp
+        settings/fp-preferences.cpp
+        settings/fp-services.cpp
+        settings/fp-settings.cpp
     LINKS
         PUBLIC
             Qt6::Core

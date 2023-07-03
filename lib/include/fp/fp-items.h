@@ -30,7 +30,6 @@ private:
     QString mPublisher;
     QDateTime mDateAdded;
     QDateTime mDateModified;
-    QString mPlatform;
     bool mBroken;
     QString mPlayMode;
     QString mStatus;
@@ -44,6 +43,7 @@ private:
     QString mLanguage;
     QString mOrderTitle;
     QString mLibrary;
+    QString mPlatformName;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -58,7 +58,6 @@ public:
     QString publisher() const;
     QDateTime dateAdded() const;
     QDateTime dateModified() const;
-    QString platform() const;
     bool isBroken() const;
     QString playMode() const;
     QString status() const;
@@ -72,6 +71,7 @@ public:
     QString language() const;
     QString orderTitle() const;
     QString library() const;
+    QString platformName() const;
 };
 
 class FP_FP_EXPORT Game::Builder
@@ -97,7 +97,6 @@ public:
     Builder& wPublisher(QString publisher);
     Builder& wDateAdded(QString rawDateAdded);
     Builder& wDateModified(QString rawDateModified);
-    Builder& wPlatform(QString platform);
     Builder& wBroken(QString rawBroken);
     Builder& wPlayMode(QString playMode);
     Builder& wStatus(QString status);
@@ -111,6 +110,7 @@ public:
     Builder& wLanguage(QString language);
     Builder& wOrderTitle(QString orderTitle);
     Builder& wLibrary(QString library);
+    Builder& wPlatformName(QString platformName);
 
     Game build();
 };

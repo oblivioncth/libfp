@@ -52,7 +52,7 @@ set(LIBFP_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "84585805c3d085eb469a04558cc2a76c4de91849"
+    REF "90098afc6b84ce0c833fa0121235b9eafd2211e6"
     COMPONENTS
         ${LIBFP_QX_COMPONENTS}
 )
