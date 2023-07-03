@@ -115,6 +115,75 @@ public:
     Game build();
 };
 
+class FP_FP_EXPORT GameData
+{
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Builder;
+
+//-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    quint32 mId;
+    QUuid mGameId;
+    QString mTitle;
+    QDateTime mDateAdded;
+    QString mSha256;
+    quint32 mCrc32;
+    bool mPresentOnDisk;
+    QString mPath;
+    quint32 mSize;
+    QString mParameters;
+    QString mAppPath;
+    QString mLaunchCommand;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    GameData();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    quint32 id() const;
+    QUuid gameId() const;
+    QString title() const;
+    QDateTime dateAdded() const;
+    QString sha256() const;
+    quint32 crc32() const;
+    bool presentOnDisk() const;
+    QString path() const;
+    quint32 size() const;
+    QString parameters() const;
+    QString appPath() const;
+    QString launchCommand() const;
+};
+
+class FP_FP_EXPORT GameData::Builder
+{
+//-Instance Variables------------------------------------------------------------------------------------------
+private:
+    GameData mGameDataBlueprint;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    Builder();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    Builder& wId(QStringView rawId);
+    Builder& wGameId(QStringView rawId);
+    Builder& wTitle(const QString& title);
+    Builder& wDateAdded(QStringView rawDateAdded);
+    Builder& wSha256(const QString& sha256);
+    Builder& wCrc32(QStringView rawCrc32);
+    Builder& wPresentOnDisk(QStringView rawBroken);
+    Builder& wPath(const QString& path);
+    Builder& wSize(QStringView rawSize);
+    Builder& wParameters(const QString& parameters);
+    Builder& wAppPath(const QString& appPath);
+    Builder& wLaunchCommand(const QString& launchCommand);
+
+    GameData build();
+};
+
 class FP_FP_EXPORT AddApp
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------

@@ -96,6 +96,54 @@ Game::Builder& Game::Builder::wPlatformName(QString platformName) { mGameBluepri
 Game Game::Builder::build() { return mGameBlueprint; }
 
 //===============================================================================================================
+// GameData
+//===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+GameData::GameData() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Public:
+quint32 GameData::id() const { return mId; }
+QUuid GameData::gameId() const { return mGameId; }
+QString GameData::title() const { return mTitle; }
+QDateTime GameData::dateAdded() const { return mDateAdded; }
+QString GameData::sha256() const { return mSha256; }
+quint32 GameData::crc32() const { return mCrc32; }
+bool GameData::presentOnDisk() const { return mPresentOnDisk; }
+QString GameData::path() const { return mPath; }
+quint32 GameData::size() const { return mSize; }
+QString GameData::parameters() const { return mParameters; }
+QString GameData::appPath() const { return mAppPath; }
+QString GameData::launchCommand() const { return mLaunchCommand; }
+
+//===============================================================================================================
+// GameData::Builder
+//===============================================================================================================
+
+//-Constructor-------------------------------------------------------------------------------------------------
+//Public:
+GameData::Builder::Builder() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------
+//Public:
+GameData::Builder& GameData::Builder::wId(QStringView rawId) { mGameDataBlueprint.mId = rawId.toInt(); return *this; }
+GameData::Builder& GameData::Builder::wGameId(QStringView rawId) { mGameDataBlueprint.mGameId = QUuid(rawId); return *this; }
+GameData::Builder& GameData::Builder::wTitle(const QString& title) { mGameDataBlueprint.mTitle = title; return *this; }
+GameData::Builder& GameData::Builder::wDateAdded(QStringView rawDateAdded) { mGameDataBlueprint.mDateAdded = QDateTime::fromString(rawDateAdded, Qt::ISODateWithMs); return *this; }
+GameData::Builder& GameData::Builder::wSha256(const QString& sha256) { mGameDataBlueprint.mSha256 = sha256; return *this; }
+GameData::Builder& GameData::Builder::wCrc32(QStringView rawCrc32) { mGameDataBlueprint.mCrc32 = rawCrc32.toInt(); return *this; }
+GameData::Builder& GameData::Builder::wPresentOnDisk(QStringView rawBroken) { mGameDataBlueprint.mPresentOnDisk = rawBroken.toInt() != 0; return *this; }
+GameData::Builder& GameData::Builder::wPath(const QString& path) { mGameDataBlueprint.mPath = path; return *this; }
+GameData::Builder& GameData::Builder::wSize(QStringView rawSize) { mGameDataBlueprint.mSize = rawSize.toInt(); return *this; }
+GameData::Builder& GameData::Builder::wParameters(const QString& parameters) { mGameDataBlueprint.mParameters = parameters; return *this; }
+GameData::Builder& GameData::Builder::wAppPath(const QString& appPath) { mGameDataBlueprint.mAppPath = appPath; return *this; }
+GameData::Builder& GameData::Builder::wLaunchCommand(const QString& launchCommand) { mGameDataBlueprint.mLaunchCommand = launchCommand; return *this; }
+
+GameData GameData::Builder::build() { return mGameDataBlueprint; }
+
+//===============================================================================================================
 // AddApp
 //===============================================================================================================
 

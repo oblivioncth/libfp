@@ -75,8 +75,11 @@ public:
         static inline const QString COL_PATH = "path";
         static inline const QString COL_SIZE = "size";
         static inline const QString COL_PARAM = "parameters";
+        static inline const QString COL_APP_PATH = "applicationPath";
+        static inline const QString COL_LAUNCH_COMMAND = "launchCommand";
 
-        static inline const QStringList COLUMN_LIST = {COL_ID, COL_GAME_ID, COL_TITLE, COL_DATE_ADDED, COL_SHA256, COL_CRC32, COL_PRES_ON_DISK, COL_PATH, COL_SIZE, COL_PARAM};
+        static inline const QStringList COLUMN_LIST = {COL_ID, COL_GAME_ID, COL_TITLE, COL_DATE_ADDED, COL_SHA256, COL_CRC32, COL_PRES_ON_DISK, COL_PATH, COL_SIZE, COL_PARAM,
+                                                      COL_APP_PATH, COL_LAUNCH_COMMAND};
     };
 
     class Table_Add_App
