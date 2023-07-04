@@ -12,6 +12,11 @@
 // Qx Includes
 #include <qx/core/qx-genericerror.h>
 
+// Project Includes
+#include "fp/fp-items.h"
+
+using namespace Qt::Literals::StringLiterals;
+
 namespace Fp
 {
 
@@ -240,6 +245,13 @@ private:
     static inline const QString ERR_MISSING_TABLE = "The Flashpoint database is missing expected tables.";
     static inline const QString ERR_TABLE_MISSING_COLUMN = "The Flashpoint database tables are missing expected columns.";
 
+    // Error - Helper
+    static inline const QString ERR_UNEXPECTED_SQL = u"Unexpected SQL error while querying the Flashpoint database:"_s;
+    static inline const QString ERR_ID_NOT_FOUND = u"An entry matching the specified ID could not be found in the Flashpoint database."_s;
+    static inline const QString ERR_TITLE_NOT_FOUND = u"The provided title was not found in the Flashpoint database."_s;
+    static inline const QString ERR_ID_DUPLICATE_ENTRY_P = u"Multiple entries with the specified ID were found."_s;
+    static inline const QString ERR_ID_DUPLICATE_ENTRY_S = u"This should not be possible and may indicate an error within the Flashpoint database"_s;
+
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -297,7 +309,7 @@ public:
 
     // Queries - CLIFp
     QSqlError queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter);
-    QSqlError queryEntryDataById(QueryBuffer& resultBuffer, QUuid appId);
+    QSqlError queryEntryDataById(QueryBuffer& resultBuffer, const QUuid& appId);
     QSqlError queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter filter);
 
     // Info
@@ -306,6 +318,10 @@ public:
 
     // Checks
     QSqlError entryUsesDataPack(bool& resultBuffer, QUuid gameId);
+
+    // Helper
+    Qx::GenericError getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId);
+    Qx::GenericError getGameData(GameData& data, const QUuid& gameId);
 
 //-Slots ------------------------------------------------------------------------------------------------------
 private:

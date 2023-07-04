@@ -101,10 +101,14 @@ Game Game::Builder::build() { return mGameBlueprint; }
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-GameData::GameData() {}
+GameData::GameData() :
+    mNull(true)
+{}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
+bool GameData::isNull() const { return mNull; }
+
 quint32 GameData::id() const { return mId; }
 QUuid GameData::gameId() const { return mGameId; }
 QString GameData::title() const { return mTitle; }
@@ -141,7 +145,7 @@ GameData::Builder& GameData::Builder::wParameters(const QString& parameters) { m
 GameData::Builder& GameData::Builder::wAppPath(const QString& appPath) { mGameDataBlueprint.mAppPath = appPath; return *this; }
 GameData::Builder& GameData::Builder::wLaunchCommand(const QString& launchCommand) { mGameDataBlueprint.mLaunchCommand = launchCommand; return *this; }
 
-GameData GameData::Builder::build() { return mGameDataBlueprint; }
+GameData GameData::Builder::build() { mGameDataBlueprint.mNull = false; return mGameDataBlueprint; }
 
 //===============================================================================================================
 // AddApp

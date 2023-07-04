@@ -123,6 +123,8 @@ public:
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
+    bool mNull;
+
     quint32 mId;
     QUuid mGameId;
     QString mTitle;
@@ -142,6 +144,8 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
+    bool isNull() const;
+
     quint32 id() const;
     QUuid gameId() const;
     QString title() const;

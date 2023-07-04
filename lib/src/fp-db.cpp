@@ -3,6 +3,7 @@
 
 // Qx Includes
 #include <qx/core/qx-string.h>
+#include <qx/core/qx-regularexpression.h>
 
 namespace Fp
 {
@@ -608,7 +609,7 @@ QSqlError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
     return QSqlError();
 }
 
-QSqlError Db::queryEntryDataById(QueryBuffer& resultBuffer, QUuid appId)
+QSqlError Db::queryEntryDataById(QueryBuffer& resultBuffer, const QUuid& appId)
 {
     // Ensure return buffer is effectively null
     resultBuffer = QueryBuffer();
@@ -700,6 +701,113 @@ QSqlError Db::entryUsesDataPack(bool& resultBuffer, QUuid gameId)
 
     // Return invalid SqlError
     return QSqlError();
+}
+
+Qx::GenericError Db::getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId)
+{
+    // Find title
+    Db::EntryFilter mainFilter{.type = Fp::Db::EntryType::PrimaryThenAddApp, .id = entryId};
+
+    Fp::Db::QueryBuffer searchResult;
+    QSqlError searchError = queryEntrys(searchResult, mainFilter);
+    if(searchError.isValid())
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_UNEXPECTED_SQL, searchError.text());
+
+    // Check if ID was found and that only one instance was found
+    if(searchResult.size == 0)
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_ID_NOT_FOUND);
+    else if(searchResult.size > 1)
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_ID_DUPLICATE_ENTRY_P, ERR_ID_DUPLICATE_ENTRY_S);
+
+    // Advance result to only record
+    searchResult.result.next();
+
+    // Fill variant
+    if(searchResult.source == Db::Table_Add_App::NAME)
+    {
+        AddApp::Builder fpAab;
+        fpAab.wId(searchResult.result.value(Fp::Db::Table_Add_App::COL_ID).toString());
+        fpAab.wAppPath(searchResult.result.value(Fp::Db::Table_Add_App::COL_APP_PATH).toString());
+        fpAab.wAutorunBefore(searchResult.result.value(Fp::Db::Table_Add_App::COL_AUTORUN).toString());
+        fpAab.wLaunchCommand(searchResult.result.value(Fp::Db::Table_Add_App::COL_LAUNCH_COMMAND).toString());
+        fpAab.wName(searchResult.result.value(Fp::Db::Table_Add_App::COL_NAME).toString().remove(Qx::RegularExpression::LINE_BREAKS));
+        fpAab.wWaitExit(searchResult.result.value(Fp::Db::Table_Add_App::COL_WAIT_EXIT).toString());
+        fpAab.wParentId(searchResult.result.value(Fp::Db::Table_Add_App::COL_PARENT_ID).toString());
+
+        entry = fpAab.build();
+    }
+    else if(searchResult.source == Db::Table_Game::NAME)
+    {
+        Game::Builder fpGb;
+        fpGb.wId(searchResult.result.value(Fp::Db::Table_Game::COL_ID).toString());
+        fpGb.wTitle(searchResult.result.value(Fp::Db::Table_Game::COL_TITLE).toString().remove(Qx::RegularExpression::LINE_BREAKS));
+        fpGb.wSeries(searchResult.result.value(Fp::Db::Table_Game::COL_SERIES).toString().remove(Qx::RegularExpression::LINE_BREAKS));
+        fpGb.wDeveloper(searchResult.result.value(Fp::Db::Table_Game::COL_DEVELOPER).toString().remove(Qx::RegularExpression::LINE_BREAKS));
+        fpGb.wPublisher(searchResult.result.value(Fp::Db::Table_Game::COL_PUBLISHER).toString().remove(Qx::RegularExpression::LINE_BREAKS));
+        fpGb.wDateAdded(searchResult.result.value(Fp::Db::Table_Game::COL_DATE_ADDED).toString());
+        fpGb.wDateModified(searchResult.result.value(Fp::Db::Table_Game::COL_DATE_MODIFIED).toString());
+        fpGb.wBroken(searchResult.result.value(Fp::Db::Table_Game::COL_BROKEN).toString());
+        fpGb.wPlayMode(searchResult.result.value(Fp::Db::Table_Game::COL_PLAY_MODE).toString());
+        fpGb.wStatus(searchResult.result.value(Fp::Db::Table_Game::COL_STATUS).toString());
+        fpGb.wNotes(searchResult.result.value(Fp::Db::Table_Game::COL_NOTES).toString());
+        fpGb.wSource(searchResult.result.value(Fp::Db::Table_Game::COL_SOURCE).toString().remove(Qx::RegularExpression::LINE_BREAKS));
+        fpGb.wAppPath(searchResult.result.value(Fp::Db::Table_Game::COL_APP_PATH).toString());
+        fpGb.wLaunchCommand(searchResult.result.value(Fp::Db::Table_Game::COL_LAUNCH_COMMAND).toString());
+        fpGb.wReleaseDate(searchResult.result.value(Fp::Db::Table_Game::COL_RELEASE_DATE).toString());
+        fpGb.wVersion(searchResult.result.value(Fp::Db::Table_Game::COL_VERSION).toString().remove(Qx::RegularExpression::LINE_BREAKS));
+        fpGb.wOriginalDescription(searchResult.result.value(Fp::Db::Table_Game::COL_ORIGINAL_DESC).toString());
+        fpGb.wLanguage(searchResult.result.value(Fp::Db::Table_Game::COL_LANGUAGE).toString().remove(Qx::RegularExpression::LINE_BREAKS));
+        fpGb.wOrderTitle(searchResult.result.value(Fp::Db::Table_Game::COL_ORDER_TITLE).toString().remove(Qx::RegularExpression::LINE_BREAKS));
+        fpGb.wLibrary(searchResult.result.value(Fp::Db::Table_Game::COL_LIBRARY).toString());
+        fpGb.wPlatformName(searchResult.result.value(Fp::Db::Table_Game::COL_PLATFORM_NAME).toString());
+
+        entry = fpGb.build();
+    }
+    else
+        qFatal("Entry search result source must be 'game' or 'additional_app'");
+
+    return Qx::GenericError();
+}
+
+Qx::GenericError Db::getGameData(GameData& data, const QUuid& gameId)
+{
+    // Clear buffer
+    data = GameData();
+
+    // Get entry data
+    QSqlError searchError;
+    Fp::Db::QueryBuffer searchResult;
+
+    if((searchError = queryEntryDataById(searchResult, gameId)).isValid())
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_UNEXPECTED_SQL, searchError.text());
+
+    // Check if ID was found and if so that only one instance was found
+    if(searchResult.size == 0)
+        return Qx::GenericError(); // Game doesn't have data pack
+    else if(searchResult.size > 1)
+        return Qx::GenericError(Qx::GenericError::Critical, ERR_ID_DUPLICATE_ENTRY_P, ERR_ID_DUPLICATE_ENTRY_S);
+
+    // Advance result to only record
+    searchResult.result.next();
+
+    // Fill buffer
+    GameData::Builder fpGdb;
+    fpGdb.wId(searchResult.result.value(Fp::Db::Table_Game_Data::COL_ID).toString());
+    fpGdb.wGameId(searchResult.result.value(Fp::Db::Table_Game_Data::COL_GAME_ID).toString());
+    fpGdb.wTitle(searchResult.result.value(Fp::Db::Table_Game_Data::COL_TITLE).toString());
+    fpGdb.wDateAdded(searchResult.result.value(Fp::Db::Table_Game_Data::COL_DATE_ADDED).toString());
+    fpGdb.wSha256(searchResult.result.value(Fp::Db::Table_Game_Data::COL_SHA256).toString());
+    fpGdb.wCrc32(searchResult.result.value(Fp::Db::Table_Game_Data::COL_CRC32).toString());
+    fpGdb.wPresentOnDisk(searchResult.result.value(Fp::Db::Table_Game_Data::COL_PRES_ON_DISK).toString());
+    fpGdb.wPath(searchResult.result.value(Fp::Db::Table_Game_Data::COL_PATH).toString());
+    fpGdb.wSize(searchResult.result.value(Fp::Db::Table_Game_Data::COL_SIZE).toString());
+    fpGdb.wParameters(searchResult.result.value(Fp::Db::Table_Game_Data::COL_PARAM).toString());
+    fpGdb.wAppPath(searchResult.result.value(Fp::Db::Table_Game_Data::COL_APP_PATH).toString());
+    fpGdb.wLaunchCommand(searchResult.result.value(Fp::Db::Table_Game_Data::COL_LAUNCH_COMMAND).toString());
+
+    data = fpGdb.build();
+
+    return Qx::GenericError();
 }
 
 //-Slots ------------------------------------------------------------------------------------------------------
