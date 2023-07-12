@@ -12,6 +12,7 @@
 
 // Qx Includes
 #include <qx/core/qx-versionnumber.h>
+#include <qx/io/qx-common-io.h>
 
 // Project Includes
 #include "fp/settings/fp-config.h"
@@ -41,10 +42,6 @@ public: // Ugh
 #endif
 
 private:
-
-    // Validity check fail reasons
-    static inline const QString FILE_DNE = "A required file does not exist: %1";
-
     // Static paths
     static inline const QString LAUNCHER_PATH =  "Launcher/" + LAUNCHER_NAME;
     static inline const QString DATABASE_PATH = "Data/flashpoint.sqlite";
@@ -67,11 +64,11 @@ private:
     static inline const QString LOGOS_FOLDER_NAME = "Logos";
     static inline const QString SCREENSHOTS_FOLDER_NAME = "Screenshots";
 
+    // Error
+    static inline const QString ERR_FILE_MISSING = QSL("A required flashpoint install file is missing.");
+
     // Settings
     static inline const QString MACRO_FP_PATH = "<fpPath>";
-
-    // Error
-    static inline const QString ERR_INVALID = "Invalid Flashpoint Install:";
 
     // Regex
     static inline const QRegularExpression VERSION_NUMBER_REGEX = QRegularExpression("[fF]lashpoint (?<version>.*?) ");
@@ -83,7 +80,7 @@ public:
 private:
     // Validity
     bool mValid;
-    Qx::GenericError mError;
+    Qx::Error mError;
 
     // Files and directories
     QDir mRootDirectory;
@@ -120,10 +117,10 @@ public:
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
-    static QString standardImageSubPath(ImageType imageType, QUuid gameId);
+    static QString standardImageSubPath(QUuid gameId);
 
 public:
-    static Qx::GenericError appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo);
+    static Qx::Error appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
@@ -132,7 +129,7 @@ private:
 public:
     // Validity
     bool isValid() const;
-    Qx::GenericError error() const;
+    Qx::Error error() const;
 
     // General information
     Edition edition() const;

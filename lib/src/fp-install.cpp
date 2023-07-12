@@ -2,8 +2,8 @@
 #include "fp/fp-install.h"
 
 // Qx Includes
-#include <qx/io/qx-common-io.h>
 #include <qx/utility/qx-helpers.h>
+#include <qx/core/qx-genericerror.h>
 
 namespace Fp
 {
@@ -46,47 +46,34 @@ Install::Install(QString installPath) :
         QFileInfo fileInfo(*file);
         if(!fileInfo.exists() || !fileInfo.isFile())
         {
-            mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, FILE_DNE.arg(fileInfo.filePath()));
+            mError = Qx::GenericError(Qx::Critical, 1, ERR_FILE_MISSING, fileInfo.filePath());
             return;
         }
     }
 
     // Get settings
-    Qx::GenericError readReport;
-
     ConfigReader configReader(&mConfig, mConfigJsonFile);
-    if((readReport = configReader.readInto()).isValid())
-    {
-        mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
+    if((mError = configReader.readInto()).isValid())
         return;
-    }
 
     PreferencesReader prefReader(&mPreferences, mPreferencesJsonFile);
-    if((readReport = prefReader.readInto()).isValid())
-    {
-        mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
+    if((mError = prefReader.readInto()).isValid())
         return;
-    }
+
     mServicesJsonFile = std::make_shared<QFile>(installPath + "/" + mPreferences.jsonFolderPath + "/" + SERVICES_JSON_NAME);
     mExecsJsonFile = std::make_shared<QFile>(installPath + "/" + mPreferences.jsonFolderPath + "/" + EXECS_JSON_NAME);
     mLogosDirectory = QDir(installPath + "/" + mPreferences.imageFolderPath + '/' + LOGOS_FOLDER_NAME);
     mScreenshotsDirectory = QDir(installPath + "/" + mPreferences.imageFolderPath + '/' + SCREENSHOTS_FOLDER_NAME);
 
     ServicesReader servicesReader(&mServices, mServicesJsonFile, mMacroResolver);
-    if((readReport = servicesReader.readInto()).isValid())
-    {
-        mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
+    if((mError = servicesReader.readInto()).isValid())
         return;
-    }
 
     if(mExecsJsonFile->exists()) // Optional
     {
         ExecsReader execsReader(&mExecs, mExecsJsonFile);
-        if((readReport = execsReader.readInto()).isValid())
-        {
-            mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
+        if((mError = execsReader.readInto()).isValid())
             return;
-        }
     }
 
     // Add database
@@ -115,14 +102,14 @@ Install::~Install()
 
 //-Class Functions------------------------------------------------------------------------------------------------
 //Private:
-QString Install::standardImageSubPath(ImageType imageType, QUuid gameId)
+QString Install::standardImageSubPath(QUuid gameId)
 {
     QString gameIdString = gameId.toString(QUuid::WithoutBraces);
     return gameIdString.left(2) + '/' + gameIdString.mid(2, 2) + '/' + gameIdString + IMAGE_EXT;
 }
 
 //Public:
-Qx::GenericError Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo)
+Qx::Error Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo)
 {
     // Reset buffer
     involvesBuffer = false;
@@ -130,7 +117,7 @@ Qx::GenericError Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInf
     if(appInfo.fileName().contains(SECURE_PLAYER_INFO.baseName()))
     {
         involvesBuffer = true;
-        return Qx::GenericError();
+        return Qx::Error();
     }
     else if(appInfo.suffix().compare("bat", Qt::CaseInsensitive) == 0)
     {
@@ -140,12 +127,12 @@ Qx::GenericError Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInf
 
         // Check for read errors
         if(readReport.isFailure())
-            return Qx::GenericError(Qx::GenericError::Critical, readReport.outcome(), readReport.outcomeInfo());
+            return Qx::Error(readReport).setSeverity(Qx::Critical);
         else
-            return Qx::GenericError();
+            return Qx::Error();
     }
     else
-        return Qx::GenericError();
+        return Qx::Error();
 }
 
 //-Instance Functions------------------------------------------------------------------------------------------------
@@ -176,7 +163,7 @@ void Install::nullify()
 
 //Public:
 bool Install::isValid() const { return mValid; }
-Qx::GenericError Install::error() const { return mError; }
+Qx::Error Install::error() const { return mError; }
 
 Install::Edition Install::edition() const
 {
@@ -236,13 +223,13 @@ QDir Install::extrasDirectory() const { return mExtrasDirectory; }
 QString Install::imageLocalPath(ImageType imageType, QUuid gameId) const
 {
     const QDir& sourceDir = imageType == ImageType::Logo ? mLogosDirectory : mScreenshotsDirectory;
-    return sourceDir.absolutePath() + '/' + standardImageSubPath(imageType, gameId);
+    return sourceDir.absolutePath() + '/' + standardImageSubPath(gameId);
 }
 
 QUrl Install::imageRemoteUrl(ImageType imageType, QUuid gameId) const
 {
     const QString typeFolder = (imageType == ImageType::Logo ? LOGOS_FOLDER_NAME : SCREENSHOTS_FOLDER_NAME);
-    return QUrl(mPreferences.onDemandBaseUrl + typeFolder + '/' + standardImageSubPath(imageType, gameId));
+    return QUrl(mPreferences.onDemandBaseUrl + typeFolder + '/' + standardImageSubPath(gameId));
 }
 
 const MacroResolver* Install::macroResolver() const { return mMacroResolver; }

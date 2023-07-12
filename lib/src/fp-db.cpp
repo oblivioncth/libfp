@@ -9,6 +9,33 @@ namespace Fp
 {
 
 //===============================================================================================================
+// DbError
+//===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+DbError::DbError(Type t, const QString& c, const QString& d):
+    mType(t),
+    mCause(c),
+    mDetails(d)
+{}
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Private:
+Qx::Severity DbError::deriveSeverity() const { return Qx::Critical; }
+quint32 DbError::deriveValue() const { return mType; }
+QString DbError::derivePrimary() const { return ERR_STRINGS.value(mType); }
+QString DbError::deriveSecondary() const { return mCause; }
+QString DbError::deriveDetails() const { return mDetails; }
+
+//Public:
+bool DbError::isValid() const { return mType != NoError; }
+DbError::Type DbError::type() const { return mType; }
+QString DbError::cause() const { return mCause; }
+QString DbError::details() const { return mDetails; }
+
+
+//===============================================================================================================
 // DB::TAG_CATEGORY
 //===============================================================================================================
 
@@ -22,7 +49,7 @@ bool operator< (const Db::TagCategory& lhs, const Db::TagCategory& rhs) noexcept
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-Db::Db(QString databaseName, const Key&) :
+Db::Db(const QString& databaseName, const Key&) :
     QObject(),
     mValid(false), // Instance is invalid until proven otherwise
     mDatabaseName(databaseName)
@@ -36,14 +63,14 @@ Db::Db(QString databaseName, const Key&) :
     QSet<QString> missingTables;
     if((databaseError = checkDatabaseForRequiredTables(missingTables)).isValid())
     {
-        mError = Qx::GenericError(Qx::GenericError::Critical, ERR_DATABASE, databaseError.text());
+        mError = DbError(DbError::SqlError, databaseError.text());
         return;
     }
 
     // Check if tables are missing
     if(!missingTables.isEmpty())
     {
-        mError = Qx::GenericError(Qx::GenericError::Critical, ERR_MISSING_TABLE, QString(),
+        mError = DbError(DbError::InvalidSchema, ERR_MISSING_TABLE,
                          QStringList(missingTables.begin(), missingTables.end()).join("\n"));
         return;
     }
@@ -52,14 +79,14 @@ Db::Db(QString databaseName, const Key&) :
     QSet<QString> missingColumns;
     if((databaseError = checkDatabaseForRequiredColumns(missingColumns)).isValid())
     {
-        mError = Qx::GenericError(Qx::GenericError::Critical, ERR_DATABASE, databaseError.text());
+        mError = DbError(DbError::SqlError, databaseError.text());
         return;
     }
 
     // Check if columns are missing
     if(!missingColumns.isEmpty())
     {
-        mError = Qx::GenericError(Qx::GenericError::Critical, ERR_MISSING_TABLE, QString(),
+        mError = DbError(DbError::InvalidSchema, ERR_MISSING_TABLE,
                          QStringList(missingColumns.begin(), missingColumns.end()).join("\n"));
         return;
     }
@@ -67,13 +94,13 @@ Db::Db(QString databaseName, const Key&) :
     // Populate item members
     if((databaseError = populateAvailableItems()).isValid())
     {
-        mError = Qx::GenericError(Qx::GenericError::Critical, ERR_DATABASE, databaseError.text());
+        mError = DbError(DbError::SqlError, databaseError.text());
         return;
     }
 
     if((databaseError = populateTags()).isValid())
     {
-        mError = Qx::GenericError(Qx::GenericError::Critical, ERR_DATABASE, databaseError.text());
+        mError = DbError(DbError::SqlError, databaseError.text());
         return;
     }
 
@@ -209,7 +236,7 @@ QSqlError Db::makeNonBindQuery(QueryBuffer& resultBuffer, QSqlDatabase* database
 
 //Public:
 bool Db::isValid() { return mValid; }
-Qx::GenericError Db::error() { return mError; }
+DbError Db::error() { return mError; }
 
 QSqlError Db::checkDatabaseForRequiredTables(QSet<QString>& missingTablesReturnBuffer)
 {
@@ -703,7 +730,7 @@ QSqlError Db::entryUsesDataPack(bool& resultBuffer, QUuid gameId)
     return QSqlError();
 }
 
-Qx::GenericError Db::getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId)
+DbError Db::getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId)
 {
     // Find title
     Db::EntryFilter mainFilter{.type = Fp::Db::EntryType::PrimaryThenAddApp, .id = entryId};
@@ -711,13 +738,13 @@ Qx::GenericError Db::getEntry(std::variant<Game, AddApp>& entry, const QUuid& en
     Fp::Db::QueryBuffer searchResult;
     QSqlError searchError = queryEntrys(searchResult, mainFilter);
     if(searchError.isValid())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_UNEXPECTED_SQL, searchError.text());
+        return DbError(DbError::SqlError, searchError.text());
 
     // Check if ID was found and that only one instance was found
     if(searchResult.size == 0)
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_ID_NOT_FOUND);
+        return DbError(DbError::IncompleteSearch, ERR_ID_NOT_FOUND);
     else if(searchResult.size > 1)
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_ID_DUPLICATE_ENTRY_P, ERR_ID_DUPLICATE_ENTRY_S);
+        return DbError(DbError::IdCollision, ERR_ID_DUPLICATE_ENTRY);
 
     // Advance result to only record
     searchResult.result.next();
@@ -766,10 +793,10 @@ Qx::GenericError Db::getEntry(std::variant<Game, AddApp>& entry, const QUuid& en
     else
         qFatal("Entry search result source must be 'game' or 'additional_app'");
 
-    return Qx::GenericError();
+    return DbError();
 }
 
-Qx::GenericError Db::getGameData(GameData& data, const QUuid& gameId)
+DbError Db::getGameData(GameData& data, const QUuid& gameId)
 {
     // Clear buffer
     data = GameData();
@@ -779,13 +806,13 @@ Qx::GenericError Db::getGameData(GameData& data, const QUuid& gameId)
     Fp::Db::QueryBuffer searchResult;
 
     if((searchError = queryEntryDataById(searchResult, gameId)).isValid())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_UNEXPECTED_SQL, searchError.text());
+        return DbError(DbError::SqlError, searchError.text());
 
     // Check if ID was found and if so that only one instance was found
     if(searchResult.size == 0)
-        return Qx::GenericError(); // Game doesn't have data pack
+        return DbError(); // Game doesn't have data pack
     else if(searchResult.size > 1)
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_ID_DUPLICATE_ENTRY_P, ERR_ID_DUPLICATE_ENTRY_S);
+        return DbError(DbError::IdCollision, ERR_ID_DUPLICATE_ENTRY);
 
     // Advance result to only record
     searchResult.result.next();
@@ -807,7 +834,7 @@ Qx::GenericError Db::getGameData(GameData& data, const QUuid& gameId)
 
     data = fpGdb.build();
 
-    return Qx::GenericError();
+    return DbError();
 }
 
 //-Slots ------------------------------------------------------------------------------------------------------

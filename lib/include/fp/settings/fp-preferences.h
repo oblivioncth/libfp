@@ -15,6 +15,8 @@ struct FP_FP_EXPORT AppPathOverride
     QString path;
     QString override;
     bool enabled;
+
+    QX_JSON_STRUCT(path, override, enabled);
 };
 
 struct FP_FP_EXPORT GameDataSource
@@ -22,6 +24,8 @@ struct FP_FP_EXPORT GameDataSource
     QList<QString> arguments;
     QString name;
     QString type;
+
+    QX_JSON_STRUCT(arguments, name, type);
 };
 
 //struct FP_FP_EXPORT GameMetadataSource_GamesTags
@@ -37,6 +41,8 @@ struct FP_FP_EXPORT GameMetadataSource
     //GameMetadataSource_GamesTags games;
     QString name;
     //GameMetadataSource_GamesTags tags;
+
+    QX_JSON_STRUCT(baseUrl, name);
 };
 
 struct FP_FP_EXPORT Preferences : public Settings
@@ -54,6 +60,22 @@ struct FP_FP_EXPORT Preferences : public Settings
     QSet<QString> nativePlatforms;
     QString browserModeProxy;
     QString server;
+
+    QX_JSON_STRUCT(
+        fpfssBaseUrl,
+        gameDataSources,
+        gameMetadataSources,
+        imageFolderPath,
+        jsonFolderPath,
+        htdocsFolderPath,
+        dataPacksFolderPath,
+        onDemandImages,
+        onDemandBaseUrl,
+        appPathOverrides,
+        nativePlatforms,
+        browserModeProxy,
+        server
+    );
 };
 
 class FP_FP_EXPORT PreferencesReader : public SettingsReader
@@ -64,11 +86,7 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    Qx::GenericError parseDocument(const QJsonDocument& prefDoc);
-    Qx::GenericError parseAppPathOverride(AppPathOverride& apoBuffer, const QJsonValue& jvApo);
-    Qx::GenericError parseNativePlatform(QString& nativePlatformBuffer, const QJsonValue& jvNativePlatform);
-    Qx::GenericError parseGameDataSource(GameDataSource& gdsBuffer, const QJsonValue& jvGds);
-    Qx::GenericError parseGameMetadataSource(GameMetadataSource& gmsBuffer, const QJsonValue& jvGms);
+    Qx::JsonError parseDocument(const QJsonDocument& prefDoc);
 };
 
 }
