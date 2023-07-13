@@ -24,49 +24,25 @@ SettingsReader::SettingsReader(Settings* targetSettings, std::shared_ptr<QFile> 
     mSourceJsonFile(sourceJsonFile)
 {}
 
-//-Class Functions-------------------------------------------------------------------------------------------------
-//Protected:
-Qx::GenericError SettingsReader::retrieveBasicKeys(QList<KeyValuePtr> keyValuePairs, const QJsonObject& obj)
-{
-    for(const KeyValuePtr& kvp : keyValuePairs)
-    {       
-        QStringView key = kvp.key;
-        auto fn = [&obj, &key](const auto& vPtr)->Qx::GenericError{
-            Q_ASSERT(vPtr);
-            return Qx::Json::checkedKeyRetrieval(*vPtr, obj, key);
-        };
-        if(auto e = std::visit(fn, kvp.val); e.isValid())
-            return e;
-    }
-
-    return Qx::GenericError();
-}
-
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Public:
-Qx::GenericError SettingsReader::readInto()
+Qx::Error SettingsReader::readInto()
 {
     // Load original JSON file
     QByteArray settingsData;
     Qx::IoOpReport settingsLoadReport = Qx::readBytesFromFile(settingsData, *mSourceJsonFile);
 
     if(settingsLoadReport.isFailure())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mSourceJsonFile->fileName()), settingsLoadReport.outcomeInfo());
+        return settingsLoadReport;
 
     // Parse original JSON data
     QJsonParseError parseError;
     QJsonDocument settingsDocument = QJsonDocument::fromJson(settingsData, &parseError);
 
     if(settingsDocument.isNull())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mSourceJsonFile->fileName()), parseError.errorString());
+        return Qx::Error(parseError).setSeverity(Qx::Critical);
     else
-    {
-        // Ensure top level container is object
-        if(!settingsDocument.isObject())
-            return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mSourceJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
-
         return parseDocument(settingsDocument);
-    }
 }
 
 }

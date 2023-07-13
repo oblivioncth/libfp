@@ -10,7 +10,7 @@
 #include <QColor>
 
 // Qx Includes
-#include <qx/core/qx-genericerror.h>
+#include <qx/core/qx-abstracterror.h>
 
 // Project Includes
 #include "fp/fp-items.h"
@@ -19,6 +19,55 @@ using namespace Qt::Literals::StringLiterals;
 
 namespace Fp
 {
+
+class FP_FP_EXPORT QX_ERROR_TYPE(DbError, "Fp::DbError", 1101)
+{
+    friend class Db;
+//-Class Enums-------------------------------------------------------------
+public:
+    enum Type
+    {
+        NoError = 0,
+        SqlError = 1,
+        InvalidSchema = 2,
+        IdCollision = 3,
+        IncompleteSearch = 4
+    };
+
+//-Class Variables-------------------------------------------------------------
+private:
+    static inline const QHash<Type, QString> ERR_STRINGS{
+        {NoError, QSL("No error occurred.")},
+        {SqlError, QSL("An unexpected SQL error occurred.")},
+        {InvalidSchema, QSL("The schema of the database was different than expected.")},
+        {IdCollision, QSL("A duplicate of a unique ID was found.")},
+        {IncompleteSearch, QSL("A data search could not be completed.")}
+    };
+
+//-Instance Variables-------------------------------------------------------------
+private:
+    Type mType;
+    QString mCause;
+    QString mDetails;
+
+//-Class Constructor-------------------------------------------------------------
+private:
+    DbError(Type t = NoError, const QString& c = {}, const QString& d = {});
+
+//-Instance Functions-------------------------------------------------------------
+private:
+    Qx::Severity deriveSeverity() const override;
+    quint32 deriveValue() const override;
+    QString derivePrimary() const override;
+    QString deriveSecondary() const override;
+    QString deriveDetails() const override;
+
+public:
+    bool isValid() const;
+    Type type() const;
+    QString cause() const;
+    QString details() const;
+};
 
 class FP_FP_EXPORT Db : public QObject
 {
@@ -241,22 +290,15 @@ private:
     static inline const QString GAME_AND_ANIM_FILTER = "(" + GAME_ONLY_FILTER + " OR " + ANIM_ONLY_FILTER + ")";
 
     // Error
-    static inline const QString ERR_DATABASE = "Flashpoint Database Error:";
     static inline const QString ERR_MISSING_TABLE = "The Flashpoint database is missing expected tables.";
     static inline const QString ERR_TABLE_MISSING_COLUMN = "The Flashpoint database tables are missing expected columns.";
-
-    // Error - Helper
-    static inline const QString ERR_UNEXPECTED_SQL = u"Unexpected SQL error while querying the Flashpoint database:"_s;
     static inline const QString ERR_ID_NOT_FOUND = u"An entry matching the specified ID could not be found in the Flashpoint database."_s;
-    static inline const QString ERR_TITLE_NOT_FOUND = u"The provided title was not found in the Flashpoint database."_s;
-    static inline const QString ERR_ID_DUPLICATE_ENTRY_P = u"Multiple entries with the specified ID were found."_s;
-    static inline const QString ERR_ID_DUPLICATE_ENTRY_S = u"This should not be possible and may indicate an error within the Flashpoint database"_s;
-
+    static inline const QString ERR_ID_DUPLICATE_ENTRY = u"This should not be possible and may indicate an error within the Flashpoint database"_s;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
     bool mValid;
-    Qx::GenericError mError;
+    DbError mError;
 
     // Database information
     QSet<const QThread*> mConnectedThreads;
@@ -267,7 +309,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    explicit Db(QString databaseName, const Key&);
+    explicit Db(const QString& databaseName, const Key&);
 
 //-Destructor-------------------------------------------------------------------------------------------------
 public:
@@ -297,7 +339,7 @@ private:
 public:
     // Validity
     bool isValid();
-    Qx::GenericError error();
+    DbError error();
 
     // TODO: See if these query functions can be consolidated via by better filtration arguments
 
@@ -320,8 +362,8 @@ public:
     QSqlError entryUsesDataPack(bool& resultBuffer, QUuid gameId);
 
     // Helper
-    Qx::GenericError getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId);
-    Qx::GenericError getGameData(GameData& data, const QUuid& gameId);
+    DbError getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId);
+    DbError getGameData(GameData& data, const QUuid& gameId);
 
 //-Slots ------------------------------------------------------------------------------------------------------
 private:

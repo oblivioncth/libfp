@@ -12,6 +12,8 @@ struct FP_FP_EXPORT Config : public Settings
     QString flashpointPath;
     bool startServer;
     QString server;
+
+    QX_JSON_STRUCT(flashpointPath, startServer, server);
 };
 
 class FP_FP_EXPORT ConfigReader : public SettingsReader
@@ -22,7 +24,7 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
-    Qx::GenericError parseDocument(const QJsonDocument& configDoc);
+    Qx::JsonError parseDocument(const QJsonDocument& configDoc);
 };
 
 }

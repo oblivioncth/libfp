@@ -4,38 +4,20 @@
 // Qx Includes
 #include <qx/core/qx-json.h>
 
-using namespace Qt::Literals::StringLiterals;
+// Configure key generator for mappable types
+namespace QxJson
+{
+
+template<>
+QString keygen<QString, Fp::ServerDaemon>(const Fp::ServerDaemon& value)
+{
+    return value.name;
+};
+
+}
 
 namespace Fp
 {
-
-namespace Json
-{
-    namespace Object_ServerDaemon
-    {
-        const QString KEY_NAME = u"name"_s;
-        const QString KEY_PATH = u"path"_s;
-        const QString KEY_FILENAME = u"filename"_s;
-        const QString KEY_ARGUMENTS = u"arguments"_s;
-        const QString KEY_KILL = u"kill"_s;
-    };
-    namespace Object_StartStop
-    {
-        const QString KEY_PATH = u"path"_s;
-        const QString KEY_FILENAME = u"filename"_s;
-        const QString KEY_ARGUMENTS = u"arguments"_s;
-    };
-
-    namespace Object_Services
-    {
-        const QString KEY_WATCH = u"watch"_s;
-        const QString KEY_SERVER = u"server"_s;
-        const QString KEY_DAEMON = u"daemon"_s;
-        const QString KEY_START = u"start"_s;
-        const QString KEY_STOP = u"stop"_s;
-    };
-}
-
 //===============================================================================================================
 // StartStop
 //===============================================================================================================
@@ -71,183 +53,31 @@ ServicesReader::ServicesReader(Services* targetServices, std::shared_ptr<QFile> 
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
-Qx::GenericError ServicesReader::parseDocument(const QJsonDocument& servicesDoc)
+Qx::JsonError ServicesReader::parseDocument(const QJsonDocument& servicesDoc)
 {
     // Get derivation specific target
     Services* targetServices = static_cast<Services*>(mTargetSettings);
 
-    // Value error checking buffer
-    QJsonObject rootObj = servicesDoc.object();
-    Qx::GenericError valueError;
+    // Parse
+    Qx::JsonError err = Qx::parseJson(*targetServices, servicesDoc);
+    if(err.isValid())
+        return err;
 
-    // Get watches
-    // TODO: include logs
-
-    // Get servers
-    QJsonArray jaServers;
-    if((valueError = Qx::Json::checkedKeyRetrieval(jaServers, rootObj, Json::Object_Services::KEY_SERVER)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);
-
-    // Parse servers
-    for(const QJsonValue& jvServer : qAsConst(jaServers))
+    // Check for known daemons
+    for(const ServerDaemon& d : targetServices->daemons)
     {
-        ServerDaemon serverBuffer;
-        if((valueError = parseServerDaemon(serverBuffer, jvServer)).isValid())
-            return valueError;
-
-        targetServices->servers.insert(serverBuffer.name, serverBuffer);
-    }
-
-    // Get daemons
-    QJsonArray jaDaemons;
-    if((valueError = Qx::Json::checkedKeyRetrieval(jaDaemons, rootObj, Json::Object_Services::KEY_DAEMON)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);
-
-    // Parse daemons
-    for(const QJsonValue& jvDaemon : qAsConst(jaDaemons))
-    {
-        ServerDaemon daemonBuffer;
-        if((valueError = parseServerDaemon(daemonBuffer, jvDaemon)).isValid())
-            return valueError;
-
-        targetServices->daemons.insert(daemonBuffer.name, daemonBuffer);
-
         /* NOTE: If for some reason this list becomes large, use a hash instead
          * (e.g. if(hash.contains("NAME")){ recognizedDaemons.setFlag(hash["NAME]); } )
          */
-        if(daemonBuffer.name.contains("qemu", Qt::CaseInsensitive) ||
-           daemonBuffer.filename.contains("qemu", Qt::CaseInsensitive))
+        if(d.name.contains("qemu", Qt::CaseInsensitive) ||
+            d.filename.contains("qemu", Qt::CaseInsensitive))
             targetServices->recognizedDaemons.setFlag(KnownDaemon::Qemu);
-        else if(daemonBuffer.name.contains("docker", Qt::CaseInsensitive) ||
-                daemonBuffer.filename.contains("docker", Qt::CaseInsensitive))
+        else if(d.name.contains("docker", Qt::CaseInsensitive) ||
+                 d.filename.contains("docker", Qt::CaseInsensitive))
             targetServices->recognizedDaemons.setFlag(KnownDaemon::Docker);
     }
 
-    // Get starts
-    QJsonArray jaStarts;
-    if((valueError = Qx::Json::checkedKeyRetrieval(jaStarts, rootObj, Json::Object_Services::KEY_START)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);
-
-    // Parse starts
-    for(const QJsonValue& jvStart : qAsConst(jaStarts))
-    {
-        StartStop startStopBuffer;
-        if((valueError = parseStartStop(startStopBuffer, jvStart)).isValid())
-            return valueError;
-
-        targetServices->starts.insert(startStopBuffer);
-    }
-
-    // Get stops
-    QJsonArray jaStops;
-    if((valueError = Qx::Json::checkedKeyRetrieval(jaStops, rootObj, Json::Object_Services::KEY_STOP)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);
-
-    // Parse starts
-    for(const QJsonValue& jvStop : qAsConst(jaStops))
-    {
-        StartStop startStopBuffer;
-        if((valueError = parseStartStop(startStopBuffer, jvStop)).isValid())
-            return valueError;
-
-        targetServices->stops.insert(startStopBuffer);
-    }
-
-    // Return invalid error on success
-    return Qx::GenericError();
-}
-
-Qx::GenericError ServicesReader::parseServerDaemon(ServerDaemon& serverBuffer, const QJsonValue& jvServer)
-{
-    // Ensure array element is Object
-    if(!jvServer.isObject())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mSourceJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
-
-    // Get server Object
-    QJsonObject joServer = jvServer.toObject();
-
-    // Value error checking buffer
-    Qx::GenericError valueError;
-
-    // Get direct values
-    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.name, joServer, Json::Object_ServerDaemon::KEY_NAME)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);
-
-    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.path, joServer, Json::Object_ServerDaemon::KEY_PATH)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);
-
-    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.filename, joServer, Json::Object_ServerDaemon::KEY_FILENAME)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);
-
-    if((valueError = Qx::Json::checkedKeyRetrieval(serverBuffer.kill, joServer, Json::Object_ServerDaemon::KEY_KILL)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);
-
-    // Get arguments
-    QJsonArray jaArgs;
-    if((valueError = Qx::Json::checkedKeyRetrieval(jaArgs, joServer, Json::Object_ServerDaemon::KEY_ARGUMENTS)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);
-
-    for(const QJsonValue& jvArg : qAsConst(jaArgs))
-    {
-        // Ensure array element is String
-        if(!jvArg.isString())
-            return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mSourceJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
-
-        serverBuffer.arguments.append(jvArg.toString());
-    }
-
-    // Resolve macros for relevant variables
-    serverBuffer.path = mHostMacroResolver->resolve(serverBuffer.path);
-    for(QString& arg : serverBuffer.arguments)
-        arg = mHostMacroResolver->resolve(arg);
-
-    // Return invalid error on success
-    return Qx::GenericError();
-}
-
-Qx::GenericError ServicesReader::parseStartStop(StartStop& startStopBuffer, const QJsonValue& jvStartStop)
-{
-    // Ensure return buffer is null
-    startStopBuffer = StartStop();
-
-    // Ensure array element is Object
-    if(!jvStartStop.isObject())
-        return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mSourceJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
-
-    // Get server Object
-    QJsonObject joStartStop = jvStartStop.toObject();
-
-    // Value error checking buffer
-    Qx::GenericError valueError;
-
-    // Get direct values
-    if((valueError = Qx::Json::checkedKeyRetrieval(startStopBuffer.path, joStartStop, Json::Object_StartStop::KEY_PATH)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);
-
-    if((valueError = Qx::Json::checkedKeyRetrieval(startStopBuffer.filename, joStartStop, Json::Object_StartStop::KEY_FILENAME)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);
-
-    // Get arguments
-    QJsonArray jaArgs;
-    if((valueError = Qx::Json::checkedKeyRetrieval(jaArgs, joStartStop, Json::Object_StartStop::KEY_ARGUMENTS)).isValid())
-        return valueError.setErrorLevel(Qx::GenericError::Critical);
-
-    for(const QJsonValue& jvArg : qAsConst(jaArgs))
-    {
-        // Ensure array element is String
-        if(!jvArg.isString())
-            return Qx::GenericError(Qx::GenericError::Critical, ERR_PARSING_JSON_DOC.arg(mSourceJsonFile->fileName()), ERR_JSON_UNEXP_FORMAT);
-
-        startStopBuffer.arguments.append(jvArg.toString());
-    }
-
-    // Resolve macros for relevant variables
-    startStopBuffer.path = mHostMacroResolver->resolve(startStopBuffer.path);
-    for(QString& arg : startStopBuffer.arguments)
-        arg = mHostMacroResolver->resolve(arg);
-
-    // Return invalid error on success
-    return Qx::GenericError();
+    return Qx::JsonError();
 }
 
 }
