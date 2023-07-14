@@ -52,7 +52,10 @@ private:
 
 //-Class Constructor-------------------------------------------------------------
 private:
-    DbError(Type t = NoError, const QString& c = {}, const QString& d = {});
+    DbError(Type t, const QString& c, const QString& d = {});
+
+public:
+    DbError();
 
 //-Class Functions---------------------------------------------------------------
 private:

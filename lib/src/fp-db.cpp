@@ -13,11 +13,16 @@ namespace Fp
 //===============================================================================================================
 
 //-Constructor------------------------------------------------------------------------------------------------
-//Public:
+//Private:
 DbError::DbError(Type t, const QString& c, const QString& d):
     mType(t),
     mCause(c),
     mDetails(d)
+{}
+
+//Public:
+DbError::DbError() :
+    mType(NoError)
 {}
 
 //-Class Functions---------------------------------------------------------------
