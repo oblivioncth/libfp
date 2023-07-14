@@ -54,6 +54,10 @@ private:
 private:
     DbError(Type t = NoError, const QString& c = {}, const QString& d = {});
 
+//-Class Functions---------------------------------------------------------------
+private:
+    static DbError fromSqlError(const QSqlError& e);
+
 //-Instance Functions-------------------------------------------------------------
 private:
     Qx::Severity deriveSeverity() const override;
@@ -344,22 +348,22 @@ public:
     // TODO: See if these query functions can be consolidated via by better filtration arguments
 
     // Queries - OFLIb
-    QSqlError queryGamesByPlatform(QList<Db::QueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
+    DbError queryGamesByPlatform(QList<Db::QueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
                                    std::optional<const QList<QUuid>*> idInclusionFilter = std::nullopt);
-    QSqlError queryAllAddApps(QueryBuffer& resultBuffer);
-    QSqlError queryAllEntryTags(QueryBuffer& resultBuffer);
+    DbError queryAllAddApps(QueryBuffer& resultBuffer);
+    DbError queryAllEntryTags(QueryBuffer& resultBuffer);
 
     // Queries - CLIFp
-    QSqlError queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter);
-    QSqlError queryEntryDataById(QueryBuffer& resultBuffer, const QUuid& appId);
-    QSqlError queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter filter);
+    DbError queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter);
+    DbError queryEntryDataById(QueryBuffer& resultBuffer, const QUuid& appId);
+    DbError queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter filter);
 
     // Info
     QStringList platformList() const;
     QMap<int, TagCategory> tags() const;
 
     // Checks
-    QSqlError entryUsesDataPack(bool& resultBuffer, QUuid gameId);
+    DbError entryUsesDataPack(bool& resultBuffer, QUuid gameId);
 
     // Helper
     DbError getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId);

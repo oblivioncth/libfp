@@ -20,6 +20,13 @@ DbError::DbError(Type t, const QString& c, const QString& d):
     mDetails(d)
 {}
 
+//-Class Functions---------------------------------------------------------------
+//Private:
+DbError DbError::fromSqlError(const QSqlError& e)
+{
+    return e.isValid() ? DbError(SqlError, e.text()) : DbError();
+}
+
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Private:
 Qx::Severity DbError::deriveSeverity() const { return Qx::Critical; }
@@ -400,7 +407,7 @@ QSqlError Db::populateTags()
     return QSqlError();
 }
 
-QSqlError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
+DbError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
                                    std::optional<const QList<QUuid>*> idInclusionFilter)
 {
     // Ensure return buffer is reset
@@ -408,13 +415,13 @@ QSqlError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, QStringList
 
     // Empty shortcuts
     if(platforms.isEmpty() || (idInclusionFilter.has_value() && idInclusionFilter.value()->isEmpty()))
-        return QSqlError();
+        return DbError();
 
     // Get database
     QSqlDatabase fpDb;
     QSqlError dbError = getThreadConnection(fpDb);
     if(dbError.isValid())
-        return dbError;
+        return DbError::fromSqlError(dbError);
 
     // Determine game exclusion filter from tag exclusions if applicable
     QSet<QUuid> idExclusionFilter;
@@ -427,7 +434,7 @@ QSqlError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, QStringList
 
         QSqlError tagQueryError = tagQuery.lastError();
         if(tagQueryError.isValid())
-            return tagQueryError;
+            return DbError::fromSqlError(tagQueryError);
 
         // Populate exclusion filter
         while(tagQuery.next())
@@ -468,7 +475,7 @@ QSqlError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, QStringList
 
         // Execute query and return if error occurs
         if(!initialQuery.exec())
-            return initialQuery.lastError();
+            return DbError::fromSqlError(initialQuery.lastError());
 
         // Create size query and bind current platform
         QSqlQuery sizeQuery(fpDb);
@@ -477,7 +484,7 @@ QSqlError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, QStringList
 
         // Execute query and return if error occurs
         if(!sizeQuery.exec())
-            return sizeQuery.lastError();
+            return DbError::fromSqlError(sizeQuery.lastError());
 
         // Get query size
         sizeQuery.next();
@@ -488,11 +495,11 @@ QSqlError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, QStringList
             resultBuffer.append({platform, initialQuery, querySize});
     }
 
-    // Return invalid SqlError
-    return QSqlError();
+    // Return invalid error
+    return DbError();
 }
 
-QSqlError Db::queryAllAddApps(QueryBuffer& resultBuffer)
+DbError Db::queryAllAddApps(QueryBuffer& resultBuffer)
 {
     // Ensure return buffer is effectively null
     resultBuffer = QueryBuffer();
@@ -501,7 +508,7 @@ QSqlError Db::queryAllAddApps(QueryBuffer& resultBuffer)
     QSqlDatabase fpDb;
     QSqlError dbError = getThreadConnection(fpDb);
     if(dbError.isValid())
-        return dbError;
+        return DbError::fromSqlError(dbError);
 
     // Make query
     QString baseQueryCommand = "SELECT %1 FROM " + Table_Add_App::NAME;
@@ -509,10 +516,10 @@ QSqlError Db::queryAllAddApps(QueryBuffer& resultBuffer)
     QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
     resultBuffer.source = Table_Add_App::NAME;
-    return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
+    return DbError::fromSqlError(makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand));
 }
 
-QSqlError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
+DbError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
 {
     // Ensure return buffer is effectively null
     resultBuffer = QueryBuffer();
@@ -526,7 +533,7 @@ QSqlError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
     QSqlDatabase fpDb;
     QSqlError dbError = getThreadConnection(fpDb);
     if(dbError.isValid())
-        return dbError;
+        return DbError::fromSqlError(dbError);
 
     // Check for entry as a game first
     if(filter.type != EntryType::AddApp)
@@ -570,11 +577,11 @@ QSqlError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
         resultBuffer.source = Table_Game::NAME;
 
         if((queryError = makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand)).isValid())
-            return queryError;
+            return DbError::fromSqlError(queryError);
 
         // Return result if one or more results were found (receiver handles situation in latter case)
         if(resultBuffer.size >= 1)
-            return QSqlError();
+            return DbError();
     }
 
     // Check for entry as an additional app second
@@ -625,18 +632,18 @@ QSqlError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
         resultBuffer.source = Table_Add_App::NAME;
 
         if((queryError = makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand)).isValid())
-            return queryError;
+            return DbError::fromSqlError(queryError);
 
         // Return result if one or more results were found (receiver handles situation in latter case)
         if(resultBuffer.size >= 1)
-            return QSqlError();
+            return DbError();
     }
 
     // No result found, return
-    return QSqlError();
+    return DbError();
 }
 
-QSqlError Db::queryEntryDataById(QueryBuffer& resultBuffer, const QUuid& appId)
+DbError Db::queryEntryDataById(QueryBuffer& resultBuffer, const QUuid& appId)
 {
     // Ensure return buffer is effectively null
     resultBuffer = QueryBuffer();
@@ -645,7 +652,7 @@ QSqlError Db::queryEntryDataById(QueryBuffer& resultBuffer, const QUuid& appId)
     QSqlDatabase fpDb;
     QSqlError dbError = getThreadConnection(fpDb);
     if(dbError.isValid())
-        return dbError;
+        return DbError::fromSqlError(dbError);
 
     // Setup ID query
     QString baseQueryCommand = "SELECT %1 FROM " + Table_Game_Data::NAME + " WHERE " +
@@ -657,10 +664,10 @@ QSqlError Db::queryEntryDataById(QueryBuffer& resultBuffer, const QUuid& appId)
     QSqlError queryError;
     resultBuffer.source = Table_Game_Data::NAME;
 
-    return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
+    return DbError::fromSqlError(makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand));
 }
 
-QSqlError Db::queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter includeFilter)
+DbError Db::queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter includeFilter)
 {
     // Ensure return buffer is effectively null
     resultBuffer = QueryBuffer();
@@ -669,7 +676,7 @@ QSqlError Db::queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter includeFi
     QSqlDatabase fpDb;
     QSqlError dbError = getThreadConnection(fpDb);
     if(dbError.isValid())
-        return dbError;
+        return DbError::fromSqlError(dbError);
 
     // Make query
     QString baseQueryCommand = "SELECT %2 FROM " + Table_Game::NAME + " WHERE " +
@@ -679,13 +686,13 @@ QSqlError Db::queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter includeFi
     QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
     resultBuffer.source = Table_Game::NAME;
-    return makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand);
+    return DbError::fromSqlError(makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand));
 }
 
 QStringList Db::platformList() const { return mPlatformList; } //TODO: Probably should use RAII for this.
 QMap<int, Db::TagCategory> Db::tags() const { return mTagMap; }
 
-QSqlError Db::entryUsesDataPack(bool& resultBuffer, QUuid gameId)
+DbError Db::entryUsesDataPack(bool& resultBuffer, QUuid gameId)
 {
     /* NOTE: The launcher performs this check and other data pack tasks by checking if the `activeDataId` column
      * of the `game` table has a value, and if it does, then matching that to the `id` column in the `game_data`
@@ -708,7 +715,7 @@ QSqlError Db::entryUsesDataPack(bool& resultBuffer, QUuid gameId)
     QSqlDatabase fpDb;
     QSqlError dbError = getThreadConnection(fpDb);
     if(dbError.isValid())
-        return dbError;
+        return DbError::fromSqlError(dbError);
 
     // Make query
     QString packCheckQueryCommand = "SELECT " + GENERAL_QUERY_SIZE_COMMAND + " FROM " + Table_Game_Data::NAME + " WHERE " +
@@ -720,14 +727,14 @@ QSqlError Db::entryUsesDataPack(bool& resultBuffer, QUuid gameId)
 
     // Execute query and return if error occurs
     if(!packCheckQuery.exec())
-        return packCheckQuery.lastError();
+        return DbError::fromSqlError(packCheckQuery.lastError());
 
     // Set buffer based on result
     packCheckQuery.next();
     resultBuffer = packCheckQuery.value(0).toInt() > 0;
 
-    // Return invalid SqlError
-    return QSqlError();
+    // Return invalid error
+    return DbError();
 }
 
 DbError Db::getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId)
@@ -736,9 +743,9 @@ DbError Db::getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId)
     Db::EntryFilter mainFilter{.type = Fp::Db::EntryType::PrimaryThenAddApp, .id = entryId};
 
     Fp::Db::QueryBuffer searchResult;
-    QSqlError searchError = queryEntrys(searchResult, mainFilter);
+    DbError searchError = queryEntrys(searchResult, mainFilter);
     if(searchError.isValid())
-        return DbError(DbError::SqlError, searchError.text());
+        return searchError;
 
     // Check if ID was found and that only one instance was found
     if(searchResult.size == 0)
@@ -802,11 +809,11 @@ DbError Db::getGameData(GameData& data, const QUuid& gameId)
     data = GameData();
 
     // Get entry data
-    QSqlError searchError;
+    DbError searchError;
     Fp::Db::QueryBuffer searchResult;
 
     if((searchError = queryEntryDataById(searchResult, gameId)).isValid())
-        return DbError(DbError::SqlError, searchError.text());
+        return searchError;
 
     // Check if ID was found and if so that only one instance was found
     if(searchResult.size == 0)
