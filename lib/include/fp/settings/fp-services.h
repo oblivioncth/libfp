@@ -55,18 +55,18 @@ struct FP_FP_EXPORT StartStop
 struct FP_FP_EXPORT Services : public Settings
 {
     //QSet<Watch> watches;
-    QHash<QString, ServerDaemon> servers;
-    QHash<QString, ServerDaemon> daemons;
-    QSet<StartStop> starts;
-    QSet<StartStop> stops;
+    QHash<QString, ServerDaemon> server;
+    QHash<QString, ServerDaemon> daemon;
+    QSet<StartStop> start;
+    QSet<StartStop> stop;
     KnownDaemons recognizedDaemons; // Non-standard
     // TODO: ^If Settings container obj is made (see other todo), move this there
 
     QX_JSON_STRUCT(
-        servers,
-        daemons,
-        starts,
-        stops,
+        server,
+        daemon,
+        start,
+        stop,
     );
 };
 
@@ -83,8 +83,6 @@ public:
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
     Qx::JsonError parseDocument(const QJsonDocument& servicesDoc);
-    Qx::JsonError parseServerDaemon(ServerDaemon& serverBuffer, const QJsonValue& jvServer);
-    Qx::JsonError parseStartStop(StartStop& startStopBuffer, const QJsonValue& jvStartStop);
 };
 
 }

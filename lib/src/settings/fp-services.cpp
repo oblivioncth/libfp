@@ -64,7 +64,7 @@ Qx::JsonError ServicesReader::parseDocument(const QJsonDocument& servicesDoc)
         return err;
 
     // Check for known daemons
-    for(const ServerDaemon& d : targetServices->daemons)
+    for(const ServerDaemon& d : qAsConst(targetServices->daemon))
     {
         /* NOTE: If for some reason this list becomes large, use a hash instead
          * (e.g. if(hash.contains("NAME")){ recognizedDaemons.setFlag(hash["NAME]); } )
