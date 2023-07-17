@@ -192,7 +192,7 @@ QSqlError Db::getThreadConnection(QSqlDatabase& connection)
     else
     {
         connection = QSqlDatabase::addDatabase("QSQLITE", tcn);
-        connection.setConnectOptions("QSQLITE_OPEN_READONLY");
+        //connection.setConnectOptions("QSQLITE_OPEN_READONLY"); Lib features some DB writing now
         connection.setDatabaseName(mDatabaseName);
 
         if(connection.open())
