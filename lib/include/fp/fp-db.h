@@ -31,7 +31,9 @@ public:
         SqlError = 1,
         InvalidSchema = 2,
         IdCollision = 3,
-        IncompleteSearch = 4
+        IncompleteSearch = 4,
+        UpdateIneffective = 5,
+        UpdateTooMany = 6
     };
 
 //-Class Variables-------------------------------------------------------------
@@ -41,7 +43,9 @@ private:
         {SqlError, QSL("An unexpected SQL error occurred.")},
         {InvalidSchema, QSL("The schema of the database was different than expected.")},
         {IdCollision, QSL("A duplicate of a unique ID was found.")},
-        {IncompleteSearch, QSL("A data search could not be completed.")}
+        {IncompleteSearch, QSL("A data search could not be completed.")},
+        {UpdateIneffective, QSL("An update statement unexpectedly affected 0 rows.")},
+        {UpdateTooMany, QSL("An update statement affected more rows than expected.")}
     };
 
 //-Instance Variables-------------------------------------------------------------
@@ -371,6 +375,7 @@ public:
     // Helper
     DbError getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId);
     DbError getGameData(GameData& data, const QUuid& gameId);
+    DbError updateGameDataOnDiskState(int packId, bool onDisk);
 
 //-Slots ------------------------------------------------------------------------------------------------------
 private:

@@ -849,6 +849,36 @@ DbError Db::getGameData(GameData& data, const QUuid& gameId)
     return DbError();
 }
 
+DbError Db::updateGameDataOnDiskState(int packId, bool onDisk)
+{
+    // Get database
+    QSqlDatabase fpDb;
+    QSqlError dbError = getThreadConnection(fpDb);
+    if(dbError.isValid())
+        return DbError::fromSqlError(dbError);
+
+    // Make query
+    QString dataUpdateCommand = "UPDATE " + Table_Game_Data::NAME + " SET " + Table_Game_Data::COL_PRES_ON_DISK + " = " + QString::number(onDisk) +
+                                " WHERE " + Table_Game_Data::COL_ID + " = " + QString::number(packId);
+
+    QSqlQuery packUpdateQuery(fpDb);
+    packUpdateQuery.setForwardOnly(true);
+    packUpdateQuery.prepare(dataUpdateCommand);
+
+    // Execute query and return if error occurs
+    if(!packUpdateQuery.exec())
+        return DbError::fromSqlError(packUpdateQuery.lastError());
+
+    // Check that expected count was affected
+    int rows = packUpdateQuery.numRowsAffected();
+    if(rows < 1)
+        return DbError(DbError::UpdateIneffective, Table_Game_Data::NAME + " SET " + Table_Game_Data::COL_PRES_ON_DISK);
+    else if(rows > 1)
+        return DbError(DbError::UpdateTooMany, Table_Game_Data::NAME + " SET " + Table_Game_Data::COL_PRES_ON_DISK);
+
+    return DbError();
+}
+
 //-Slots ------------------------------------------------------------------------------------------------------
 //Private:
 void Db::connectedThreadDestroyed(QObject* thread)
