@@ -326,10 +326,6 @@ public:
 public:
     ~Db();
 
-//-Class Functions--------------------------------------------------------------------------------------------
-private:
-    QString threadConnectionName(const QThread* thread);
-
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
     // Validity
@@ -338,6 +334,7 @@ private:
     // Connection
     void closeConnection(const QThread* thread);
     void closeAllConnections();
+    QString threadConnectionName(const QThread* thread);
     QSqlError getThreadConnection(QSqlDatabase& connection);
     QSqlError makeNonBindQuery(QueryBuffer& resultBuffer, QSqlDatabase* database, QString queryCommand, QString sizeQueryCommand) const;
 
