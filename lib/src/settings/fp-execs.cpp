@@ -1,8 +1,16 @@
 // Unit Includes
 #include "fp/settings/fp-execs.h"
 
-// Qx Includes
-#include <qx/core/qx-json.h>
+// Json struct parsing implementation
+QX_JSON_STRUCT_OUTSIDE(Fp::Exec,
+    linux,
+    win32,
+    wine
+);
+
+QX_JSON_STRUCT_OUTSIDE(Fp::Execs,
+    list
+);
 
 namespace Fp
 {

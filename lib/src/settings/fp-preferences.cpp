@@ -22,6 +22,40 @@ QString keygen<QString, Fp::GameMetadataSource>(const Fp::GameMetadataSource& va
 
 }
 
+// Json struct parsing implementation
+QX_JSON_STRUCT_OUTSIDE(Fp::AppPathOverride,
+    path,
+    override,
+    enabled
+);
+
+QX_JSON_STRUCT_OUTSIDE(Fp::GameDataSource,
+    arguments,
+    name,
+    type
+);
+
+QX_JSON_STRUCT_OUTSIDE(Fp::GameMetadataSource,
+    baseUrl,
+    name
+);
+
+QX_JSON_STRUCT_OUTSIDE(Fp::Preferences,
+    fpfssBaseUrl,
+    gameDataSources,
+    gameMetadataSources,
+    imageFolderPath,
+    jsonFolderPath,
+    htdocsFolderPath,
+    dataPacksFolderPath,
+    onDemandImages,
+    onDemandBaseUrl,
+    appPathOverrides,
+    nativePlatforms,
+    browserModeProxy,
+    server
+);
+
 namespace Fp
 {
 

@@ -1,6 +1,13 @@
 // Unit Includes
 #include "fp/settings/fp-config.h"
 
+// Json struct parsing implementation
+QX_JSON_STRUCT_OUTSIDE(Fp::Config,
+    flashpointPath,
+    startServer,
+    server
+)
+
 namespace Fp
 {
 

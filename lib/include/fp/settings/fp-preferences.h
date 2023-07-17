@@ -15,8 +15,6 @@ struct FP_FP_EXPORT AppPathOverride
     QString path;
     QString override;
     bool enabled;
-
-    QX_JSON_STRUCT(path, override, enabled);
 };
 
 struct FP_FP_EXPORT GameDataSource
@@ -24,8 +22,6 @@ struct FP_FP_EXPORT GameDataSource
     QList<QString> arguments;
     QString name;
     QString type;
-
-    QX_JSON_STRUCT(arguments, name, type);
 };
 
 //struct FP_FP_EXPORT GameMetadataSource_GamesTags
@@ -41,8 +37,6 @@ struct FP_FP_EXPORT GameMetadataSource
     //GameMetadataSource_GamesTags games;
     QString name;
     //GameMetadataSource_GamesTags tags;
-
-    QX_JSON_STRUCT(baseUrl, name);
 };
 
 struct FP_FP_EXPORT Preferences : public Settings
@@ -60,22 +54,6 @@ struct FP_FP_EXPORT Preferences : public Settings
     QSet<QString> nativePlatforms;
     QString browserModeProxy;
     QString server;
-
-    QX_JSON_STRUCT(
-        fpfssBaseUrl,
-        gameDataSources,
-        gameMetadataSources,
-        imageFolderPath,
-        jsonFolderPath,
-        htdocsFolderPath,
-        dataPacksFolderPath,
-        onDemandImages,
-        onDemandBaseUrl,
-        appPathOverrides,
-        nativePlatforms,
-        browserModeProxy,
-        server
-    );
 };
 
 class FP_FP_EXPORT PreferencesReader : public SettingsReader

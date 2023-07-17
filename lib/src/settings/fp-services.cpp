@@ -4,6 +4,8 @@
 // Qx Includes
 #include <qx/core/qx-json.h>
 
+// Json struct parsing implementation
+
 // Configure key generator for mappable types
 namespace QxJson
 {
@@ -15,6 +17,28 @@ QString keygen<QString, Fp::ServerDaemon>(const Fp::ServerDaemon& value)
 };
 
 }
+
+// Json struct parsing implementation
+QX_JSON_STRUCT_OUTSIDE(Fp::ServerDaemon,
+    name,
+    path,
+    filename,
+    arguments,
+    kill
+);
+
+QX_JSON_STRUCT_OUTSIDE(Fp::StartStop,
+    path,
+    filename,
+    arguments
+);
+
+QX_JSON_STRUCT_OUTSIDE(Fp::Services,
+    server,
+    daemon,
+    start,
+    stop,
+);
 
 namespace Fp
 {

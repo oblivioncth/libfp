@@ -17,15 +17,11 @@ struct FP_FP_EXPORT Exec
     QString linux;
     QString win32;
     QString wine;
-
-    QX_JSON_STRUCT(linux, win32, wine);
 };
 
 struct FP_FP_EXPORT Execs : public Settings
 {
     QList<Exec> list;
-
-    QX_JSON_STRUCT(list);
 };
 
 class FP_FP_EXPORT ExecsReader : public SettingsReader
