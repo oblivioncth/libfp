@@ -22,6 +22,7 @@
 #include "fp/fp-macro.h"
 #include "fp/fp-db.h"
 #include "fp/fp-items.h"
+#include "fp/fp-playlistmanager.h"
 
 namespace Fp
 {
@@ -87,6 +88,7 @@ private:
     QDir mLogosDirectory;
     QDir mScreenshotsDirectory;
     QDir mExtrasDirectory;
+    QDir mPlaylistsDirectory;
     std::unique_ptr<QFile> mLauncherFile;
     std::unique_ptr<QFile> mDatabaseFile;
     std::shared_ptr<QFile> mConfigJsonFile;
@@ -103,6 +105,9 @@ private:
 
     // Database
     Db* mDatabase = nullptr;
+
+    // Playlist Manager
+    PlaylistManager* mPlaylistManager = nullptr;
 
     // Utilities
     MacroResolver* mMacroResolver = nullptr;
@@ -139,6 +144,9 @@ public:
 
     // Database
     Db* database();
+
+    // Playlist Manager
+    PlaylistManager* playlistManager();
 
     // Support Application Checks
     // TODO: At some point create a "Settings" object that wraps all of these, would need to rename existing Fp::Settings

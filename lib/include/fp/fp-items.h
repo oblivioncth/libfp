@@ -296,6 +296,51 @@ public:
     Set build();
 };
 
+class FP_FP_EXPORT PlaylistGame
+{
+    //-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Builder;
+
+    //-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    int mId;
+    QUuid mPlaylistId;
+    int mOrder;
+    QUuid mGameId;
+
+    //-Constructor-------------------------------------------------------------------------------------------------
+public:
+    PlaylistGame();
+
+    //-Instance Functions------------------------------------------------------------------------------------------------------
+public:
+    int id() const;
+    QUuid playlistId() const;
+    int order() const;
+    QUuid gameId() const;
+};
+
+class FP_FP_EXPORT PlaylistGame::Builder
+{
+    //-Instance Variables------------------------------------------------------------------------------------------
+private:
+    PlaylistGame mPlaylistGameBlueprint;
+
+    //-Constructor-------------------------------------------------------------------------------------------------
+public:
+    Builder();
+
+    //-Instance Functions------------------------------------------------------------------------------------------
+public:
+    Builder& wId(int id);
+    Builder& wPlaylistId(QString rawPlaylistId);
+    Builder& wOrder(int order);
+    Builder& wGameId(QString rawGameId);
+
+    PlaylistGame build();
+};
+
 class FP_FP_EXPORT Playlist
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
@@ -308,6 +353,7 @@ private:
     QString mTitle;
     QString mDescription;
     QString mAuthor;
+    QList<PlaylistGame> mPlaylistGames;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -319,6 +365,7 @@ public:
     QString title() const;
     QString description() const;
     QString author() const;
+    const QList<PlaylistGame>& playlistGames() const;
 
 };
 
@@ -338,53 +385,9 @@ public:
     Builder& wTitle(QString title);
     Builder& wDescription(QString description);
     Builder& wAuthor(QString author);
+    Builder& wPlaylistGame(const PlaylistGame& playlistGame);
 
     Playlist build();
-};
-
-class FP_FP_EXPORT PlaylistGame
-{
-//-Inner Classes----------------------------------------------------------------------------------------------------
-public:
-    class Builder;
-
-//-Instance Variables-----------------------------------------------------------------------------------------------
-private:
-    int mId;
-    QUuid mPlaylistId;
-    int mOrder;
-    QUuid mGameId;
-
-//-Constructor-------------------------------------------------------------------------------------------------
-public:
-    PlaylistGame();
-
-//-Instance Functions------------------------------------------------------------------------------------------------------
-public:
-    int id() const;
-    QUuid playlistId() const;
-    int order() const;
-    QUuid gameId() const;
-};
-
-class FP_FP_EXPORT PlaylistGame::Builder
-{
-//-Instance Variables------------------------------------------------------------------------------------------
-private:
-    PlaylistGame mPlaylistGameBlueprint;
-
-//-Constructor-------------------------------------------------------------------------------------------------
-public:
-    Builder();
-
-//-Instance Functions------------------------------------------------------------------------------------------
-public:
-    Builder& wId(QString rawId);
-    Builder& wPlaylistId(QString rawPlaylistId);
-    Builder& wOrder(QString rawOrder);
-    Builder& wGameId(QString rawGameId);
-
-    PlaylistGame build();
 };
 
 }

@@ -64,6 +64,7 @@ Install::Install(QString installPath) :
     mExecsJsonFile = std::make_shared<QFile>(installPath + "/" + mPreferences.jsonFolderPath + "/" + EXECS_JSON_NAME);
     mLogosDirectory = QDir(installPath + "/" + mPreferences.imageFolderPath + '/' + LOGOS_FOLDER_NAME);
     mScreenshotsDirectory = QDir(installPath + "/" + mPreferences.imageFolderPath + '/' + SCREENSHOTS_FOLDER_NAME);
+    mPlaylistsDirectory = QDir(installPath + "/" + mPreferences.playlistFolderPath);
 
     ServicesReader servicesReader(&mServices, mServicesJsonFile, mMacroResolver);
     if((mError = servicesReader.readInto()).isValid())
@@ -85,6 +86,9 @@ Install::Install(QString installPath) :
         return;
     }
 
+    // Add playlists manager
+    mPlaylistManager = new PlaylistManager(mPlaylistsDirectory, {});
+
     // Give the OK
     mValid = true;
     validityGuard.dismiss();
@@ -98,6 +102,8 @@ Install::~Install()
         delete mMacroResolver;
     if(mDatabase)
         delete mDatabase;
+    if(mPlaylistManager)
+        delete mPlaylistManager;
 }
 
 //-Class Functions------------------------------------------------------------------------------------------------
@@ -144,6 +150,7 @@ void Install::nullify()
     mLogosDirectory = QDir();
     mScreenshotsDirectory = QDir();
     mExtrasDirectory = QDir();
+    mPlaylistsDirectory = QDir();
     mLauncherFile.reset();
     mDatabaseFile.reset();
     mConfigJsonFile.reset();
@@ -154,6 +161,8 @@ void Install::nullify()
         qxDelete(mMacroResolver);
     if(mDatabase)
         qxDelete(mDatabase);
+    if(mPlaylistManager)
+        qxDelete(mPlaylistManager);
 
     // Settings
     mConfig = {};
@@ -209,6 +218,7 @@ QString Install::launcherChecksum() const
 }
 
 Db* Install::database() { return mDatabase; }
+PlaylistManager* Install::playlistManager() { return mPlaylistManager; }
 
 const Config& Install::config() const { return mConfig; }
 const Preferences& Install::preferences() const { return mPreferences; }

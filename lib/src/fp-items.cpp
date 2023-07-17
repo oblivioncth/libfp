@@ -244,38 +244,6 @@ Set::Builder& Set::Builder::wAddApps(const QList<AddApp>& addApps) { mSetBluepri
 Set Set::Builder::build() { return mSetBlueprint; }
 
 //===============================================================================================================
-// Playlist
-//===============================================================================================================
-
-//-Constructor-------------------------------------------------------------------------------------------------
-//Public:
-Playlist::Playlist() {}
-
-//-Instance Functions------------------------------------------------------------------------------------------------------
-//Public:
-QUuid Playlist::id() const { return mId; }
-QString Playlist::title() const { return mTitle; }
-QString Playlist::description() const { return mDescription; }
-QString Playlist::author() const { return mAuthor; }
-
-//===============================================================================================================
-// Playlist::Builder
-//===============================================================================================================
-
-//-Constructor-------------------------------------------------------------------------------------------------
-//Public:
-Playlist::Builder::Builder() {}
-
-//-Instance Functions------------------------------------------------------------------------------------------
-//Public:
-Playlist::Builder& Playlist::Builder::wId(QString rawId) { mPlaylistBlueprint.mId = QUuid(rawId); return *this; }
-Playlist::Builder& Playlist::Builder::wTitle(QString title) { mPlaylistBlueprint.mTitle = title; return *this; }
-Playlist::Builder& Playlist::Builder::wDescription(QString description) { mPlaylistBlueprint.mDescription = description; return *this; }
-Playlist::Builder& Playlist::Builder::wAuthor(QString author) { mPlaylistBlueprint.mAuthor = author; return *this; }
-
-Playlist Playlist::Builder::build() { return mPlaylistBlueprint; }
-
-//===============================================================================================================
 // PlaylistGame
 //===============================================================================================================
 
@@ -297,24 +265,49 @@ QUuid PlaylistGame::gameId() const { return mGameId; }
 
 //-Constructor-------------------------------------------------------------------------------------------------
 //Public:
-   PlaylistGame::Builder::Builder() {}
+PlaylistGame::Builder::Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-    PlaylistGame::Builder& PlaylistGame::Builder::wId(QString rawId) { mPlaylistGameBlueprint.mId = rawId.toInt(); return *this; }
-    PlaylistGame::Builder& PlaylistGame::Builder::wPlaylistId(QString rawPlaylistId) { mPlaylistGameBlueprint.mPlaylistId = QUuid(rawPlaylistId); return *this; }
+PlaylistGame::Builder& PlaylistGame::Builder::wId(int id) { mPlaylistGameBlueprint.mId = id; return *this; }
+PlaylistGame::Builder& PlaylistGame::Builder::wPlaylistId(QString rawPlaylistId) { mPlaylistGameBlueprint.mPlaylistId = QUuid(rawPlaylistId); return *this; }
+PlaylistGame::Builder& PlaylistGame::Builder::wOrder(int order) { mPlaylistGameBlueprint.mOrder = order; return *this; }
+PlaylistGame::Builder& PlaylistGame::Builder::wGameId(QString rawGameId) { mPlaylistGameBlueprint.mGameId = QUuid(rawGameId); return *this; }
 
-    PlaylistGame::Builder& PlaylistGame::Builder::wOrder(QString rawOrder)
-    {
-        bool validInt = false;
-        mPlaylistGameBlueprint.mOrder = rawOrder.toInt(&validInt);
-        if(!validInt)
-            mPlaylistGameBlueprint.mOrder = -1;
+PlaylistGame PlaylistGame::Builder::build() { return mPlaylistGameBlueprint; }
 
-        return *this;
-    }
+//===============================================================================================================
+// Playlist
+//===============================================================================================================
 
-    PlaylistGame::Builder& PlaylistGame::Builder::wGameId(QString rawGameId) { mPlaylistGameBlueprint.mGameId = QUuid(rawGameId); return *this; }
+//-Constructor-------------------------------------------------------------------------------------------------
+//Public:
+Playlist::Playlist() {}
 
-    PlaylistGame PlaylistGame::Builder::build() { return mPlaylistGameBlueprint; }
-};
+//-Instance Functions------------------------------------------------------------------------------------------------------
+//Public:
+QUuid Playlist::id() const { return mId; }
+QString Playlist::title() const { return mTitle; }
+QString Playlist::description() const { return mDescription; }
+QString Playlist::author() const { return mAuthor; }
+const QList<PlaylistGame>& Playlist::playlistGames() const { return mPlaylistGames; }
+
+//===============================================================================================================
+// Playlist::Builder
+//===============================================================================================================
+
+//-Constructor-------------------------------------------------------------------------------------------------
+//Public:
+Playlist::Builder::Builder() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------
+//Public:
+Playlist::Builder& Playlist::Builder::wId(QString rawId) { mPlaylistBlueprint.mId = QUuid(rawId); return *this; }
+Playlist::Builder& Playlist::Builder::wTitle(QString title) { mPlaylistBlueprint.mTitle = title; return *this; }
+Playlist::Builder& Playlist::Builder::wDescription(QString description) { mPlaylistBlueprint.mDescription = description; return *this; }
+Playlist::Builder& Playlist::Builder::wAuthor(QString author) { mPlaylistBlueprint.mAuthor = author; return *this; }
+Playlist::Builder& Playlist::Builder::wPlaylistGame(const PlaylistGame& playlistGame) { mPlaylistBlueprint.mPlaylistGames.append(playlistGame); return *this; }
+
+Playlist Playlist::Builder::build() { return mPlaylistBlueprint; }
+
+}

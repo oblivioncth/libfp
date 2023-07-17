@@ -12,6 +12,7 @@ ob_add_standard_library(${LIB_TARGET_NAME}
             fp-install.h
             fp-items.h
             fp-macro.h
+            fp-playlistmanager.h
             settings/fp-config.h
             settings/fp-execs.h
             settings/fp-preferences.h
@@ -22,6 +23,7 @@ ob_add_standard_library(${LIB_TARGET_NAME}
         fp-install.cpp
         fp-macro.cpp
         fp-items.cpp
+        fp-playlistmanager.cpp
         settings/fp-config.cpp
         settings/fp-execs.cpp
         settings/fp-preferences.cpp
