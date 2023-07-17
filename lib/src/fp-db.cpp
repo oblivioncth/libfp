@@ -650,6 +650,9 @@ DbError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
 
 DbError Db::queryEntryDataById(QueryBuffer& resultBuffer, const QUuid& appId)
 {
+    // A few entries have more than one data pack. The results are sorted
+    // by most to least recently added
+
     // Ensure return buffer is effectively null
     resultBuffer = QueryBuffer();
 
@@ -661,7 +664,8 @@ DbError Db::queryEntryDataById(QueryBuffer& resultBuffer, const QUuid& appId)
 
     // Setup ID query
     QString baseQueryCommand = "SELECT %1 FROM " + Table_Game_Data::NAME + " WHERE " +
-            Table_Game_Data::COL_GAME_ID + " == '" + appId.toString(QUuid::WithoutBraces) + "'";
+            Table_Game_Data::COL_GAME_ID + " == '" + appId.toString(QUuid::WithoutBraces) + "' " +
+                               "ORDER BY " + Table_Game_Data::COL_DATE_ADDED + " DESC";
     QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Game_Data::COLUMN_LIST.join("`,`") + "`");
     QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
@@ -824,9 +828,9 @@ DbError Db::getGameData(GameData& data, const QUuid& gameId)
     if(searchResult.size == 0)
         return DbError(); // Game doesn't have data pack
     else if(searchResult.size > 1)
-        return DbError(DbError::IdCollision, ERR_ID_DUPLICATE_ENTRY);
+        qWarning("Entry with more than one data pack, using most recent.");
 
-    // Advance result to only record
+    // Advance result to first record
     searchResult.result.next();
 
     // Fill buffer
