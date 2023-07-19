@@ -369,6 +369,7 @@ public:
     QString author() const;
     QString library() const;
     const QList<PlaylistGame>& playlistGames() const;
+    QList<PlaylistGame>& playlistGames();
 
 };
 

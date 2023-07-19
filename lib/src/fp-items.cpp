@@ -292,6 +292,7 @@ QString Playlist::description() const { return mDescription; }
 QString Playlist::author() const { return mAuthor; }
 QString Playlist::library() const { return mLibrary; }
 const QList<PlaylistGame>& Playlist::playlistGames() const { return mPlaylistGames; }
+QList<PlaylistGame>& Playlist::playlistGames() { return mPlaylistGames; }
 
 //===============================================================================================================
 // Playlist::Builder
