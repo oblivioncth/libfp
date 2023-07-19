@@ -144,7 +144,7 @@ QString Db::threadConnectionName(const QThread* thread)
 //Private:
 void Db::nullify()
 {
-    mPlatformList.clear();
+   mPlatformNames.clear();
     mPlaylistList.clear();
     mTagMap.clear();
 }
@@ -328,7 +328,7 @@ QSqlError Db::populateAvailableItems()
         return dbError;
 
     // Ensure lists are reset
-    mPlatformList.clear();
+    mPlatformNames.clear();
     mPlaylistList.clear();
 
     // Make platform query
@@ -340,10 +340,10 @@ QSqlError Db::populateAvailableItems()
 
     // Parse query
     while(platformQuery.next())
-        mPlatformList.append(platformQuery.value(Table_Game::COL_PLATFORM_NAME).toString());
+        mPlatformNames.append(platformQuery.value(Table_Game::COL_PLATFORM_NAME).toString());
 
     // Sort list
-    mPlatformList.sort();
+    mPlatformNames.sort();
 
     // Return invalid SqlError
     return QSqlError();
@@ -698,7 +698,7 @@ DbError Db::queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter includeFilt
     return DbError::fromSqlError(makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand));
 }
 
-QStringList Db::platformList() const { return mPlatformList; } //TODO: Probably should use RAII for this.
+QStringList Db::platformNames() const { return mPlatformNames; } //TODO: Probably should use RAII for this.
 QMap<int, Db::TagCategory> Db::tags() const { return mTagMap; }
 
 DbError Db::entryUsesDataPack(bool& resultBuffer, QUuid gameId)

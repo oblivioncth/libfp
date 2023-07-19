@@ -314,7 +314,7 @@ private:
     // Database information
     QSet<const QThread*> mConnectedThreads;
     const QString mDatabaseName;
-    QStringList mPlatformList;
+    QStringList mPlatformNames;
     QStringList mPlaylistList;
     QMap<int, TagCategory> mTagMap; // Order matters for display in tag selector
 
@@ -363,7 +363,7 @@ public:
     DbError queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter filter);
 
     // Info
-    QStringList platformList() const;
+    QStringList platformNames() const;
     QMap<int, TagCategory> tags() const;
 
     // Checks

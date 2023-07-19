@@ -36,6 +36,7 @@ private:
     bool mPopulated;
     QDir mFolder;
     QList<Fp::Playlist> mPlaylists;
+    QStringList mTitles;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -47,7 +48,8 @@ private:
 public:
     bool isPopulated() const;
     Qx::Error populate();
-    const QList<Fp::Playlist> playlists() const;
+    QList<Fp::Playlist> playlists() const;
+    QStringList playlistTitles() const;
 };
 
 }

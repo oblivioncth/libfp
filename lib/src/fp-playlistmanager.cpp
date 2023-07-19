@@ -115,12 +115,13 @@ Qx::Error PlaylistManager::populate()
             pb.wPlaylistGame(pgb.build());
         }
 
+        mTitles.append(jPlaylist.title);
         mPlaylists.append(pb.build());
     }
 
     return Qx::Error();
 }
 
-const QList<Fp::Playlist> PlaylistManager::playlists() const { return mPlaylists; }
-
+QList<Fp::Playlist> PlaylistManager::playlists() const { return mPlaylists; }
+QStringList PlaylistManager::playlistTitles() const { return mTitles; }
 }
