@@ -50,6 +50,7 @@ struct FP_FP_EXPORT Preferences : public Settings
     QString htdocsFolderPath;
     QString dataPacksFolderPath;
     bool onDemandImages;
+    bool onDemandImagesCompressed;
     QString onDemandBaseUrl;
     QList<AppPathOverride> appPathOverrides;
     QSet<QString> nativePlatforms;

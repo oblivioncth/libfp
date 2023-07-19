@@ -111,7 +111,7 @@ Install::~Install()
 QString Install::standardImageSubPath(QUuid gameId)
 {
     QString gameIdString = gameId.toString(QUuid::WithoutBraces);
-    return gameIdString.left(2) + '/' + gameIdString.mid(2, 2) + '/' + gameIdString + IMAGE_EXT;
+    return gameIdString.left(2) + '/' + gameIdString.mid(2, 2) + '/' + gameIdString;
 }
 
 //Public:
@@ -233,13 +233,22 @@ QDir Install::extrasDirectory() const { return mExtrasDirectory; }
 QString Install::imageLocalPath(ImageType imageType, QUuid gameId) const
 {
     const QDir& sourceDir = imageType == ImageType::Logo ? mLogosDirectory : mScreenshotsDirectory;
-    return sourceDir.absolutePath() + '/' + standardImageSubPath(gameId);
+    bool compressed = mPreferences.onDemandImagesCompressed;
+    QString localSubPath = standardImageSubPath(gameId) + (compressed ? IMAGE_C_EXT : IMAGE_UC_EXT);
+
+    return sourceDir.absolutePath() + '/' + localSubPath;
 }
 
 QUrl Install::imageRemoteUrl(ImageType imageType, QUuid gameId) const
 {
     const QString typeFolder = (imageType == ImageType::Logo ? LOGOS_FOLDER_NAME : SCREENSHOTS_FOLDER_NAME);
-    return QUrl(mPreferences.onDemandBaseUrl + typeFolder + '/' + standardImageSubPath(gameId));
+    bool compressed = mPreferences.onDemandImagesCompressed;
+    QString remoteSubPath = standardImageSubPath(gameId) + IMAGE_UC_EXT;
+
+    if(compressed)
+        remoteSubPath += IMAGE_C_URL_SUFFIX;
+
+    return QUrl(mPreferences.onDemandBaseUrl + typeFolder + '/' + remoteSubPath);
 }
 
 const MacroResolver* Install::macroResolver() const { return mMacroResolver; }
