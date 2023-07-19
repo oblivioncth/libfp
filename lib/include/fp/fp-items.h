@@ -353,6 +353,8 @@ private:
     QString mTitle;
     QString mDescription;
     QString mAuthor;
+    QString mLibrary;
+
     QList<PlaylistGame> mPlaylistGames;
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -365,6 +367,7 @@ public:
     QString title() const;
     QString description() const;
     QString author() const;
+    QString library() const;
     const QList<PlaylistGame>& playlistGames() const;
 
 };
@@ -385,6 +388,7 @@ public:
     Builder& wTitle(QString title);
     Builder& wDescription(QString description);
     Builder& wAuthor(QString author);
+    Builder& wLibrary(QString library);
     Builder& wPlaylistGame(const PlaylistGame& playlistGame);
 
     Playlist build();

@@ -33,13 +33,15 @@ struct Playlist
     QString title;
     QString description;
     QString author;
+    QString library;
 
     QX_JSON_STRUCT(
         id,
         games,
         title,
         description,
-        author
+        author,
+        library
     );
 };
 
