@@ -51,8 +51,8 @@ Game::Builder::Builder() {}
 //Private:
 QString Game::Builder::kosherizeRawDate(QString date)
 {
-    static const QString DEFAULT_MONTH = "-01";
-    static const QString DEFAULT_DAY = "-01";
+    static const QString DEFAULT_MONTH = u"-01"_s;
+    static const QString DEFAULT_DAY = u"-01"_s;
 
     if(Qx::String::isOnlyNumbers(date) && date.length() == 4) // Year only
         return date + DEFAULT_MONTH + DEFAULT_DAY;

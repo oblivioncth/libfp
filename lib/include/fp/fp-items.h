@@ -9,6 +9,8 @@
 #include <QDateTime>
 #include <QUuid>
 
+using namespace Qt::Literals::StringLiterals;
+
 namespace Fp
 {
 //-Enums----------------------------------------------------------------------------------------------------------
@@ -196,8 +198,8 @@ public:
 
 //-Class Variables-----------------------------------------------------------------------------------------------
 private:
-    QString SPEC_PATH_MSG = ":message:";
-    QString SPEC_PATH_EXTRA = ":extras:";
+    static inline const QString SPEC_PATH_MSG = u":message:"_s;
+    static inline const QString SPEC_PATH_EXTRA = u":extras:"_s;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:

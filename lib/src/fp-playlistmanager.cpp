@@ -60,7 +60,7 @@ PlaylistManager::PlaylistManager(const QDir& folder, const Key&) :
     mPopulated(false),
     mFolder(folder)
 {
-    mFolder.setNameFilters({"*.json"});
+    mFolder.setNameFilters({u"*.json"_s});
     mFolder.setFilter(QDir::Files);
 }
 

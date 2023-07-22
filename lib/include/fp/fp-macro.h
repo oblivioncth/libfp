@@ -7,6 +7,8 @@
 // Qt Includes
 #include <QHash>
 
+using namespace Qt::Literals::StringLiterals;
+
 namespace Fp
 {
 
@@ -24,7 +26,7 @@ public:
 
 //-Class Variables-----------------------------------------------------------------------------------------------
 private:
-    static inline const QString FP_PATH = "<fpPath>";
+    static inline const QString FP_PATH = u"<fpPath>"_s;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:

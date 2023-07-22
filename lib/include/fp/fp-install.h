@@ -27,7 +27,7 @@
 namespace Fp
 {
 
-inline const QString NAME = QStringLiteral("Flashpoint");
+inline const QString NAME = u"Flashpoint"_s;
 
 class FP_FP_EXPORT Install
 {
@@ -37,46 +37,46 @@ enum class Edition {Ultimate, Infinity, Core};
 //-Class Variables-----------------------------------------------------------------------------------------------
 public: // Ugh
 #if defined _WIN32
-    static inline const QString LAUNCHER_NAME =  "Flashpoint.exe";
+    static inline const QString LAUNCHER_NAME =  u"Flashpoint.exe"_s;
 #elif defined __linux__
-    static inline const QString LAUNCHER_NAME =  "flashpoint-launcher";
+    static inline const QString LAUNCHER_NAME =  u"flashpoint-launcher"_s;
 #endif
 
 private:
     // Static paths
-    static inline const QString LAUNCHER_PATH =  "Launcher/" + LAUNCHER_NAME;
-    static inline const QString DATABASE_PATH = "Data/flashpoint.sqlite";
-    static inline const QString CONFIG_JSON_PATH = "Launcher/config.json";
-    static inline const QString PREFERENCES_JSON_PATH = "preferences.json";
-    static inline const QString VER_TXT_PATH = "version.txt";
+    static inline const QString LAUNCHER_PATH =  u"Launcher/"_s + LAUNCHER_NAME;
+    static inline const QString DATABASE_PATH = u"Data/flashpoint.sqlite"_s;
+    static inline const QString CONFIG_JSON_PATH = u"Launcher/config.json"_s;
+    static inline const QString PREFERENCES_JSON_PATH = u"preferences.json"_s;
+    static inline const QString VER_TXT_PATH = u"version.txt"_s;
 
     // File Info
-    static inline const QString IMAGE_UC_EXT = ".png";
-    static inline const QString IMAGE_C_EXT = ".jpg";
-    static inline const QString IMAGE_C_URL_SUFFIX = "?type=jpg";
+    static inline const QString IMAGE_UC_EXT = u".png"_s;
+    static inline const QString IMAGE_C_EXT = u".jpg"_s;
+    static inline const QString IMAGE_C_URL_SUFFIX = u"?type=jpg"_s;
 
     // Dynamic path file names
-    static inline const QString SERVICES_JSON_NAME = "services.json";
-    static inline const QString EXECS_JSON_NAME = "execs.json";
+    static inline const QString SERVICES_JSON_NAME = u"services.json"_s;
+    static inline const QString EXECS_JSON_NAME = u"execs.json"_s;
 
     // Static Folders
-    static inline const QString EXTRAS_PATH = "Extras";
+    static inline const QString EXTRAS_PATH = u"Extras"_s;
 
     // Dynamic path folder names
-    static inline const QString LOGOS_FOLDER_NAME = "Logos";
-    static inline const QString SCREENSHOTS_FOLDER_NAME = "Screenshots";
+    static inline const QString LOGOS_FOLDER_NAME = u"Logos"_s;
+    static inline const QString SCREENSHOTS_FOLDER_NAME = u"Screenshots"_s;
 
     // Error
-    static inline const QString ERR_FILE_MISSING = QSL("A required flashpoint install file is missing.");
+    static inline const QString ERR_FILE_MISSING = u"A required flashpoint install file is missing."_s;
 
     // Settings
-    static inline const QString MACRO_FP_PATH = "<fpPath>";
+    static inline const QString MACRO_FP_PATH = u"<fpPath>"_s;
 
     // Regex
-    static inline const QRegularExpression VERSION_NUMBER_REGEX = QRegularExpression("[fF]lashpoint (?<version>.*?) ");
+    static inline const QRegularExpression VERSION_NUMBER_REGEX = QRegularExpression(u"[fF]lashpoint (?<version>.*?) "_s);
 
 public:
-    static inline const QFileInfo SECURE_PLAYER_INFO = QFileInfo("FlashpointSecurePlayer.exe");
+    static inline const QFileInfo SECURE_PLAYER_INFO = QFileInfo(u"FlashpointSecurePlayer.exe"_s);
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:

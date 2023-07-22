@@ -91,13 +91,13 @@ Qx::JsonError ServicesReader::parseDocument(const QJsonDocument& servicesDoc)
     for(const ServerDaemon& d : qAsConst(targetServices->daemon))
     {
         /* NOTE: If for some reason this list becomes large, use a hash instead
-         * (e.g. if(hash.contains("NAME")){ recognizedDaemons.setFlag(hash["NAME]); } )
+         * (e.g. if(hash.contains(u"NAME"_s)){ recognizedDaemons.setFlag(hash["NAME]); } )
          */
-        if(d.name.contains("qemu", Qt::CaseInsensitive) ||
-            d.filename.contains("qemu", Qt::CaseInsensitive))
+        if(d.name.contains(u"qemu"_s, Qt::CaseInsensitive) ||
+            d.filename.contains(u"qemu"_s, Qt::CaseInsensitive))
             targetServices->recognizedDaemons.setFlag(KnownDaemon::Qemu);
-        else if(d.name.contains("docker", Qt::CaseInsensitive) ||
-                 d.filename.contains("docker", Qt::CaseInsensitive))
+        else if(d.name.contains(u"docker"_s, Qt::CaseInsensitive) ||
+                 d.filename.contains(u"docker"_s, Qt::CaseInsensitive))
             targetServices->recognizedDaemons.setFlag(KnownDaemon::Docker);
     }
 
