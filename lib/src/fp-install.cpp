@@ -20,12 +20,12 @@ Install::Install(QString installPath) :
 
     // Initialize static files and directories
     mRootDirectory = QDir(installPath);
-    mLauncherFile = std::make_unique<QFile>(installPath + "/" + LAUNCHER_PATH);
-    mDatabaseFile = std::make_unique<QFile>(installPath + "/" + DATABASE_PATH);
-    mConfigJsonFile = std::make_shared<QFile>(installPath + "/" + CONFIG_JSON_PATH);
-    mPreferencesJsonFile = std::make_shared<QFile>(installPath + "/" + PREFERENCES_JSON_PATH);
-    mVersionFile = std::make_unique<QFile>(installPath + "/" + VER_TXT_PATH);
-    mExtrasDirectory = QDir(installPath + "/" + EXTRAS_PATH);
+    mLauncherFile = std::make_unique<QFile>(installPath + u"/"_s + LAUNCHER_PATH);
+    mDatabaseFile = std::make_unique<QFile>(installPath + u"/"_s + DATABASE_PATH);
+    mConfigJsonFile = std::make_shared<QFile>(installPath + u"/"_s + CONFIG_JSON_PATH);
+    mPreferencesJsonFile = std::make_shared<QFile>(installPath + u"/"_s + PREFERENCES_JSON_PATH);
+    mVersionFile = std::make_unique<QFile>(installPath + u"/"_s + VER_TXT_PATH);
+    mExtrasDirectory = QDir(installPath + u"/"_s + EXTRAS_PATH);
 
     // Create macro resolver
     mMacroResolver = new MacroResolver(mRootDirectory.absolutePath(), {});
@@ -60,11 +60,11 @@ Install::Install(QString installPath) :
     if((mError = prefReader.readInto()).isValid())
         return;
 
-    mServicesJsonFile = std::make_shared<QFile>(installPath + "/" + mPreferences.jsonFolderPath + "/" + SERVICES_JSON_NAME);
-    mExecsJsonFile = std::make_shared<QFile>(installPath + "/" + mPreferences.jsonFolderPath + "/" + EXECS_JSON_NAME);
-    mLogosDirectory = QDir(installPath + "/" + mPreferences.imageFolderPath + '/' + LOGOS_FOLDER_NAME);
-    mScreenshotsDirectory = QDir(installPath + "/" + mPreferences.imageFolderPath + '/' + SCREENSHOTS_FOLDER_NAME);
-    mPlaylistsDirectory = QDir(installPath + "/" + mPreferences.playlistFolderPath);
+    mServicesJsonFile = std::make_shared<QFile>(installPath + u"/"_s + mPreferences.jsonFolderPath + u"/"_s + SERVICES_JSON_NAME);
+    mExecsJsonFile = std::make_shared<QFile>(installPath + u"/"_s + mPreferences.jsonFolderPath + u"/"_s + EXECS_JSON_NAME);
+    mLogosDirectory = QDir(installPath + u"/"_s + mPreferences.imageFolderPath + '/' + LOGOS_FOLDER_NAME);
+    mScreenshotsDirectory = QDir(installPath + u"/"_s + mPreferences.imageFolderPath + '/' + SCREENSHOTS_FOLDER_NAME);
+    mPlaylistsDirectory = QDir(installPath + u"/"_s + mPreferences.playlistFolderPath);
 
     ServicesReader servicesReader(&mServices, mServicesJsonFile, mMacroResolver);
     if((mError = servicesReader.readInto()).isValid())
@@ -125,7 +125,7 @@ Qx::Error Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appIn
         involvesBuffer = true;
         return Qx::Error();
     }
-    else if(appInfo.suffix().compare("bat", Qt::CaseInsensitive) == 0)
+    else if(appInfo.suffix().compare(u"bat"_s, Qt::CaseInsensitive) == 0)
     {
         // Check if bat uses secure player
         QFile batFile(appInfo.absoluteFilePath());
@@ -178,8 +178,8 @@ Install::Edition Install::edition() const
 {
     QString nameVer = nameVersionString();
 
-    return nameVer.contains("ultimate", Qt::CaseInsensitive) ? Edition::Ultimate :
-           nameVer.contains("infinity", Qt::CaseInsensitive) ? Edition::Infinity :
+    return nameVer.contains(u"ultimate"_s, Qt::CaseInsensitive) ? Edition::Ultimate :
+           nameVer.contains(u"infinity"_s, Qt::CaseInsensitive) ? Edition::Infinity :
                                                                Edition::Core;
 }
 
@@ -200,7 +200,7 @@ Qx::VersionNumber Install::version() const
 
     if(versionMatch.hasMatch())
     {
-        Qx::VersionNumber fpVersion = Qx::VersionNumber::fromString(versionMatch.captured("version"));
+        Qx::VersionNumber fpVersion = Qx::VersionNumber::fromString(versionMatch.captured(u"version"_s));
         if(!fpVersion.isNull())
             return fpVersion;
     }

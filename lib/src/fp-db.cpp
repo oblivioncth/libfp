@@ -83,7 +83,7 @@ Db::Db(const QString& databaseName, const Key&) :
     if(!missingTables.isEmpty())
     {
         mError = DbError(DbError::InvalidSchema, ERR_MISSING_TABLE,
-                         QStringList(missingTables.begin(), missingTables.end()).join("\n"));
+                         QStringList(missingTables.begin(), missingTables.end()).join(u"\n"_s));
         return;
     }
 
@@ -99,7 +99,7 @@ Db::Db(const QString& databaseName, const Key&) :
     if(!missingColumns.isEmpty())
     {
         mError = DbError(DbError::InvalidSchema, ERR_MISSING_TABLE,
-                         QStringList(missingColumns.begin(), missingColumns.end()).join("\n"));
+                         QStringList(missingColumns.begin(), missingColumns.end()).join(u"\n"_s));
         return;
     }
 
@@ -135,8 +135,8 @@ QString Db::threadConnectionName(const QThread* thread)
     // Important to also salt using instance "id" so that
     // different instances don't use the same connection
    return DATABASE_CONNECTION_NAME +
-           "_i" + QString::number((quint64)this, 16) +
-           "_t" + QString::number((quint64)thread, 16);
+           u"_i"_s + QString::number((quint64)this, 16) +
+           u"_t"_s + QString::number((quint64)thread, 16);
 }
 
 
@@ -191,7 +191,7 @@ QSqlError Db::getThreadConnection(QSqlDatabase& connection)
     }
     else
     {
-        connection = QSqlDatabase::addDatabase("QSQLITE", tcn);
+        connection = QSqlDatabase::addDatabase(u"QSQLITE"_s, tcn);
         //connection.setConnectOptions("QSQLITE_OPEN_READONLY"); Lib features some DB writing now
         connection.setDatabaseName(mDatabaseName);
 
@@ -298,7 +298,7 @@ QSqlError Db::checkDatabaseForRequiredColumns(QSet<QString> &missingColumsReturn
         existingColumns.clear();
 
         // Make column name query
-        QSqlQuery columnQuery("PRAGMA table_info(" + tableAndColumns.name + ")", fpDb);
+        QSqlQuery columnQuery(u"PRAGMA table_info("_s + tableAndColumns.name + u")"_s, fpDb);
 
         // Return if error occurs
         if(columnQuery.lastError().isValid())
@@ -306,12 +306,12 @@ QSqlError Db::checkDatabaseForRequiredColumns(QSet<QString> &missingColumsReturn
 
         // Parse query
         while(columnQuery.next())
-            existingColumns.insert(columnQuery.value("name").toString());
+            existingColumns.insert(columnQuery.value(u"name"_s).toString());
 
         // Check for missing columns
         for(const QString& column : tableAndColumns.columns)
             if(!existingColumns.contains(column))
-                missingColumsReturnBuffer.insert(tableAndColumns.name + ": " + column);
+                missingColumsReturnBuffer.insert(tableAndColumns.name + u": "_s + column);
     }
 
 
@@ -332,7 +332,7 @@ QSqlError Db::populateAvailableItems()
     mPlaylistList.clear();
 
     // Make platform query
-    QSqlQuery platformQuery("SELECT DISTINCT " + Table_Game::COL_PLATFORM_NAME + " FROM " + Table_Game::NAME, fpDb);
+    QSqlQuery platformQuery(u"SELECT DISTINCT "_s + Table_Game::COL_PLATFORM_NAME + u" FROM "_s + Table_Game::NAME, fpDb);
 
     // Return if error occurs
     if(platformQuery.lastError().isValid())
@@ -364,7 +364,7 @@ QSqlError Db::populateTags()
     QHash<int, QString> primaryAliases;
 
     // Make tag category query
-    QSqlQuery categoryQuery("SELECT `" + Table_Tag_Category::COLUMN_LIST.join("`,`") + "` FROM " + Table_Tag_Category::NAME, fpDb);
+    QSqlQuery categoryQuery(u"SELECT `"_s + Table_Tag_Category::COLUMN_LIST.join(u"`,`"_s) + u"` FROM "_s + Table_Tag_Category::NAME, fpDb);
 
     // Return if error occurs
     if(categoryQuery.lastError().isValid())
@@ -381,7 +381,7 @@ QSqlError Db::populateTags()
     }
 
     // Make tag alias query
-    QSqlQuery aliasQuery("SELECT `" + Table_Tag_Alias::COLUMN_LIST.join("`,`") + "` FROM " + Table_Tag_Alias::NAME, fpDb);
+    QSqlQuery aliasQuery(u"SELECT `"_s + Table_Tag_Alias::COLUMN_LIST.join(u"`,`"_s) + u"` FROM "_s + Table_Tag_Alias::NAME, fpDb);
 
     // Return if error occurs
     if(aliasQuery.lastError().isValid())
@@ -392,7 +392,7 @@ QSqlError Db::populateTags()
         primaryAliases[aliasQuery.value(Table_Tag_Alias::COL_ID).toInt()] = aliasQuery.value(Table_Tag_Alias::COL_NAME).toString();
 
     // Make tag query
-    QSqlQuery tagQuery("SELECT `" + Table_Tag::COLUMN_LIST.join("`,`") + "` FROM " + Table_Tag::NAME, fpDb);
+    QSqlQuery tagQuery(u"SELECT `"_s + Table_Tag::COLUMN_LIST.join(u"`,`"_s) + u"` FROM "_s + Table_Tag::NAME, fpDb);
 
     // Return if error occurs
     if(tagQuery.lastError().isValid())
@@ -433,9 +433,9 @@ DbError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, QStringList p
     if(!inclusionOptions.excludedTagIds.isEmpty())
     {
         // Make game tag sets query
-        QString tagIdCSV = Qx::String::join(inclusionOptions.excludedTagIds, [](int tagId){return QString::number(tagId);}, "','");
-        QSqlQuery tagQuery("SELECT `" + Table_Game_Tags_Tag::COL_GAME_ID + "` FROM " + Table_Game_Tags_Tag::NAME +
-                           " WHERE " + Table_Game_Tags_Tag::COL_TAG_ID + " IN('" + tagIdCSV + "')", fpDb);
+        QString tagIdCSV = Qx::String::join(inclusionOptions.excludedTagIds, [](int tagId){return QString::number(tagId);}, u"','"_s);
+        QSqlQuery tagQuery(u"SELECT `"_s + Table_Game_Tags_Tag::COL_GAME_ID + u"` FROM "_s + Table_Game_Tags_Tag::NAME +
+                           u" WHERE "_s + Table_Game_Tags_Tag::COL_TAG_ID + u" IN('"_s + tagIdCSV + u"')"_s, fpDb);
 
         QSqlError tagQueryError = tagQuery.lastError();
         if(tagQueryError.isValid())
@@ -449,27 +449,27 @@ DbError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, QStringList p
     for(const QString& platform : platforms)
     {
         // Create platform query string
-        QString placeholder = ":platform";
-        QString baseQueryCommand = "SELECT %1 FROM " + Table_Game::NAME + " WHERE " +
-                                   Table_Game::COL_PLATFORM_NAME + " = " + placeholder + " AND ";
+        QString placeholder = u":platform"_s;
+        QString baseQueryCommand = u"SELECT %1 FROM "_s + Table_Game::NAME + u" WHERE "_s +
+                                   Table_Game::COL_PLATFORM_NAME + u" = "_s + placeholder + u" AND "_s;
 
         // Handle filtering
         QString filteredQueryCommand = baseQueryCommand.append(inclusionOptions.includeAnimations ? GAME_AND_ANIM_FILTER : GAME_ONLY_FILTER);
 
         if(!idExclusionFilter.isEmpty())
         {
-            QString gameIdCSV = Qx::String::join(idExclusionFilter, [](QUuid id){return id.toString(QUuid::WithoutBraces);}, "','");
-            filteredQueryCommand += " AND " + Table_Game::COL_ID + " NOT IN('" + gameIdCSV + "')";
+            QString gameIdCSV = Qx::String::join(idExclusionFilter, [](QUuid id){return id.toString(QUuid::WithoutBraces);}, u"','"_s);
+            filteredQueryCommand += u" AND "_s + Table_Game::COL_ID + u" NOT IN('"_s + gameIdCSV + u"')"_s;
         }
 
         if(idInclusionFilter.has_value())
         {
-            QString gameIdCSV = Qx::String::join(*idInclusionFilter.value(), [](QUuid id){return id.toString(QUuid::WithoutBraces);}, "','");
-            filteredQueryCommand += " AND " + Table_Game::COL_ID + " IN('" + gameIdCSV + "')";
+            QString gameIdCSV = Qx::String::join(*idInclusionFilter.value(), [](QUuid id){return id.toString(QUuid::WithoutBraces);}, u"','"_s);
+            filteredQueryCommand += u" AND "_s + Table_Game::COL_ID + u" IN('"_s + gameIdCSV + u"')"_s;
         }
 
         // Create final command strings
-        QString mainQueryCommand = filteredQueryCommand.arg("`" + Table_Game::COLUMN_LIST.join("`,`") + "`");
+        QString mainQueryCommand = filteredQueryCommand.arg(u"`"_s + Table_Game::COLUMN_LIST.join(u"`,`"_s) + u"`"_s);
         QString sizeQueryCommand = filteredQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
         // Create main query and bind current platform
@@ -516,8 +516,8 @@ DbError Db::queryAllAddApps(QueryBuffer& resultBuffer)
         return DbError::fromSqlError(dbError);
 
     // Make query
-    QString baseQueryCommand = "SELECT %1 FROM " + Table_Add_App::NAME;
-    QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Add_App::COLUMN_LIST.join("`,`") + "`");
+    QString baseQueryCommand = u"SELECT %1 FROM "_s + Table_Add_App::NAME;
+    QString mainQueryCommand = baseQueryCommand.arg(u"`"_s + Table_Add_App::COLUMN_LIST.join(u"`,`"_s) + u"`"_s);
     QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
     resultBuffer.source = Table_Add_App::NAME;
@@ -530,9 +530,9 @@ DbError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
     resultBuffer = QueryBuffer();
 
     // Query Constants
-    const QString where = " WHERE ";
-    const QString nd = " AND ";
-    const QString likeTempl = " LIKE '%%1%' ESCAPE '\\'";
+    const QString where = u" WHERE "_s;
+    const QString nd = u" AND "_s;
+    const QString likeTempl = u" LIKE '%%1%' ESCAPE '\\'"_s;
 
     // Get database
     QSqlDatabase fpDb;
@@ -544,26 +544,26 @@ DbError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
     if(filter.type != EntryType::AddApp)
     {
         // Assemble Base Query Command
-        QString baseQueryCommand = "SELECT %1 FROM " + Table_Game::NAME;
+        QString baseQueryCommand = u"SELECT %1 FROM "_s + Table_Game::NAME;
 
         if(!filter.parent.isNull() || !filter.id.isNull() || !filter.name.isNull())
         {
             baseQueryCommand += where;
 
             if(!filter.id.isNull())
-                baseQueryCommand += Table_Game::COL_ID + " == '" + filter.id.toString(QUuid::WithoutBraces) + "'" + nd;
+                baseQueryCommand += Table_Game::COL_ID + u" == '"_s + filter.id.toString(QUuid::WithoutBraces) + u"'"_s + nd;
             if(!filter.parent.isNull())
-                baseQueryCommand += Table_Game::COL_PARENT_ID + " == '" + filter.parent.toString(QUuid::WithoutBraces) + "'" + nd;
+                baseQueryCommand += Table_Game::COL_PARENT_ID + u" == '"_s + filter.parent.toString(QUuid::WithoutBraces) + u"'"_s + nd;
             if(!filter.name.isNull())
             {
                 if(filter.exactName)
-                    baseQueryCommand += Table_Game::COL_TITLE + " == '" + filter.name + "'" + nd;
+                    baseQueryCommand += Table_Game::COL_TITLE + u" == '"_s + filter.name + u"'"_s + nd;
                 else
                 {
                     // Escape name to account for SQL LITE %
                     QString escapedName = filter.name;
-                    escapedName.replace(R"(\)", R"(\\)"); // Have to escape the escape char
-                    escapedName.replace(R"(%)",R"(\%)");
+                    escapedName.replace(uR"(\)"_s, uR"(\\)"_s); // Have to escape the escape char
+                    escapedName.replace(uR"(%)"_s, uR"(\%)"_s);
 
                     baseQueryCommand += Table_Game::COL_TITLE + likeTempl.arg(escapedName) + nd;
                 }
@@ -574,7 +574,7 @@ DbError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
         }
 
         // Assemble final query commands
-        QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Game::COLUMN_LIST.join("`,`") + "`");
+        QString mainQueryCommand = baseQueryCommand.arg(u"`"_s + Table_Game::COLUMN_LIST.join(u"`,`"_s) + u"`"_s);
         QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
         // Make query
@@ -593,34 +593,34 @@ DbError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
     if(filter.type != EntryType::Primary)
     {
         // Assemble Base Query Command
-        QString baseQueryCommand = "SELECT %1 FROM " + Table_Add_App::NAME;
+        QString baseQueryCommand = u"SELECT %1 FROM "_s + Table_Add_App::NAME;
 
         if(!filter.parent.isNull() || !filter.id.isNull() || !filter.name.isNull())
         {
             baseQueryCommand += where;
 
             if(!filter.id.isNull())
-                baseQueryCommand += Table_Add_App::COL_ID + " == '" + filter.id.toString(QUuid::WithoutBraces) + "'" + nd;
+                baseQueryCommand += Table_Add_App::COL_ID + u" == '"_s + filter.id.toString(QUuid::WithoutBraces) + u"'"_s + nd;
             if(!filter.parent.isNull())
-                baseQueryCommand += Table_Add_App::COL_PARENT_ID + " == '" + filter.parent.toString(QUuid::WithoutBraces) + "'" + nd;
+                baseQueryCommand += Table_Add_App::COL_PARENT_ID + u" == '"_s + filter.parent.toString(QUuid::WithoutBraces) + u"'"_s + nd;
             if(!filter.name.isNull())
             {
                 if(filter.exactName)
-                    baseQueryCommand += Table_Add_App::COL_NAME + " == '" + filter.name + "'" + nd;
+                    baseQueryCommand += Table_Add_App::COL_NAME + u" == '"_s + filter.name + u"'"_s + nd;
                 else
                 {
                     // Escape name to account for SQL LITE %
                     QString escapedName = filter.name;
-                    escapedName.replace(R"(\)", R"(\\)"); // Have to escape the escape char
-                    escapedName.replace(R"(%)",R"(\%)");
+                    escapedName.replace(uR"(\)"_s, uR"(\\)"_s); // Have to escape the escape char
+                    escapedName.replace(uR"(%)"_s, uR"(\%)"_s);
 
                     baseQueryCommand += Table_Add_App::COL_NAME + likeTempl.arg(escapedName) + nd;
                 }
             }
             if(filter.playableOnly)
             {
-                baseQueryCommand += Table_Add_App::COL_APP_PATH + " NOT IN ('" + Table_Add_App::ENTRY_EXTRAS + "','" +
-                                    Table_Add_App::ENTRY_MESSAGE + "') AND " + Table_Add_App::COL_AUTORUN + " != 1" +
+                baseQueryCommand += Table_Add_App::COL_APP_PATH + u" NOT IN ('"_s + Table_Add_App::ENTRY_EXTRAS + u"','"_s +
+                                    Table_Add_App::ENTRY_MESSAGE + u"') AND "_s + Table_Add_App::COL_AUTORUN + u" != 1"_s +
                                     nd;
             }
 
@@ -629,7 +629,7 @@ DbError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
         }
 
         // Assemble final query commands
-        QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Add_App::COLUMN_LIST.join("`,`") + "`");
+        QString mainQueryCommand = baseQueryCommand.arg(u"`"_s + Table_Add_App::COLUMN_LIST.join(u"`,`"_s) + u"`"_s);
         QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
         // Make query
@@ -663,10 +663,10 @@ DbError Db::queryEntryDataById(QueryBuffer& resultBuffer, const QUuid& appId)
         return DbError::fromSqlError(dbError);
 
     // Setup ID query
-    QString baseQueryCommand = "SELECT %1 FROM " + Table_Game_Data::NAME + " WHERE " +
-            Table_Game_Data::COL_GAME_ID + " == '" + appId.toString(QUuid::WithoutBraces) + "' " +
-                               "ORDER BY " + Table_Game_Data::COL_DATE_ADDED + " DESC";
-    QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Game_Data::COLUMN_LIST.join("`,`") + "`");
+    QString baseQueryCommand = u"SELECT %1 FROM "_s + Table_Game_Data::NAME + u" WHERE "_s +
+            Table_Game_Data::COL_GAME_ID + u" == '"_s + appId.toString(QUuid::WithoutBraces) + u"' "_s +
+                               u"ORDER BY "_s + Table_Game_Data::COL_DATE_ADDED + u" DESC"_s;
+    QString mainQueryCommand = baseQueryCommand.arg(u"`"_s + Table_Game_Data::COLUMN_LIST.join(u"`,`"_s) + u"`"_s);
     QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
     // Make query
@@ -688,10 +688,10 @@ DbError Db::queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter includeFilt
         return DbError::fromSqlError(dbError);
 
     // Make query
-    QString baseQueryCommand = "SELECT %2 FROM " + Table_Game::NAME + " WHERE " +
-                               Table_Game::COL_STATUS + " != '" + Table_Game::ENTRY_NOT_WORK + "'%1";
-    baseQueryCommand = baseQueryCommand.arg(includeFilter == LibraryFilter::Game ? " AND " + GAME_ONLY_FILTER : (includeFilter == LibraryFilter::Anim ? " AND " + ANIM_ONLY_FILTER : ""));
-    QString mainQueryCommand = baseQueryCommand.arg("`" + Table_Game::COL_ID + "`");
+    QString baseQueryCommand = u"SELECT %2 FROM "_s + Table_Game::NAME + u" WHERE "_s +
+                               Table_Game::COL_STATUS + u" != '"_s + Table_Game::ENTRY_NOT_WORK + u"'%1"_s;
+    baseQueryCommand = baseQueryCommand.arg(includeFilter == LibraryFilter::Game ? u" AND "_s + GAME_ONLY_FILTER : (includeFilter == LibraryFilter::Anim ? u" AND "_s + ANIM_ONLY_FILTER : u""_s));
+    QString mainQueryCommand = baseQueryCommand.arg(u"`"_s + Table_Game::COL_ID + u"`"_s);
     QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
 
     resultBuffer.source = Table_Game::NAME;
@@ -727,8 +727,8 @@ DbError Db::entryUsesDataPack(bool& resultBuffer, QUuid gameId)
         return DbError::fromSqlError(dbError);
 
     // Make query
-    QString packCheckQueryCommand = "SELECT " + GENERAL_QUERY_SIZE_COMMAND + " FROM " + Table_Game_Data::NAME + " WHERE " +
-                                   Table_Game_Data::COL_GAME_ID + " == '" + gameId.toString(QUuid::WithoutBraces) + "'";
+    QString packCheckQueryCommand = u"SELECT "_s + GENERAL_QUERY_SIZE_COMMAND + u" FROM "_s + Table_Game_Data::NAME + u" WHERE "_s +
+                                   Table_Game_Data::COL_GAME_ID + u" == '"_s + gameId.toString(QUuid::WithoutBraces) + u"'"_s;
 
     QSqlQuery packCheckQuery(fpDb);
     packCheckQuery.setForwardOnly(true);
@@ -862,8 +862,8 @@ DbError Db::updateGameDataOnDiskState(int packId, bool onDisk)
         return DbError::fromSqlError(dbError);
 
     // Make query
-    QString dataUpdateCommand = "UPDATE " + Table_Game_Data::NAME + " SET " + Table_Game_Data::COL_PRES_ON_DISK + " = " + QString::number(onDisk) +
-                                " WHERE " + Table_Game_Data::COL_ID + " = " + QString::number(packId);
+    QString dataUpdateCommand = u"UPDATE "_s + Table_Game_Data::NAME + u" SET "_s + Table_Game_Data::COL_PRES_ON_DISK + u" = "_s + QString::number(onDisk) +
+                                u" WHERE "_s + Table_Game_Data::COL_ID + u" = "_s + QString::number(packId);
 
     QSqlQuery packUpdateQuery(fpDb);
     packUpdateQuery.setForwardOnly(true);
@@ -876,9 +876,9 @@ DbError Db::updateGameDataOnDiskState(int packId, bool onDisk)
     // Check that expected count was affected
     int rows = packUpdateQuery.numRowsAffected();
     if(rows < 1)
-        return DbError(DbError::UpdateIneffective, Table_Game_Data::NAME + " SET " + Table_Game_Data::COL_PRES_ON_DISK);
+        return DbError(DbError::UpdateIneffective, Table_Game_Data::NAME + u" SET "_s + Table_Game_Data::COL_PRES_ON_DISK);
     else if(rows > 1)
-        return DbError(DbError::UpdateTooMany, Table_Game_Data::NAME + " SET " + Table_Game_Data::COL_PRES_ON_DISK);
+        return DbError(DbError::UpdateTooMany, Table_Game_Data::NAME + u" SET "_s + Table_Game_Data::COL_PRES_ON_DISK);
 
     return DbError();
 }
