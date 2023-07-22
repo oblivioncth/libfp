@@ -34,11 +34,11 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    MacroResolver(QString installPath, const Key&); // Will need to be improved if many more macros are added
+    MacroResolver(const QString& installPath, const Key&); // Will need to be improved if many more macros are added
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QString resolve(QString macroStr) const;
+    QString resolve(const QString& macroStr) const;
 };
 
 }

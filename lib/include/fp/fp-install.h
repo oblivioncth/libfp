@@ -161,8 +161,8 @@ public:
     QDir logosDirectory() const;
     QDir screenshotsDirectory() const;
     QDir extrasDirectory() const;
-    QString imageLocalPath(ImageType imageType, QUuid gameId) const;
-    QUrl imageRemoteUrl(ImageType imageType, QUuid gameId) const;
+    QString imageLocalPath(ImageType imageType, const QUuid& gameId) const;
+    QUrl imageRemoteUrl(ImageType imageType, const QUuid& gameId) const;
     const MacroResolver* macroResolver() const;
 
     // Helper

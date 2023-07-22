@@ -230,7 +230,7 @@ QDir Install::logosDirectory() const { return mLogosDirectory; }
 QDir Install::screenshotsDirectory() const { return mScreenshotsDirectory; }
 QDir Install::extrasDirectory() const { return mExtrasDirectory; }
 
-QString Install::imageLocalPath(ImageType imageType, QUuid gameId) const
+QString Install::imageLocalPath(ImageType imageType, const QUuid& gameId) const
 {
     const QDir& sourceDir = imageType == ImageType::Logo ? mLogosDirectory : mScreenshotsDirectory;
     bool compressed = mPreferences.onDemandImagesCompressed;
@@ -239,7 +239,7 @@ QString Install::imageLocalPath(ImageType imageType, QUuid gameId) const
     return sourceDir.absolutePath() + '/' + localSubPath;
 }
 
-QUrl Install::imageRemoteUrl(ImageType imageType, QUuid gameId) const
+QUrl Install::imageRemoteUrl(ImageType imageType, const QUuid& gameId) const
 {
     const QString typeFolder = (imageType == ImageType::Logo ? LOGOS_FOLDER_NAME : SCREENSHOTS_FOLDER_NAME);
     bool compressed = mPreferences.onDemandImagesCompressed;

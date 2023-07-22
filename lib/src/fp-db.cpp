@@ -214,7 +214,7 @@ QSqlError Db::getThreadConnection(QSqlDatabase& connection)
     }
 }
 
-QSqlError Db::makeNonBindQuery(QueryBuffer& resultBuffer, QSqlDatabase* database, QString queryCommand, QString sizeQueryCommand) const
+QSqlError Db::makeNonBindQuery(QueryBuffer& resultBuffer, QSqlDatabase* database, const QString& queryCommand, const QString& sizeQueryCommand) const
 {
     // Create main query
     QSqlQuery mainQuery(*database);
@@ -277,7 +277,7 @@ QSqlError Db::checkDatabaseForRequiredTables(QSet<QString>& missingTablesReturnB
     return  QSqlError();
 }
 
-QSqlError Db::checkDatabaseForRequiredColumns(QSet<QString> &missingColumsReturnBuffer)
+QSqlError Db::checkDatabaseForRequiredColumns(QSet<QString>& missingColumsReturnBuffer)
 {
 
     // Ensure return buffer starts empty
@@ -412,7 +412,7 @@ QSqlError Db::populateTags()
     return QSqlError();
 }
 
-DbError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
+DbError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, const QStringList& platforms, const InclusionOptions& inclusionOptions,
                                    std::optional<const QList<QUuid>*> idInclusionFilter)
 {
     // Ensure return buffer is reset
@@ -524,7 +524,7 @@ DbError Db::queryAllAddApps(QueryBuffer& resultBuffer)
     return DbError::fromSqlError(makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand));
 }
 
-DbError Db::queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter)
+DbError Db::queryEntrys(QueryBuffer& resultBuffer, const EntryFilter& filter)
 {
     // Ensure return buffer is effectively null
     resultBuffer = QueryBuffer();
@@ -676,7 +676,7 @@ DbError Db::queryEntryDataById(QueryBuffer& resultBuffer, const QUuid& appId)
     return DbError::fromSqlError(makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand));
 }
 
-DbError Db::queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter includeFilter)
+DbError Db::queryAllGameIds(QueryBuffer& resultBuffer, const LibraryFilter& includeFilter)
 {
     // Ensure return buffer is effectively null
     resultBuffer = QueryBuffer();
@@ -701,7 +701,7 @@ DbError Db::queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter includeFilt
 QStringList Db::platformNames() const { return mPlatformNames; } //TODO: Probably should use RAII for this.
 QMap<int, Db::TagCategory> Db::tags() const { return mTagMap; }
 
-DbError Db::entryUsesDataPack(bool& resultBuffer, QUuid gameId)
+DbError Db::entryUsesDataPack(bool& resultBuffer, const QUuid& gameId)
 {
     /* NOTE: The launcher performs this check and other data pack tasks by checking if the `activeDataId` column
      * of the `game` table has a value, and if it does, then matching that to the `id` column in the `game_data`

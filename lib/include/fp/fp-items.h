@@ -88,31 +88,31 @@ public:
 
 //-Class Functions---------------------------------------------------------------------------------------------
 private:
-    static QString kosherizeRawDate(QString date);
+    static QString kosherizeRawDate(const QString& date);
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wId(QString rawId);
-    Builder& wTitle(QString title);
-    Builder& wSeries(QString series);
-    Builder& wDeveloper(QString developer);
-    Builder& wPublisher(QString publisher);
-    Builder& wDateAdded(QString rawDateAdded);
-    Builder& wDateModified(QString rawDateModified);
-    Builder& wBroken(QString rawBroken);
-    Builder& wPlayMode(QString playMode);
-    Builder& wStatus(QString status);
-    Builder& wNotes(QString notes);
-    Builder& wSource(QString source);
-    Builder& wAppPath(QString appPath);
-    Builder& wLaunchCommand(QString launchCommand);
-    Builder& wReleaseDate(QString rawReleaseDate);
-    Builder& wVersion(QString version);
-    Builder& wOriginalDescription(QString originalDescription);
-    Builder& wLanguage(QString language);
-    Builder& wOrderTitle(QString orderTitle);
-    Builder& wLibrary(QString library);
-    Builder& wPlatformName(QString platformName);
+    Builder& wId(QStringView rawId);
+    Builder& wTitle(const QString& title);
+    Builder& wSeries(const QString& series);
+    Builder& wDeveloper(const QString& developer);
+    Builder& wPublisher(const QString& publisher);
+    Builder& wDateAdded(QStringView rawDateAdded);
+    Builder& wDateModified(QStringView rawDateModified);
+    Builder& wBroken(QStringView rawBroken);
+    Builder& wPlayMode(const QString& playMode);
+    Builder& wStatus(const QString& status);
+    Builder& wNotes(const QString& notes);
+    Builder& wSource(const QString& source);
+    Builder& wAppPath(const QString& appPath);
+    Builder& wLaunchCommand(const QString& launchCommand);
+    Builder& wReleaseDate(QStringView rawReleaseDate);
+    Builder& wVersion(const QString& version);
+    Builder& wOriginalDescription(const QString& originalDescription);
+    Builder& wLanguage(const QString& language);
+    Builder& wOrderTitle(const QString& orderTitle);
+    Builder& wLibrary(const QString& library);
+    Builder& wPlatformName(const QString& platformName);
 
     Game build();
 };
@@ -247,13 +247,13 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wId(QString rawId);
-    Builder& wAppPath(QString appPath);
-    Builder& wAutorunBefore(QString rawAutorunBefore);
-    Builder& wLaunchCommand(QString launchCommand);
-    Builder& wName(QString name);
-    Builder& wWaitExit(QString rawWaitExit);
-    Builder& wParentId(QString rawParentId);
+    Builder& wId(QStringView rawId);
+    Builder& wAppPath(const QString& appPath);
+    Builder& wAutorunBefore(QStringView rawAutorunBefore);
+    Builder& wLaunchCommand(const QString& launchCommand);
+    Builder& wName(const QString& name);
+    Builder& wWaitExit(QStringView rawWaitExit);
+    Builder& wParentId(QStringView rawParentId);
 
     AddApp build();
 };
@@ -336,9 +336,9 @@ public:
     //-Instance Functions------------------------------------------------------------------------------------------
 public:
     Builder& wId(int id);
-    Builder& wPlaylistId(QString rawPlaylistId);
+    Builder& wPlaylistId(QStringView rawPlaylistId);
     Builder& wOrder(int order);
-    Builder& wGameId(QString rawGameId);
+    Builder& wGameId(QStringView rawGameId);
 
     PlaylistGame build();
 };
@@ -387,11 +387,11 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wId(QString rawId);
-    Builder& wTitle(QString title);
-    Builder& wDescription(QString description);
-    Builder& wAuthor(QString author);
-    Builder& wLibrary(QString library);
+    Builder& wId(QStringView rawId);
+    Builder& wTitle(const QString& title);
+    Builder& wDescription(const QString& description);
+    Builder& wAuthor(const QString& author);
+    Builder& wLibrary(const QString& library);
     Builder& wPlaylistGame(const PlaylistGame& playlistGame);
 
     Playlist build();

@@ -336,7 +336,7 @@ private:
     void closeAllConnections();
     QString threadConnectionName(const QThread* thread);
     QSqlError getThreadConnection(QSqlDatabase& connection);
-    QSqlError makeNonBindQuery(QueryBuffer& resultBuffer, QSqlDatabase* database, QString queryCommand, QString sizeQueryCommand) const;
+    QSqlError makeNonBindQuery(QueryBuffer& resultBuffer, QSqlDatabase* database, const QString& queryCommand, const QString& sizeQueryCommand) const;
 
     // Init
     QSqlError checkDatabaseForRequiredTables(QSet<QString>& missingTablesBuffer);
@@ -352,22 +352,22 @@ public:
     // TODO: See if these query functions can be consolidated via by better filtration arguments
 
     // Queries - OFLIb
-    DbError queryGamesByPlatform(QList<Db::QueryBuffer>& resultBuffer, QStringList platforms, InclusionOptions inclusionOptions,
+    DbError queryGamesByPlatform(QList<Db::QueryBuffer>& resultBuffer, const QStringList& platforms, const InclusionOptions& inclusionOptions,
                                    std::optional<const QList<QUuid>*> idInclusionFilter = std::nullopt);
     DbError queryAllAddApps(QueryBuffer& resultBuffer);
     DbError queryAllEntryTags(QueryBuffer& resultBuffer);
 
     // Queries - CLIFp
-    DbError queryEntrys(QueryBuffer& resultBuffer, EntryFilter filter);
+    DbError queryEntrys(QueryBuffer& resultBuffer, const EntryFilter& filter);
     DbError queryEntryDataById(QueryBuffer& resultBuffer, const QUuid& appId);
-    DbError queryAllGameIds(QueryBuffer& resultBuffer, LibraryFilter filter);
+    DbError queryAllGameIds(QueryBuffer& resultBuffer, const LibraryFilter& filter);
 
     // Info
     QStringList platformNames() const;
     QMap<int, TagCategory> tags() const;
 
     // Checks
-    DbError entryUsesDataPack(bool& resultBuffer, QUuid gameId);
+    DbError entryUsesDataPack(bool& resultBuffer, const QUuid& gameId);
 
     // Helper
     DbError getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId);
