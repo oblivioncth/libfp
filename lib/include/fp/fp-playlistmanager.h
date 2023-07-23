@@ -1,20 +1,24 @@
-#ifndef FLASHPOINT_MACRO_H
-#define FLASHPOINT_MACRO_H
+#ifndef FLASHPOINT_PLAYLISTMANAGER_H
+#define FLASHPOINT_PLAYLISTMANAGER_H
 
 // Shared Lib Support
 #include "fp/fp_export.h"
 
 // Qt Includes
-#include <QHash>
+#include <QDir>
 
-using namespace Qt::Literals::StringLiterals;
+// Qx Includes
+#include <qx/core/qx-error.h>
+
+// Project Includes
+#include "fp/fp-items.h"
 
 namespace Fp
 {
 
-class FP_FP_EXPORT MacroResolver
+class FP_FP_EXPORT PlaylistManager
 {
-//-Inner Classes----------------------------------------------------------------------------------------------------
+//-Inner Classes-------------------------------------------------------------------------------------------------
 public:
     class Key
     {
@@ -26,21 +30,28 @@ public:
 
 //-Class Variables-----------------------------------------------------------------------------------------------
 private:
-    static inline const QString FP_PATH = u"<fpPath>"_s;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    QHash<QString, QString> mMacroMap; // Will make sense if more macros are added
+    bool mPopulated;
+    QDir mFolder;
+    QList<Fp::Playlist> mPlaylists;
+    QStringList mTitles;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    MacroResolver(const QString& installPath, const Key&); // Will need to be improved if many more macros are added
+    explicit PlaylistManager(const QDir& folder, const Key&);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
+private:
+
 public:
-    QString resolve(QString macroStr) const;
+    bool isPopulated() const;
+    Qx::Error populate();
+    QList<Fp::Playlist> playlists() const;
+    QStringList playlistTitles() const;
 };
 
 }
 
-#endif // FLASHPOINT_MACRO_H
+#endif // FLASHPOINT_PLAYLISTMANAGER_H

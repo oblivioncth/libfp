@@ -9,6 +9,8 @@
 #include <QDateTime>
 #include <QUuid>
 
+using namespace Qt::Literals::StringLiterals;
+
 namespace Fp
 {
 //-Enums----------------------------------------------------------------------------------------------------------
@@ -30,7 +32,6 @@ private:
     QString mPublisher;
     QDateTime mDateAdded;
     QDateTime mDateModified;
-    QString mPlatform;
     bool mBroken;
     QString mPlayMode;
     QString mStatus;
@@ -44,6 +45,7 @@ private:
     QString mLanguage;
     QString mOrderTitle;
     QString mLibrary;
+    QString mPlatformName;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -58,7 +60,6 @@ public:
     QString publisher() const;
     QDateTime dateAdded() const;
     QDateTime dateModified() const;
-    QString platform() const;
     bool isBroken() const;
     QString playMode() const;
     QString status() const;
@@ -72,6 +73,7 @@ public:
     QString language() const;
     QString orderTitle() const;
     QString library() const;
+    QString platformName() const;
 };
 
 class FP_FP_EXPORT Game::Builder
@@ -86,33 +88,106 @@ public:
 
 //-Class Functions---------------------------------------------------------------------------------------------
 private:
-    static QString kosherizeRawDate(QString date);
+    static QString kosherizeRawDate(const QString& date);
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wId(QString rawId);
-    Builder& wTitle(QString title);
-    Builder& wSeries(QString series);
-    Builder& wDeveloper(QString developer);
-    Builder& wPublisher(QString publisher);
-    Builder& wDateAdded(QString rawDateAdded);
-    Builder& wDateModified(QString rawDateModified);
-    Builder& wPlatform(QString platform);
-    Builder& wBroken(QString rawBroken);
-    Builder& wPlayMode(QString playMode);
-    Builder& wStatus(QString status);
-    Builder& wNotes(QString notes);
-    Builder& wSource(QString source);
-    Builder& wAppPath(QString appPath);
-    Builder& wLaunchCommand(QString launchCommand);
-    Builder& wReleaseDate(QString rawReleaseDate);
-    Builder& wVersion(QString version);
-    Builder& wOriginalDescription(QString originalDescription);
-    Builder& wLanguage(QString language);
-    Builder& wOrderTitle(QString orderTitle);
-    Builder& wLibrary(QString library);
+    Builder& wId(QStringView rawId);
+    Builder& wTitle(const QString& title);
+    Builder& wSeries(const QString& series);
+    Builder& wDeveloper(const QString& developer);
+    Builder& wPublisher(const QString& publisher);
+    Builder& wDateAdded(QStringView rawDateAdded);
+    Builder& wDateModified(QStringView rawDateModified);
+    Builder& wBroken(QStringView rawBroken);
+    Builder& wPlayMode(const QString& playMode);
+    Builder& wStatus(const QString& status);
+    Builder& wNotes(const QString& notes);
+    Builder& wSource(const QString& source);
+    Builder& wAppPath(const QString& appPath);
+    Builder& wLaunchCommand(const QString& launchCommand);
+    Builder& wReleaseDate(QStringView rawReleaseDate);
+    Builder& wVersion(const QString& version);
+    Builder& wOriginalDescription(const QString& originalDescription);
+    Builder& wLanguage(const QString& language);
+    Builder& wOrderTitle(const QString& orderTitle);
+    Builder& wLibrary(const QString& library);
+    Builder& wPlatformName(const QString& platformName);
 
     Game build();
+};
+
+class FP_FP_EXPORT GameData
+{
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Builder;
+
+//-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    bool mNull;
+
+    quint32 mId;
+    QUuid mGameId;
+    QString mTitle;
+    QDateTime mDateAdded;
+    QString mSha256;
+    quint32 mCrc32;
+    bool mPresentOnDisk;
+    QString mPath;
+    quint32 mSize;
+    QString mParameters;
+    QString mAppPath;
+    QString mLaunchCommand;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    GameData();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    bool isNull() const;
+
+    quint32 id() const;
+    QUuid gameId() const;
+    QString title() const;
+    QDateTime dateAdded() const;
+    QString sha256() const;
+    quint32 crc32() const;
+    bool presentOnDisk() const;
+    QString path() const;
+    quint32 size() const;
+    QString parameters() const;
+    QString appPath() const;
+    QString launchCommand() const;
+};
+
+class FP_FP_EXPORT GameData::Builder
+{
+//-Instance Variables------------------------------------------------------------------------------------------
+private:
+    GameData mGameDataBlueprint;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    Builder();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    Builder& wId(QStringView rawId);
+    Builder& wGameId(QStringView rawId);
+    Builder& wTitle(const QString& title);
+    Builder& wDateAdded(QStringView rawDateAdded);
+    Builder& wSha256(const QString& sha256);
+    Builder& wCrc32(QStringView rawCrc32);
+    Builder& wPresentOnDisk(QStringView rawBroken);
+    Builder& wPath(const QString& path);
+    Builder& wSize(QStringView rawSize);
+    Builder& wParameters(const QString& parameters);
+    Builder& wAppPath(const QString& appPath);
+    Builder& wLaunchCommand(const QString& launchCommand);
+
+    GameData build();
 };
 
 class FP_FP_EXPORT AddApp
@@ -123,8 +198,8 @@ public:
 
 //-Class Variables-----------------------------------------------------------------------------------------------
 private:
-    QString SPEC_PATH_MSG = ":message:";
-    QString SPEC_PATH_EXTRA = ":extras:";
+    static inline const QString SPEC_PATH_MSG = u":message:"_s;
+    static inline const QString SPEC_PATH_EXTRA = u":extras:"_s;
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -172,13 +247,13 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wId(QString rawId);
-    Builder& wAppPath(QString appPath);
-    Builder& wAutorunBefore(QString rawAutorunBefore);
-    Builder& wLaunchCommand(QString launchCommand);
-    Builder& wName(QString name);
-    Builder& wWaitExit(QString rawWaitExit);
-    Builder& wParentId(QString rawParentId);
+    Builder& wId(QStringView rawId);
+    Builder& wAppPath(const QString& appPath);
+    Builder& wAutorunBefore(QStringView rawAutorunBefore);
+    Builder& wLaunchCommand(const QString& launchCommand);
+    Builder& wName(const QString& name);
+    Builder& wWaitExit(QStringView rawWaitExit);
+    Builder& wParentId(QStringView rawParentId);
 
     AddApp build();
 };
@@ -223,6 +298,51 @@ public:
     Set build();
 };
 
+class FP_FP_EXPORT PlaylistGame
+{
+    //-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Builder;
+
+    //-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    int mId;
+    QUuid mPlaylistId;
+    int mOrder;
+    QUuid mGameId;
+
+    //-Constructor-------------------------------------------------------------------------------------------------
+public:
+    PlaylistGame();
+
+    //-Instance Functions------------------------------------------------------------------------------------------------------
+public:
+    int id() const;
+    QUuid playlistId() const;
+    int order() const;
+    QUuid gameId() const;
+};
+
+class FP_FP_EXPORT PlaylistGame::Builder
+{
+    //-Instance Variables------------------------------------------------------------------------------------------
+private:
+    PlaylistGame mPlaylistGameBlueprint;
+
+    //-Constructor-------------------------------------------------------------------------------------------------
+public:
+    Builder();
+
+    //-Instance Functions------------------------------------------------------------------------------------------
+public:
+    Builder& wId(int id);
+    Builder& wPlaylistId(QStringView rawPlaylistId);
+    Builder& wOrder(int order);
+    Builder& wGameId(QStringView rawGameId);
+
+    PlaylistGame build();
+};
+
 class FP_FP_EXPORT Playlist
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
@@ -235,6 +355,9 @@ private:
     QString mTitle;
     QString mDescription;
     QString mAuthor;
+    QString mLibrary;
+
+    QList<PlaylistGame> mPlaylistGames;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -246,6 +369,9 @@ public:
     QString title() const;
     QString description() const;
     QString author() const;
+    QString library() const;
+    const QList<PlaylistGame>& playlistGames() const;
+    QList<PlaylistGame>& playlistGames();
 
 };
 
@@ -261,57 +387,14 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wId(QString rawId);
-    Builder& wTitle(QString title);
-    Builder& wDescription(QString description);
-    Builder& wAuthor(QString author);
+    Builder& wId(QStringView rawId);
+    Builder& wTitle(const QString& title);
+    Builder& wDescription(const QString& description);
+    Builder& wAuthor(const QString& author);
+    Builder& wLibrary(const QString& library);
+    Builder& wPlaylistGame(const PlaylistGame& playlistGame);
 
     Playlist build();
-};
-
-class FP_FP_EXPORT PlaylistGame
-{
-//-Inner Classes----------------------------------------------------------------------------------------------------
-public:
-    class Builder;
-
-//-Instance Variables-----------------------------------------------------------------------------------------------
-private:
-    int mId;
-    QUuid mPlaylistId;
-    int mOrder;
-    QUuid mGameId;
-
-//-Constructor-------------------------------------------------------------------------------------------------
-public:
-    PlaylistGame();
-
-//-Instance Functions------------------------------------------------------------------------------------------------------
-public:
-    int id() const;
-    QUuid playlistId() const;
-    int order() const;
-    QUuid gameId() const;
-};
-
-class FP_FP_EXPORT PlaylistGame::Builder
-{
-//-Instance Variables------------------------------------------------------------------------------------------
-private:
-    PlaylistGame mPlaylistGameBlueprint;
-
-//-Constructor-------------------------------------------------------------------------------------------------
-public:
-    Builder();
-
-//-Instance Functions------------------------------------------------------------------------------------------
-public:
-    Builder& wId(QString rawId);
-    Builder& wPlaylistId(QString rawPlaylistId);
-    Builder& wOrder(QString rawOrder);
-    Builder& wGameId(QString rawGameId);
-
-    PlaylistGame build();
 };
 
 }

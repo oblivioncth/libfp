@@ -1,6 +1,6 @@
 # libfp
 
-A C++ interface for instances of [Blue Maxima's Flashpoint](https://bluemaxima.org/flashpoint/)
+A C++ interface for instances of [Flashpoint Archive](https://flashpointarchive.org/)
 
 [![Dev Builds](https://github.com/oblivioncth/libfp/actions/workflows/push-reaction.yml/badge.svg?branch=dev)](https://github.com/oblivioncth/libfp/actions/workflows/push-reaction.yml)
 
