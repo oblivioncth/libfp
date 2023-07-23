@@ -17,7 +17,7 @@ MacroResolver::MacroResolver(const QString& installPath, const Key&)
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
-QString MacroResolver::resolve(const QString& macroStr) const
+QString MacroResolver::resolve(QString macroStr) const
 {
     QHash<QString, QString>::const_iterator i;
     for(i = mMacroMap.constBegin(); i != mMacroMap.constEnd(); i++)
