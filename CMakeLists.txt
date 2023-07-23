@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.23.0...3.25.0)
 project(libfp
     VERSION 0.3.1
     LANGUAGES CXX
-    DESCRIPTION "C++ support library for Flashpoint"
+    DESCRIPTION "C++ support library for Flashpoint Archive"
 )
 
 # Get helper scripts
