@@ -115,7 +115,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    Install(QString installPath);
+    Install(QString installPath, bool preloadPlaylists = false);
 
 //-Destructor-------------------------------------------------------------------------------------------------
 public:

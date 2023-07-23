@@ -13,7 +13,7 @@ namespace Fp
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-Install::Install(QString installPath) :
+Install::Install(QString installPath, bool preloadPlaylists) :
     mValid(false) // Install is invalid until proven otherwise
 {
     QScopeGuard validityGuard([this](){ nullify(); }); // Automatically nullify on fail
@@ -88,6 +88,12 @@ Install::Install(QString installPath) :
 
     // Add playlists manager
     mPlaylistManager = new PlaylistManager(mPlaylistsDirectory, {});
+
+    if(preloadPlaylists)
+    {
+        if(mError = mPlaylistManager->populate(); mError.isValid())
+            return;
+    }
 
     // Give the OK
     mValid = true;
