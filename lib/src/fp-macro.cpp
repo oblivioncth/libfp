@@ -10,7 +10,7 @@ namespace Fp
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-MacroResolver::MacroResolver(QString installPath, const Key&)
+MacroResolver::MacroResolver(const QString& installPath, const Key&)
 {
     mMacroMap[FP_PATH] = installPath;
 }

@@ -12,17 +12,22 @@
 
 // Qx Includes
 #include <qx/core/qx-versionnumber.h>
+#include <qx/io/qx-common-io.h>
 
 // Project Includes
-#include "fp/fp-json.h"
+#include "fp/settings/fp-config.h"
+#include "fp/settings/fp-execs.h"
+#include "fp/settings/fp-preferences.h"
+#include "fp/settings/fp-services.h"
 #include "fp/fp-macro.h"
 #include "fp/fp-db.h"
 #include "fp/fp-items.h"
+#include "fp/fp-playlistmanager.h"
 
 namespace Fp
 {
 
-inline const QString NAME = QStringLiteral("Flashpoint");
+inline const QString NAME = u"Flashpoint"_s;
 
 class FP_FP_EXPORT Install
 {
@@ -32,61 +37,59 @@ enum class Edition {Ultimate, Infinity, Core};
 //-Class Variables-----------------------------------------------------------------------------------------------
 public: // Ugh
 #if defined _WIN32
-    static inline const QString LAUNCHER_NAME =  "Flashpoint.exe";
+    static inline const QString LAUNCHER_NAME =  u"Flashpoint.exe"_s;
 #elif defined __linux__
-    static inline const QString LAUNCHER_NAME =  "flashpoint-launcher";
+    static inline const QString LAUNCHER_NAME =  u"flashpoint-launcher"_s;
 #endif
 
 private:
-
-    // Validity check fail reasons
-    static inline const QString FILE_DNE = "A required file does not exist: %1";
-
     // Static paths
-    static inline const QString LAUNCHER_PATH =  "Launcher/" + LAUNCHER_NAME;
-    static inline const QString DATABASE_PATH = "Data/flashpoint.sqlite";
-    static inline const QString CONFIG_JSON_PATH = "Launcher/config.json";
-    static inline const QString PREFERENCES_JSON_PATH = "preferences.json";
-    static inline const QString VER_TXT_PATH = "version.txt";
+    static inline const QString LAUNCHER_PATH =  u"Launcher/"_s + LAUNCHER_NAME;
+    static inline const QString DATABASE_PATH = u"Data/flashpoint.sqlite"_s;
+    static inline const QString CONFIG_JSON_PATH = u"Launcher/config.json"_s;
+    static inline const QString PREFERENCES_JSON_PATH = u"preferences.json"_s;
+    static inline const QString VER_TXT_PATH = u"version.txt"_s;
 
     // File Info
-    static inline const QString IMAGE_EXT = ".png";
-
+    static inline const QString IMAGE_UC_EXT = u".png"_s;
+    static inline const QString IMAGE_C_EXT = u".jpg"_s;
+    static inline const QString IMAGE_C_URL_SUFFIX = u"?type=jpg"_s;
 
     // Dynamic path file names
-    static inline const QString SERVICES_JSON_NAME = "services.json";
-    static inline const QString EXECS_JSON_NAME = "execs.json";
+    static inline const QString SERVICES_JSON_NAME = u"services.json"_s;
+    static inline const QString EXECS_JSON_NAME = u"execs.json"_s;
 
     // Static Folders
-    static inline const QString EXTRAS_PATH = "Extras";
+    static inline const QString EXTRAS_PATH = u"Extras"_s;
 
     // Dynamic path folder names
-    static inline const QString LOGOS_FOLDER_NAME = "Logos";
-    static inline const QString SCREENSHOTS_FOLDER_NAME = "Screenshots";
-
-    // Settings
-    static inline const QString MACRO_FP_PATH = "<fpPath>";
+    static inline const QString LOGOS_FOLDER_NAME = u"Logos"_s;
+    static inline const QString SCREENSHOTS_FOLDER_NAME = u"Screenshots"_s;
 
     // Error
-    static inline const QString ERR_INVALID = "Invalid Flashpoint Install:";
+    static inline const QString ERR_FILE_MISSING = u"A required flashpoint install file is missing."_s;
+
+    // Settings
+    static inline const QString MACRO_FP_PATH = u"<fpPath>"_s;
 
     // Regex
-    static inline const QRegularExpression VERSION_NUMBER_REGEX = QRegularExpression("[fF]lashpoint (?<version>.*?) ");
+    static inline const QRegularExpression VERSION_NUMBER_REGEX = QRegularExpression(u"[fF]lashpoint (?<version>.*?) "_s);
 
 public:
-    static inline const QFileInfo SECURE_PLAYER_INFO = QFileInfo("FlashpointSecurePlayer.exe");
+    static inline const QFileInfo SECURE_PLAYER_INFO = QFileInfo(u"FlashpointSecurePlayer.exe"_s);
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
     // Validity
     bool mValid;
-    Qx::GenericError mError;
+    Qx::Error mError;
 
     // Files and directories
     QDir mRootDirectory;
     QDir mLogosDirectory;
     QDir mScreenshotsDirectory;
     QDir mExtrasDirectory;
+    QDir mPlaylistsDirectory;
     std::unique_ptr<QFile> mLauncherFile;
     std::unique_ptr<QFile> mDatabaseFile;
     std::shared_ptr<QFile> mConfigJsonFile;
@@ -96,20 +99,23 @@ private:
     std::unique_ptr<QFile> mVersionFile;
 
     // Settings
-    Json::Config mConfig;
-    Json::Preferences mPreferences;
-    Json::Services mServices;
-    Json::Execs mExecs;
+    Config mConfig;
+    Preferences mPreferences;
+    Services mServices;
+    Execs mExecs;
 
     // Database
     Db* mDatabase = nullptr;
+
+    // Playlist Manager
+    PlaylistManager* mPlaylistManager = nullptr;
 
     // Utilities
     MacroResolver* mMacroResolver = nullptr;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    Install(QString installPath);
+    Install(QString installPath, bool preloadPlaylists = false);
 
 //-Destructor-------------------------------------------------------------------------------------------------
 public:
@@ -117,10 +123,10 @@ public:
 
 //-Class Functions------------------------------------------------------------------------------------------------------
 private:
-    static QString standardImageSubPath(ImageType imageType, QUuid gameId);
+    static QString standardImageSubPath(QUuid gameId);
 
 public:
-    static Qx::GenericError appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo);
+    static Qx::Error appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
@@ -129,7 +135,7 @@ private:
 public:
     // Validity
     bool isValid() const;
-    Qx::GenericError error() const;
+    Qx::Error error() const;
 
     // General information
     Edition edition() const;
@@ -140,20 +146,23 @@ public:
     // Database
     Db* database();
 
+    // Playlist Manager
+    PlaylistManager* playlistManager();
+
     // Support Application Checks
     // TODO: At some point create a "Settings" object that wraps all of these, would need to rename existing Fp::Settings
-    const Json::Config& config() const;
-    const Json::Preferences& preferences() const;
-    const Json::Services& services() const;
-    const Json::Execs& execs() const;
+    const Config& config() const;
+    const Preferences& preferences() const;
+    const Services& services() const;
+    const Execs& execs() const;
 
     // Data access
     QString fullPath() const;
     QDir logosDirectory() const;
     QDir screenshotsDirectory() const;
     QDir extrasDirectory() const;
-    QString imageLocalPath(ImageType imageType, QUuid gameId) const;
-    QUrl imageRemoteUrl(ImageType imageType, QUuid gameId) const;
+    QString imageLocalPath(ImageType imageType, const QUuid& gameId) const;
+    QUrl imageRemoteUrl(ImageType imageType, const QUuid& gameId) const;
     const MacroResolver* macroResolver() const;
 
     // Helper

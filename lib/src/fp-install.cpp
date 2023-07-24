@@ -2,8 +2,8 @@
 #include "fp/fp-install.h"
 
 // Qx Includes
-#include <qx/io/qx-common-io.h>
 #include <qx/utility/qx-helpers.h>
+#include <qx/core/qx-genericerror.h>
 
 namespace Fp
 {
@@ -13,19 +13,19 @@ namespace Fp
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-Install::Install(QString installPath) :
+Install::Install(QString installPath, bool preloadPlaylists) :
     mValid(false) // Install is invalid until proven otherwise
 {
     QScopeGuard validityGuard([this](){ nullify(); }); // Automatically nullify on fail
 
     // Initialize static files and directories
     mRootDirectory = QDir(installPath);
-    mLauncherFile = std::make_unique<QFile>(installPath + "/" + LAUNCHER_PATH);
-    mDatabaseFile = std::make_unique<QFile>(installPath + "/" + DATABASE_PATH);
-    mConfigJsonFile = std::make_shared<QFile>(installPath + "/" + CONFIG_JSON_PATH);
-    mPreferencesJsonFile = std::make_shared<QFile>(installPath + "/" + PREFERENCES_JSON_PATH);
-    mVersionFile = std::make_unique<QFile>(installPath + "/" + VER_TXT_PATH);
-    mExtrasDirectory = QDir(installPath + "/" + EXTRAS_PATH);
+    mLauncherFile = std::make_unique<QFile>(installPath + u"/"_s + LAUNCHER_PATH);
+    mDatabaseFile = std::make_unique<QFile>(installPath + u"/"_s + DATABASE_PATH);
+    mConfigJsonFile = std::make_shared<QFile>(installPath + u"/"_s + CONFIG_JSON_PATH);
+    mPreferencesJsonFile = std::make_shared<QFile>(installPath + u"/"_s + PREFERENCES_JSON_PATH);
+    mVersionFile = std::make_unique<QFile>(installPath + u"/"_s + VER_TXT_PATH);
+    mExtrasDirectory = QDir(installPath + u"/"_s + EXTRAS_PATH);
 
     // Create macro resolver
     mMacroResolver = new MacroResolver(mRootDirectory.absolutePath(), {});
@@ -46,47 +46,35 @@ Install::Install(QString installPath) :
         QFileInfo fileInfo(*file);
         if(!fileInfo.exists() || !fileInfo.isFile())
         {
-            mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, FILE_DNE.arg(fileInfo.filePath()));
+            mError = Qx::GenericError(Qx::Critical, 1, ERR_FILE_MISSING, fileInfo.filePath());
             return;
         }
     }
 
     // Get settings
-    Qx::GenericError readReport;
-
-    Json::ConfigReader configReader(&mConfig, mConfigJsonFile);
-    if((readReport = configReader.readInto()).isValid())
-    {
-        mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
+    ConfigReader configReader(&mConfig, mConfigJsonFile);
+    if((mError = configReader.readInto()).isValid())
         return;
-    }
 
-    Json::PreferencesReader prefReader(&mPreferences, mPreferencesJsonFile);
-    if((readReport = prefReader.readInto()).isValid())
-    {
-        mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
+    PreferencesReader prefReader(&mPreferences, mPreferencesJsonFile);
+    if((mError = prefReader.readInto()).isValid())
         return;
-    }
-    mServicesJsonFile = std::make_shared<QFile>(installPath + "/" + mPreferences.jsonFolderPath + "/" + SERVICES_JSON_NAME);
-    mExecsJsonFile = std::make_shared<QFile>(installPath + "/" + mPreferences.jsonFolderPath + "/" + EXECS_JSON_NAME);
-    mLogosDirectory = QDir(installPath + "/" + mPreferences.imageFolderPath + '/' + LOGOS_FOLDER_NAME);
-    mScreenshotsDirectory = QDir(installPath + "/" + mPreferences.imageFolderPath + '/' + SCREENSHOTS_FOLDER_NAME);
 
-    Json::ServicesReader servicesReader(&mServices, mServicesJsonFile, mMacroResolver);
-    if((readReport = servicesReader.readInto()).isValid())
-    {
-        mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
+    mServicesJsonFile = std::make_shared<QFile>(installPath + u"/"_s + mPreferences.jsonFolderPath + u"/"_s + SERVICES_JSON_NAME);
+    mExecsJsonFile = std::make_shared<QFile>(installPath + u"/"_s + mPreferences.jsonFolderPath + u"/"_s + EXECS_JSON_NAME);
+    mLogosDirectory = QDir(installPath + u"/"_s + mPreferences.imageFolderPath + '/' + LOGOS_FOLDER_NAME);
+    mScreenshotsDirectory = QDir(installPath + u"/"_s + mPreferences.imageFolderPath + '/' + SCREENSHOTS_FOLDER_NAME);
+    mPlaylistsDirectory = QDir(installPath + u"/"_s + mPreferences.playlistFolderPath);
+
+    ServicesReader servicesReader(&mServices, mServicesJsonFile, mMacroResolver);
+    if((mError = servicesReader.readInto()).isValid())
         return;
-    }
 
     if(mExecsJsonFile->exists()) // Optional
     {
-        Json::ExecsReader execsReader(&mExecs, mExecsJsonFile);
-        if((readReport = execsReader.readInto()).isValid())
-        {
-            mError = Qx::GenericError(Qx::GenericError::Critical, ERR_INVALID, readReport.primaryInfo() + " [" + readReport.secondaryInfo() + "]");
+        ExecsReader execsReader(&mExecs, mExecsJsonFile);
+        if((mError = execsReader.readInto()).isValid())
             return;
-        }
     }
 
     // Add database
@@ -96,6 +84,15 @@ Install::Install(QString installPath) :
     {
         mError = mDatabase->error();
         return;
+    }
+
+    // Add playlists manager
+    mPlaylistManager = new PlaylistManager(mPlaylistsDirectory, {});
+
+    if(preloadPlaylists)
+    {
+        if(mError = mPlaylistManager->populate(); mError.isValid())
+            return;
     }
 
     // Give the OK
@@ -111,18 +108,20 @@ Install::~Install()
         delete mMacroResolver;
     if(mDatabase)
         delete mDatabase;
+    if(mPlaylistManager)
+        delete mPlaylistManager;
 }
 
 //-Class Functions------------------------------------------------------------------------------------------------
 //Private:
-QString Install::standardImageSubPath(ImageType imageType, QUuid gameId)
+QString Install::standardImageSubPath(QUuid gameId)
 {
     QString gameIdString = gameId.toString(QUuid::WithoutBraces);
-    return gameIdString.left(2) + '/' + gameIdString.mid(2, 2) + '/' + gameIdString + IMAGE_EXT;
+    return gameIdString.left(2) + '/' + gameIdString.mid(2, 2) + '/' + gameIdString;
 }
 
 //Public:
-Qx::GenericError Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo)
+Qx::Error Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo)
 {
     // Reset buffer
     involvesBuffer = false;
@@ -130,9 +129,9 @@ Qx::GenericError Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInf
     if(appInfo.fileName().contains(SECURE_PLAYER_INFO.baseName()))
     {
         involvesBuffer = true;
-        return Qx::GenericError();
+        return Qx::Error();
     }
-    else if(appInfo.suffix().compare("bat", Qt::CaseInsensitive) == 0)
+    else if(appInfo.suffix().compare(u"bat"_s, Qt::CaseInsensitive) == 0)
     {
         // Check if bat uses secure player
         QFile batFile(appInfo.absoluteFilePath());
@@ -140,12 +139,12 @@ Qx::GenericError Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInf
 
         // Check for read errors
         if(readReport.isFailure())
-            return Qx::GenericError(Qx::GenericError::Critical, readReport.outcome(), readReport.outcomeInfo());
+            return Qx::Error(readReport).setSeverity(Qx::Critical);
         else
-            return Qx::GenericError();
+            return Qx::Error();
     }
     else
-        return Qx::GenericError();
+        return Qx::Error();
 }
 
 //-Instance Functions------------------------------------------------------------------------------------------------
@@ -157,6 +156,7 @@ void Install::nullify()
     mLogosDirectory = QDir();
     mScreenshotsDirectory = QDir();
     mExtrasDirectory = QDir();
+    mPlaylistsDirectory = QDir();
     mLauncherFile.reset();
     mDatabaseFile.reset();
     mConfigJsonFile.reset();
@@ -167,6 +167,8 @@ void Install::nullify()
         qxDelete(mMacroResolver);
     if(mDatabase)
         qxDelete(mDatabase);
+    if(mPlaylistManager)
+        qxDelete(mPlaylistManager);
 
     // Settings
     mConfig = {};
@@ -176,14 +178,14 @@ void Install::nullify()
 
 //Public:
 bool Install::isValid() const { return mValid; }
-Qx::GenericError Install::error() const { return mError; }
+Qx::Error Install::error() const { return mError; }
 
 Install::Edition Install::edition() const
 {
     QString nameVer = nameVersionString();
 
-    return nameVer.contains("ultimate", Qt::CaseInsensitive) ? Edition::Ultimate :
-           nameVer.contains("infinity", Qt::CaseInsensitive) ? Edition::Infinity :
+    return nameVer.contains(u"ultimate"_s, Qt::CaseInsensitive) ? Edition::Ultimate :
+           nameVer.contains(u"infinity"_s, Qt::CaseInsensitive) ? Edition::Infinity :
                                                                Edition::Core;
 }
 
@@ -204,7 +206,7 @@ Qx::VersionNumber Install::version() const
 
     if(versionMatch.hasMatch())
     {
-        Qx::VersionNumber fpVersion = Qx::VersionNumber::fromString(versionMatch.captured("version"));
+        Qx::VersionNumber fpVersion = Qx::VersionNumber::fromString(versionMatch.captured(u"version"_s));
         if(!fpVersion.isNull())
             return fpVersion;
     }
@@ -222,27 +224,37 @@ QString Install::launcherChecksum() const
 }
 
 Db* Install::database() { return mDatabase; }
+PlaylistManager* Install::playlistManager() { return mPlaylistManager; }
 
-const Json::Config& Install::config() const { return mConfig; }
-const Json::Preferences& Install::preferences() const { return mPreferences; }
-const Json::Services& Install::services() const { return mServices; }
-const Json::Execs& Install::execs() const { return mExecs; }
+const Config& Install::config() const { return mConfig; }
+const Preferences& Install::preferences() const { return mPreferences; }
+const Services& Install::services() const { return mServices; }
+const Execs& Install::execs() const { return mExecs; }
 
 QString Install::fullPath() const { return mRootDirectory.absolutePath(); }
 QDir Install::logosDirectory() const { return mLogosDirectory; }
 QDir Install::screenshotsDirectory() const { return mScreenshotsDirectory; }
 QDir Install::extrasDirectory() const { return mExtrasDirectory; }
 
-QString Install::imageLocalPath(ImageType imageType, QUuid gameId) const
+QString Install::imageLocalPath(ImageType imageType, const QUuid& gameId) const
 {
     const QDir& sourceDir = imageType == ImageType::Logo ? mLogosDirectory : mScreenshotsDirectory;
-    return sourceDir.absolutePath() + '/' + standardImageSubPath(imageType, gameId);
+    bool compressed = mPreferences.onDemandImagesCompressed;
+    QString localSubPath = standardImageSubPath(gameId) + (compressed ? IMAGE_C_EXT : IMAGE_UC_EXT);
+
+    return sourceDir.absolutePath() + '/' + localSubPath;
 }
 
-QUrl Install::imageRemoteUrl(ImageType imageType, QUuid gameId) const
+QUrl Install::imageRemoteUrl(ImageType imageType, const QUuid& gameId) const
 {
     const QString typeFolder = (imageType == ImageType::Logo ? LOGOS_FOLDER_NAME : SCREENSHOTS_FOLDER_NAME);
-    return QUrl(mPreferences.onDemandBaseUrl + typeFolder + '/' + standardImageSubPath(imageType, gameId));
+    bool compressed = mPreferences.onDemandImagesCompressed;
+    QString remoteSubPath = standardImageSubPath(gameId) + IMAGE_UC_EXT;
+
+    if(compressed)
+        remoteSubPath += IMAGE_C_URL_SUFFIX;
+
+    return QUrl(mPreferences.onDemandBaseUrl + typeFolder + '/' + remoteSubPath);
 }
 
 const MacroResolver* Install::macroResolver() const { return mMacroResolver; }
@@ -250,7 +262,7 @@ const MacroResolver* Install::macroResolver() const { return mMacroResolver; }
 QString Install::resolveAppPathOverrides(const QString& appPath) const
 {
     // Check if path has an associated override
-    for(const Json::AppPathOverride& override : qAsConst(mPreferences.appPathOverrides))
+    for(const AppPathOverride& override : qAsConst(mPreferences.appPathOverrides))
     {
         if(override.path == appPath && override.enabled)
             return override.override;
@@ -265,7 +277,7 @@ QString Install::resolveExecSwaps(const QString& appPath, const QString& platfor
     bool preferNative = mPreferences.nativePlatforms.contains(platform);
 
     // Check if path has an associated swap
-    for(const Json::Exec& swap : qAsConst(mExecs.list))
+    for(const Exec& swap : qAsConst(mExecs.list))
     {
         if(swap.win32 == appPath)
         {
