@@ -62,8 +62,9 @@ Install::Install(QString installPath, bool preloadPlaylists) :
 
     mServicesJsonFile = std::make_shared<QFile>(installPath + u"/"_s + mPreferences.jsonFolderPath + u"/"_s + SERVICES_JSON_NAME);
     mExecsJsonFile = std::make_shared<QFile>(installPath + u"/"_s + mPreferences.jsonFolderPath + u"/"_s + EXECS_JSON_NAME);
-    mLogosDirectory = QDir(installPath + u"/"_s + mPreferences.imageFolderPath + '/' + LOGOS_FOLDER_NAME);
-    mScreenshotsDirectory = QDir(installPath + u"/"_s + mPreferences.imageFolderPath + '/' + SCREENSHOTS_FOLDER_NAME);
+    mPlatformLogosDirectory = QDir(installPath + u"/"_s + mPreferences.logoFolderPath);
+    mEntryLogosDirectory = QDir(installPath + u"/"_s + mPreferences.imageFolderPath + '/' + LOGOS_FOLDER_NAME);
+    mEntryScreenshotsDirectory = QDir(installPath + u"/"_s + mPreferences.imageFolderPath + '/' + SCREENSHOTS_FOLDER_NAME);
     mPlaylistsDirectory = QDir(installPath + u"/"_s + mPreferences.playlistFolderPath);
 
     ServicesReader servicesReader(&mServices, mServicesJsonFile, mMacroResolver);
@@ -153,8 +154,9 @@ void Install::nullify()
 {
     // Files and directories
     mRootDirectory = QDir();
-    mLogosDirectory = QDir();
-    mScreenshotsDirectory = QDir();
+    mPlatformLogosDirectory = QDir();
+    mEntryLogosDirectory = QDir();
+    mEntryScreenshotsDirectory = QDir();
     mExtrasDirectory = QDir();
     mPlaylistsDirectory = QDir();
     mLauncherFile.reset();
@@ -232,20 +234,26 @@ const Services& Install::services() const { return mServices; }
 const Execs& Install::execs() const { return mExecs; }
 
 QString Install::fullPath() const { return mRootDirectory.absolutePath(); }
-QDir Install::logosDirectory() const { return mLogosDirectory; }
-QDir Install::screenshotsDirectory() const { return mScreenshotsDirectory; }
+QDir Install::entryLogosDirectory() const { return mEntryLogosDirectory; }
+QDir Install::entryScreenshotsDirectory() const { return mEntryScreenshotsDirectory; }
 QDir Install::extrasDirectory() const { return mExtrasDirectory; }
 
-QString Install::imageLocalPath(ImageType imageType, const QUuid& gameId) const
+QString Install::platformLogoPath(const QString& platform)
 {
-    const QDir& sourceDir = imageType == ImageType::Logo ? mLogosDirectory : mScreenshotsDirectory;
+    QString path = mPlatformLogosDirectory.absoluteFilePath(platform + IMAGE_UC_EXT);
+    return QFile::exists(path) ? path : QString();
+}
+
+QString Install::entryImageLocalPath(ImageType imageType, const QUuid& gameId) const
+{
+    const QDir& sourceDir = imageType == ImageType::Logo ? mEntryLogosDirectory : mEntryScreenshotsDirectory;
     bool compressed = mPreferences.onDemandImagesCompressed;
     QString localSubPath = standardImageSubPath(gameId) + (compressed ? IMAGE_C_EXT : IMAGE_UC_EXT);
 
     return sourceDir.absolutePath() + '/' + localSubPath;
 }
 
-QUrl Install::imageRemoteUrl(ImageType imageType, const QUuid& gameId) const
+QUrl Install::entryImageRemoteUrl(ImageType imageType, const QUuid& gameId) const
 {
     const QString typeFolder = (imageType == ImageType::Logo ? LOGOS_FOLDER_NAME : SCREENSHOTS_FOLDER_NAME);
     bool compressed = mPreferences.onDemandImagesCompressed;
