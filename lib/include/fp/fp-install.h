@@ -86,8 +86,9 @@ private:
 
     // Files and directories
     QDir mRootDirectory;
-    QDir mLogosDirectory;
-    QDir mScreenshotsDirectory;
+    QDir mPlatformLogosDirectory;
+    QDir mEntryLogosDirectory;
+    QDir mEntryScreenshotsDirectory;
     QDir mExtrasDirectory;
     QDir mPlaylistsDirectory;
     std::unique_ptr<QFile> mLauncherFile;
@@ -158,11 +159,12 @@ public:
 
     // Data access
     QString fullPath() const;
-    QDir logosDirectory() const;
-    QDir screenshotsDirectory() const;
+    QDir entryLogosDirectory() const;
+    QDir entryScreenshotsDirectory() const;
     QDir extrasDirectory() const;
-    QString imageLocalPath(ImageType imageType, const QUuid& gameId) const;
-    QUrl imageRemoteUrl(ImageType imageType, const QUuid& gameId) const;
+    QString platformLogoPath(const QString& platform);
+    QString entryImageLocalPath(ImageType imageType, const QUuid& gameId) const;
+    QUrl entryImageRemoteUrl(ImageType imageType, const QUuid& gameId) const;
     const MacroResolver* macroResolver() const;
 
     // Helper

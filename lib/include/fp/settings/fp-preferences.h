@@ -45,6 +45,7 @@ struct FP_FP_EXPORT Preferences : public Settings
     QHash<QString, GameDataSource> gameDataSources;
     QHash<QString, GameMetadataSource> gameMetadataSources;
     QString imageFolderPath;
+    QString logoFolderPath;
     QString playlistFolderPath;
     QString jsonFolderPath;
     QString htdocsFolderPath;
