@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.23.0...3.25.0)
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
 project(libfp
-    VERSION 0.4
+    VERSION 0.4.1
     LANGUAGES CXX
     DESCRIPTION "C++ support library for Flashpoint Archive"
 )
