@@ -28,11 +28,17 @@ struct PlaylistGame
 
 struct Playlist
 {
+    static inline const QString ERR_ICON_PARSE = u"Failed to parse Flashpoint playlist icon."_s;
+    static inline const QString ICON_REGEX_FORMAT_G = u"format"_s;
+    static inline const QString ICON_REGEX_DATA_G = u"data"_s;
+    static inline const QRegularExpression ICON_REGEX = QRegularExpression(u"^data:image\\/(?<format>.+);base64,(?<data>.+)"_s);
+
     QString id;
     QList<PlaylistGame> games;
     QString title;
     QString description;
     QString author;
+    QImage icon;
     QString library;
 
     QX_JSON_STRUCT(
@@ -41,11 +47,48 @@ struct Playlist
         title,
         description,
         author,
+        icon,
         library
     );
 };
 
 }
+
+QX_JSON_MEMBER_OVERRIDE(Json::Playlist, icon,
+    static Qx::JsonError fromJson(QImage& member, const QJsonValue& jv)
+    {
+        // Get string data
+        if(!jv.isString())
+            return Qx::JsonError(Json::Playlist::ERR_ICON_PARSE, Qx::JsonError::TypeMismatch);
+
+        QString inlineImageUri = jv.toString();
+
+        // Get Base64 data
+        static Qx::JsonError convErr(Json::Playlist::ERR_ICON_PARSE, Qx::JsonError::InvalidValue);
+
+        QRegularExpressionMatch rm = Json::Playlist::ICON_REGEX.match(inlineImageUri);
+        if(!rm.hasMatch())
+            return convErr;
+
+        QString format = rm.captured(Json::Playlist::ICON_REGEX_FORMAT_G).toUpper();
+        if(format.isEmpty())
+            return convErr;
+
+        QString base64 = rm.captured(Json::Playlist::ICON_REGEX_DATA_G);
+        if(format.isEmpty())
+            return convErr;
+
+        // Convert to binary data
+        QByteArray imageData = QByteArray::fromBase64(base64.toLatin1(), QByteArray::Base64Encoding | QByteArray::AbortOnBase64DecodingErrors);
+        if(imageData.isEmpty())
+            return convErr;
+
+        // Load image
+        member = QImage::fromData(imageData); // NOTE: For relying on format auto-detection as the explicit format is known to have been mismatched
+
+        return member.isNull() ? convErr : Qx::JsonError();
+    }
+)
 
 namespace Fp
 {
@@ -103,7 +146,8 @@ Qx::Error PlaylistManager::populate()
           .wTitle(jPlaylist.title)
           .wDescription(jPlaylist.description)
           .wAuthor(jPlaylist.author)
-          .wLibrary(jPlaylist.library);
+          .wLibrary(jPlaylist.library)
+          .wIcon(jPlaylist.icon);
 
         for(const Json::PlaylistGame& jPlaylistGame : qAsConst(jPlaylist.games))
         {
