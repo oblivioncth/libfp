@@ -291,6 +291,7 @@ QString Playlist::title() const { return mTitle; }
 QString Playlist::description() const { return mDescription; }
 QString Playlist::author() const { return mAuthor; }
 QString Playlist::library() const { return mLibrary; }
+QImage Playlist::icon() const { return mIcon; }
 const QList<PlaylistGame>& Playlist::playlistGames() const { return mPlaylistGames; }
 QList<PlaylistGame>& Playlist::playlistGames() { return mPlaylistGames; }
 
@@ -309,6 +310,7 @@ Playlist::Builder& Playlist::Builder::wTitle(const QString& title) { mPlaylistBl
 Playlist::Builder& Playlist::Builder::wDescription(const QString& description) { mPlaylistBlueprint.mDescription = description; return *this; }
 Playlist::Builder& Playlist::Builder::wAuthor(const QString& author) { mPlaylistBlueprint.mAuthor = author; return *this; }
 Playlist::Builder& Playlist::Builder::wLibrary(const QString& library) { mPlaylistBlueprint.mLibrary = library; return *this; }
+Playlist::Builder& Playlist::Builder::wIcon(const QImage& icon) { mPlaylistBlueprint.mIcon = icon; return *this; }
 Playlist::Builder& Playlist::Builder::wPlaylistGame(const PlaylistGame& playlistGame) { mPlaylistBlueprint.mPlaylistGames.append(playlistGame); return *this; }
 
 Playlist Playlist::Builder::build() { return mPlaylistBlueprint; }
