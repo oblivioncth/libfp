@@ -8,6 +8,7 @@
 #include <QString>
 #include <QDateTime>
 #include <QUuid>
+#include <QImage>
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -356,6 +357,7 @@ private:
     QString mDescription;
     QString mAuthor;
     QString mLibrary;
+    QImage mIcon;
 
     QList<PlaylistGame> mPlaylistGames;
 
@@ -370,6 +372,8 @@ public:
     QString description() const;
     QString author() const;
     QString library() const;
+    QImage icon() const;
+
     const QList<PlaylistGame>& playlistGames() const;
     QList<PlaylistGame>& playlistGames();
 
@@ -392,6 +396,7 @@ public:
     Builder& wDescription(const QString& description);
     Builder& wAuthor(const QString& author);
     Builder& wLibrary(const QString& library);
+    Builder& wIcon(const QImage& icon);
     Builder& wPlaylistGame(const PlaylistGame& playlistGame);
 
     Playlist build();
