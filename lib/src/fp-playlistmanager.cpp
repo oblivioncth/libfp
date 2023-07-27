@@ -102,7 +102,8 @@ Qx::Error PlaylistManager::populate()
         pb.wId(jPlaylist.id)
           .wTitle(jPlaylist.title)
           .wDescription(jPlaylist.description)
-          .wAuthor(jPlaylist.author);
+          .wAuthor(jPlaylist.author)
+          .wLibrary(jPlaylist.library);
 
         for(const Json::PlaylistGame& jPlaylistGame : qAsConst(jPlaylist.games))
         {
