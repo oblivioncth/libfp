@@ -138,7 +138,7 @@ Qx::Error PlaylistManager::populate()
         // Parse to known JSON structure
         Json::Playlist jPlaylist;
         if(Qx::JsonError je = Qx::parseJson(jPlaylist, playlistDoc); je.isValid())
-            return je;
+            return je.withContext(QxJson::File(playlistFile));
 
         // Convert to FP item
         Playlist::Builder pb;
