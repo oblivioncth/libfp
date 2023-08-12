@@ -307,7 +307,7 @@ public:
 
     //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    int mId;
+    std::optional<int> mId;
     QUuid mPlaylistId;
     int mOrder;
     QUuid mGameId;
@@ -318,7 +318,7 @@ public:
 
     //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    int id() const;
+    std::optional<int> id() const;
     QUuid playlistId() const;
     int order() const;
     QUuid gameId() const;
@@ -336,7 +336,7 @@ public:
 
     //-Instance Functions------------------------------------------------------------------------------------------
 public:
-    Builder& wId(int id);
+    Builder& wId(std::optional<int> id);
     Builder& wPlaylistId(QStringView rawPlaylistId);
     Builder& wOrder(int order);
     Builder& wGameId(QStringView rawGameId);

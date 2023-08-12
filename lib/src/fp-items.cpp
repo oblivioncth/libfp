@@ -254,7 +254,7 @@ PlaylistGame::PlaylistGame() {}
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
 
-int PlaylistGame::id() const { return mId; }
+std::optional<int> PlaylistGame::id() const { return mId; }
 QUuid PlaylistGame::playlistId() const { return mPlaylistId; }
 int PlaylistGame::order() const { return mOrder; }
 QUuid PlaylistGame::gameId() const { return mGameId; }
@@ -269,7 +269,7 @@ PlaylistGame::Builder::Builder() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
-PlaylistGame::Builder& PlaylistGame::Builder::wId(int id) { mPlaylistGameBlueprint.mId = id; return *this; }
+PlaylistGame::Builder& PlaylistGame::Builder::wId(std::optional<int> id) { mPlaylistGameBlueprint.mId = id; return *this; }
 PlaylistGame::Builder& PlaylistGame::Builder::wPlaylistId(QStringView rawPlaylistId) { mPlaylistGameBlueprint.mPlaylistId = QUuid(rawPlaylistId); return *this; }
 PlaylistGame::Builder& PlaylistGame::Builder::wOrder(int order) { mPlaylistGameBlueprint.mOrder = order; return *this; }
 PlaylistGame::Builder& PlaylistGame::Builder::wGameId(QStringView rawGameId) { mPlaylistGameBlueprint.mGameId = QUuid(rawGameId); return *this; }

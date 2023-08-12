@@ -13,7 +13,7 @@ namespace Json
 
 struct PlaylistGame
 {
-    int id;
+    std::optional<int> id;
     QString playlistId;
     int order;
     QString gameId;
