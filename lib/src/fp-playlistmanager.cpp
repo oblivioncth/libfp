@@ -13,8 +13,8 @@ namespace Json
 
 struct PlaylistGame
 {
-    int id;
-    QString playlistId;
+    std::optional<int> id;
+    std::optional<QString> playlistId;
     int order;
     QString gameId;
 
@@ -138,7 +138,7 @@ Qx::Error PlaylistManager::populate()
         // Parse to known JSON structure
         Json::Playlist jPlaylist;
         if(Qx::JsonError je = Qx::parseJson(jPlaylist, playlistDoc); je.isValid())
-            return je;
+            return je.withContext(QxJson::File(playlistFile));
 
         // Convert to FP item
         Playlist::Builder pb;
@@ -153,7 +153,7 @@ Qx::Error PlaylistManager::populate()
         {
             PlaylistGame::Builder pgb;
             pgb.wId(jPlaylistGame.id)
-               .wPlaylistId(jPlaylistGame.playlistId)
+               .wPlaylistId(jPlaylistGame.playlistId ? jPlaylistGame.playlistId.value() : QString())
                .wOrder(jPlaylistGame.order)
                .wGameId(jPlaylistGame.gameId);
 

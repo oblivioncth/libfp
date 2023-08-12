@@ -42,7 +42,7 @@ Qx::Error SettingsReader::readInto()
     if(settingsDocument.isNull())
         return Qx::Error(parseError).setSeverity(Qx::Critical);
     else
-        return parseDocument(settingsDocument);
+        return parseDocument(settingsDocument).withContext(QxJson::File(*mSourceJsonFile));
 }
 
 }
