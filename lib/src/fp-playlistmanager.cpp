@@ -14,7 +14,7 @@ namespace Json
 struct PlaylistGame
 {
     std::optional<int> id;
-    QString playlistId;
+    std::optional<QString> playlistId;
     int order;
     QString gameId;
 
@@ -153,7 +153,7 @@ Qx::Error PlaylistManager::populate()
         {
             PlaylistGame::Builder pgb;
             pgb.wId(jPlaylistGame.id)
-               .wPlaylistId(jPlaylistGame.playlistId)
+               .wPlaylistId(jPlaylistGame.playlistId ? jPlaylistGame.playlistId.value() : QString())
                .wOrder(jPlaylistGame.order)
                .wGameId(jPlaylistGame.gameId);
 
