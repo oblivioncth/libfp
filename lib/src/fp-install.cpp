@@ -246,8 +246,9 @@ QString Install::platformLogoPath(const QString& platform)
 
 QString Install::entryImageLocalPath(ImageType imageType, const QUuid& gameId) const
 {
+    // Defaults to using compression if the setting isn't present
     const QDir& sourceDir = imageType == ImageType::Logo ? mEntryLogosDirectory : mEntryScreenshotsDirectory;
-    bool compressed = mPreferences.onDemandImagesCompressed;
+    bool compressed = !mPreferences.onDemandImagesCompressed.has_value() || mPreferences.onDemandImagesCompressed.value();
     QString localSubPath = standardImageSubPath(gameId) + (compressed ? IMAGE_C_EXT : IMAGE_UC_EXT);
 
     return sourceDir.absolutePath() + '/' + localSubPath;
@@ -255,8 +256,9 @@ QString Install::entryImageLocalPath(ImageType imageType, const QUuid& gameId) c
 
 QUrl Install::entryImageRemoteUrl(ImageType imageType, const QUuid& gameId) const
 {
+    // Defaults to using compression if the setting isn't present
     const QString typeFolder = (imageType == ImageType::Logo ? LOGOS_FOLDER_NAME : SCREENSHOTS_FOLDER_NAME);
-    bool compressed = mPreferences.onDemandImagesCompressed;
+    bool compressed = !mPreferences.onDemandImagesCompressed.has_value() || mPreferences.onDemandImagesCompressed.value();
     QString remoteSubPath = standardImageSubPath(gameId) + IMAGE_UC_EXT;
 
     if(compressed)
