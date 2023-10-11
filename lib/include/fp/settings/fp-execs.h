@@ -16,7 +16,7 @@ struct FP_FP_EXPORT Exec
 {
     QString linux;
     QString win32;
-    QString wine;
+    std::optional<QString> wine;
 };
 
 struct FP_FP_EXPORT Execs : public Settings
