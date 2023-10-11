@@ -287,7 +287,7 @@ QString Install::resolveExecSwaps(const QString& appPath, const QString& platfor
     bool preferNative = mPreferences.nativePlatforms.contains(platform);
 
     // Check if path has an associated swap
-    for(const Exec& swap : qAsConst(mExecs.list))
+    for(const Exec& swap : qAsConst(mExecs.execs))
     {
         if(swap.win32 == appPath)
         {

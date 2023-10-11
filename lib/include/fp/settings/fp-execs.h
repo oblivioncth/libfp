@@ -21,7 +21,7 @@ struct FP_FP_EXPORT Exec
 
 struct FP_FP_EXPORT Execs : public Settings
 {
-    QList<Exec> list;
+    QList<Exec> execs;
 };
 
 class FP_FP_EXPORT ExecsReader : public SettingsReader
