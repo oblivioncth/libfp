@@ -11,14 +11,6 @@
 namespace Fp
 {
 
-enum KnownDaemon{
-    None = 0x0,
-    Docker = 0x1,
-    Qemu = 0x2
-};
-Q_DECLARE_FLAGS(KnownDaemons, KnownDaemon);
-Q_DECLARE_OPERATORS_FOR_FLAGS(KnownDaemons);
-
 struct FP_FP_EXPORT ServerDaemon
 {
     QString name;
@@ -45,7 +37,6 @@ struct FP_FP_EXPORT Services : public Settings
     QHash<QString, ServerDaemon> daemon;
     QSet<StartStop> start;
     QSet<StartStop> stop;
-    KnownDaemons recognizedDaemons; // Non-standard
     // TODO: ^If Settings container obj is made (see other todo), move this there
 };
 
