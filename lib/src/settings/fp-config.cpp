@@ -5,7 +5,6 @@
 QX_JSON_STRUCT_OUTSIDE(Fp::Config,
     flashpointPath,
     startServer,
-    server
 )
 
 namespace Fp

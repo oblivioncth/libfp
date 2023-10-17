@@ -78,6 +78,16 @@ Install::Install(QString installPath, bool preloadPlaylists) :
             return;
     }
 
+    // Note daemon
+    if(mServices.daemon.size() != 1)
+    {
+        mError = Qx::GenericError(Qx::Critical, 11101, "The number of configured daemons differs from the expected amount", "1");
+        return;
+    }
+
+
+    establishDaemon();
+
     // Add database
     mDatabase = new Db(mDatabaseFile->fileName(), {});
 
@@ -150,6 +160,26 @@ Qx::Error Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appIn
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Private:
+void Install::establishDaemon()
+{
+    Q_ASSERT(mServices.daemon.size() == 1);
+
+    // NOTE: This assumes only one daemon is present!
+    const ServerDaemon& d = *mServices.daemon.constBegin();
+
+    if(d.name.contains(u"qemu"_s, Qt::CaseInsensitive) ||
+        d.filename.contains(u"qemu"_s, Qt::CaseInsensitive))
+        mDaemon = Qemu;
+    else if(d.name.contains(u"docker"_s, Qt::CaseInsensitive) ||
+             d.filename.contains(u"docker"_s, Qt::CaseInsensitive))
+        mDaemon = Docker;
+    else if(d.name.contains(u"proxy"_s, Qt::CaseInsensitive) ||
+             d.filename.contains(u"proxy"_s, Qt::CaseInsensitive))
+        mDaemon = FpProxy;
+    else
+        mDaemon = Unknown;
+}
+
 void Install::nullify()
 {
     // Files and directories
@@ -232,6 +262,7 @@ const Config& Install::config() const { return mConfig; }
 const Preferences& Install::preferences() const { return mPreferences; }
 const Services& Install::services() const { return mServices; }
 const Execs& Install::execs() const { return mExecs; }
+Daemon Install::outfittedDaemon() const { return mDaemon; }
 
 QString Install::fullPath() const { return mRootDirectory.absolutePath(); }
 QDir Install::entryLogosDirectory() const { return mEntryLogosDirectory; }
@@ -240,7 +271,7 @@ QDir Install::extrasDirectory() const { return mExtrasDirectory; }
 
 QString Install::platformLogoPath(const QString& platform)
 {
-    QString path = mPlatformLogosDirectory.absoluteFilePath(platform + IMAGE_UC_EXT);
+    QString path = mPlatformLogosDirectory.absoluteFilePath(platform + IMAGE_EXT);
     return QFile::exists(path) ? path : QString();
 }
 
@@ -248,8 +279,7 @@ QString Install::entryImageLocalPath(ImageType imageType, const QUuid& gameId) c
 {
     // Defaults to using compression if the setting isn't present
     const QDir& sourceDir = imageType == ImageType::Logo ? mEntryLogosDirectory : mEntryScreenshotsDirectory;
-    bool compressed = !mPreferences.onDemandImagesCompressed.has_value() || mPreferences.onDemandImagesCompressed.value();
-    QString localSubPath = standardImageSubPath(gameId) + (compressed ? IMAGE_C_EXT : IMAGE_UC_EXT);
+    QString localSubPath = standardImageSubPath(gameId) + IMAGE_EXT;
 
     return sourceDir.absolutePath() + '/' + localSubPath;
 }
@@ -259,10 +289,10 @@ QUrl Install::entryImageRemoteUrl(ImageType imageType, const QUuid& gameId) cons
     // Defaults to using compression if the setting isn't present
     const QString typeFolder = (imageType == ImageType::Logo ? LOGOS_FOLDER_NAME : SCREENSHOTS_FOLDER_NAME);
     bool compressed = !mPreferences.onDemandImagesCompressed.has_value() || mPreferences.onDemandImagesCompressed.value();
-    QString remoteSubPath = standardImageSubPath(gameId) + IMAGE_UC_EXT;
+    QString remoteSubPath = standardImageSubPath(gameId) + IMAGE_EXT;
 
     if(compressed)
-        remoteSubPath += IMAGE_C_URL_SUFFIX;
+        remoteSubPath += IMAGE_COMPRESSED_URL_SUFFIX;
 
     return QUrl(mPreferences.onDemandBaseUrl + typeFolder + '/' + remoteSubPath);
 }
@@ -287,14 +317,14 @@ QString Install::resolveExecSwaps(const QString& appPath, const QString& platfor
     bool preferNative = mPreferences.nativePlatforms.contains(platform);
 
     // Check if path has an associated swap
-    for(const Exec& swap : qAsConst(mExecs.list))
+    for(const Exec& swap : qAsConst(mExecs.execs))
     {
         if(swap.win32 == appPath)
         {
             if(preferNative && !swap.linux.isEmpty())
                 return swap.linux;
-            else if(!swap.wine.isEmpty())
-                return swap.wine;
+            else if(swap.wine.has_value() && !swap.wine->isEmpty())
+                return swap.wine.value();
         }
     }
 

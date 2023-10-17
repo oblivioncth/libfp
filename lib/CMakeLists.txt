@@ -8,6 +8,7 @@ ob_add_standard_library(${LIB_TARGET_NAME}
     HEADERS_API
         COMMON "${PROJECT_NAMESPACE_LC}"
         FILES
+            fp-daemon.h
             fp-db.h
             fp-install.h
             fp-items.h

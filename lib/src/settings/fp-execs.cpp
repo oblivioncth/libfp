@@ -9,7 +9,7 @@ QX_JSON_STRUCT_OUTSIDE(Fp::Exec,
 );
 
 QX_JSON_STRUCT_OUTSIDE(Fp::Execs,
-    list
+    execs
 );
 
 namespace Fp

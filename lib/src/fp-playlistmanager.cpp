@@ -61,7 +61,13 @@ QX_JSON_MEMBER_OVERRIDE(Json::Playlist, icon,
         if(!jv.isString())
             return Qx::JsonError(Json::Playlist::ERR_ICON_PARSE, Qx::JsonError::TypeMismatch);
 
-        QString inlineImageUri = jv.toString();
+        QString inlineImageUri = jv.toString().trimmed();
+
+        if(inlineImageUri.isEmpty()) // No icon
+        {
+            member = QImage();
+            return Qx::JsonError();
+        }
 
         // Get Base64 data
         static Qx::JsonError convErr(Json::Playlist::ERR_ICON_PARSE, Qx::JsonError::InvalidValue);

@@ -23,6 +23,7 @@
 #include "fp/fp-db.h"
 #include "fp/fp-items.h"
 #include "fp/fp-playlistmanager.h"
+#include "fp/fp-daemon.h"
 
 namespace Fp
 {
@@ -51,9 +52,8 @@ private:
     static inline const QString VER_TXT_PATH = u"version.txt"_s;
 
     // File Info
-    static inline const QString IMAGE_UC_EXT = u".png"_s;
-    static inline const QString IMAGE_C_EXT = u".jpg"_s;
-    static inline const QString IMAGE_C_URL_SUFFIX = u"?type=jpg"_s;
+    static inline const QString IMAGE_EXT = u".png"_s;
+    static inline const QString IMAGE_COMPRESSED_URL_SUFFIX = u"?type=jpg"_s;
 
     // Dynamic path file names
     static inline const QString SERVICES_JSON_NAME = u"services.json"_s;
@@ -104,6 +104,7 @@ private:
     Preferences mPreferences;
     Services mServices;
     Execs mExecs;
+    Daemon mDaemon;
 
     // Database
     Db* mDatabase = nullptr;
@@ -131,6 +132,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
+    void establishDaemon();
     void nullify();
 
 public:
@@ -156,6 +158,7 @@ public:
     const Preferences& preferences() const;
     const Services& services() const;
     const Execs& execs() const;
+    Daemon outfittedDaemon() const;
 
     // Data access
     QString fullPath() const;
