@@ -23,6 +23,7 @@
 #include "fp/fp-db.h"
 #include "fp/fp-items.h"
 #include "fp/fp-playlistmanager.h"
+#include "fp/fp-daemon.h"
 
 namespace Fp
 {
@@ -104,6 +105,7 @@ private:
     Preferences mPreferences;
     Services mServices;
     Execs mExecs;
+    Daemon mDaemon;
 
     // Database
     Db* mDatabase = nullptr;
@@ -131,6 +133,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
+    void establishDaemon();
     void nullify();
 
 public:
@@ -156,6 +159,7 @@ public:
     const Preferences& preferences() const;
     const Services& services() const;
     const Execs& execs() const;
+    Daemon outfittedDaemon() const;
 
     // Data access
     QString fullPath() const;
