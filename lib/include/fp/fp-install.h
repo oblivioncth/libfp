@@ -52,9 +52,8 @@ private:
     static inline const QString VER_TXT_PATH = u"version.txt"_s;
 
     // File Info
-    static inline const QString IMAGE_UC_EXT = u".png"_s;
-    static inline const QString IMAGE_C_EXT = u".jpg"_s;
-    static inline const QString IMAGE_C_URL_SUFFIX = u"?type=jpg"_s;
+    static inline const QString IMAGE_EXT = u".png"_s;
+    static inline const QString IMAGE_COMPRESSED_URL_SUFFIX = u"?type=jpg"_s;
 
     // Dynamic path file names
     static inline const QString SERVICES_JSON_NAME = u"services.json"_s;
