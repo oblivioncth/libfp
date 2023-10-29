@@ -77,13 +77,58 @@ ServicesReader::ServicesReader(Services* targetServices, std::shared_ptr<QFile> 
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 //Private:
+void ServicesReader::resolveMacros(QString& str) { mHostMacroResolver->resolve(str); }
+
+void ServicesReader::resolveMacros(QStringList& args)
+{
+    for(auto& str : args)
+        resolveMacros(str);
+}
+
+template<ServicesT T>
+void ServicesReader::resolveMacros(T& st)
+{
+    resolveMacros(st.path);
+    resolveMacros(st.arguments);
+}
+
+template<ServicesContainerT T>
+void ServicesReader::resolveMacros(T& sct)
+{
+    for(auto& st : sct)
+    {
+        /* NOTE: This ugly hack is to drop the const from QSet element references as you can
+         * only get a const& to its elements; however, we know for sure that the type of
+         * element within the set is not a const type, which means const_cast is a safe,
+         * albeit dirty way, to modify items within the set. This can be avoided if the
+         * Services sets are just changed to lists, which may be best in the end.
+         */
+        using MutR = std::add_lvalue_reference_t<std::remove_const_t<std::remove_reference_t<decltype(st)>>>;
+        resolveMacros(const_cast<MutR>(st));
+    }
+}
+
+void ServicesReader::resolveMacros(Fp::Services& s)
+{
+    resolveMacros(s.server);
+    resolveMacros(s.daemon);
+    resolveMacros(s.start);
+    resolveMacros(s.stop);
+}
+
 Qx::JsonError ServicesReader::parseDocument(const QJsonDocument& servicesDoc)
 {
     // Get derivation specific target
     Services* targetServices = static_cast<Services*>(mTargetSettings);
 
     // Parse
-    return Qx::parseJson(*targetServices, servicesDoc);
+    if(Qx::JsonError err = Qx::parseJson(*targetServices, servicesDoc); err.isValid())
+        return err;
+
+    // Perform macro substitution
+    resolveMacros(*targetServices);
+
+    return Qx::JsonError();
 }
 
 }
