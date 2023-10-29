@@ -38,7 +38,7 @@ public:
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
-    QString resolve(QString macroStr) const;
+    void resolve(QString& macroStr) const;
 };
 
 }

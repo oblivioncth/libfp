@@ -7,9 +7,7 @@
 namespace Fp
 {
 
-enum Daemon { Unknown, Docker, Qemu, FpProxy };
-
-Daemon daemonFromString(QStringView name);
+enum Daemon { Unknown, Docker, Qemu, FpProxy, FpGameServer };
 
 }
 #endif // FLASHPOINT_DAEMON_H

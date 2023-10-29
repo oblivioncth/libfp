@@ -176,6 +176,9 @@ void Install::establishDaemon()
     else if(d.name.contains(u"proxy"_s, Qt::CaseInsensitive) ||
              d.filename.contains(u"proxy"_s, Qt::CaseInsensitive))
         mDaemon = FpProxy;
+    else if(d.name.contains(u"game server"_s, Qt::CaseInsensitive) ||
+             d.filename.contains(u"game server"_s, Qt::CaseInsensitive))
+        mDaemon = FpGameServer;
     else
         mDaemon = Unknown;
 }

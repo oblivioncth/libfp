@@ -4,13 +4,16 @@
 // Qt Includes
 #include <QSet>
 
+// Qx Includes
+#include <qx/utility/qx-concepts.h>
+
 // Project Includes
 #include "fp/settings/fp-settings.h"
 #include "fp/fp-macro.h"
 
 namespace Fp
 {
-
+//-Structs--------------------------------------------------------------
 struct FP_FP_EXPORT ServerDaemon
 {
     QString name;
@@ -40,6 +43,13 @@ struct FP_FP_EXPORT Services : public Settings
     // TODO: ^If Settings container obj is made (see other todo), move this there
 };
 
+//-Concepts--------------------------------------------------------------
+template<typename T>
+concept ServicesT = Qx::any_of<T, ServerDaemon, StartStop>;
+
+template<typename T>
+concept ServicesContainerT = Qx::any_of<T, QHash<QString, ServerDaemon>, QSet<StartStop>>;
+
 class FP_FP_EXPORT ServicesReader : public SettingsReader
 {
 //-Instance Variables--------------------------------------------------------------------------------------------------
@@ -52,6 +62,14 @@ public:
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
+    void resolveMacros(QString& str);
+    void resolveMacros(QStringList& args);
+    template<ServicesT T>
+    void resolveMacros(T& st);
+    template<ServicesContainerT T>
+    void resolveMacros(T& sct);
+    void resolveMacros(Fp::Services& s);
+
     Qx::JsonError parseDocument(const QJsonDocument& servicesDoc);
 };
 
