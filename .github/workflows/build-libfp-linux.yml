@@ -69,6 +69,7 @@ jobs:
     - name: Update package index
       run: sudo apt-get update
     - name: WORKAROUND FOR https://github.com/actions/runner-images/issues/8659
+      if: matrix.os == 'ubuntu-22.04'
       run: |
         echo "TEMPORARY WORKAROUND FOR GITHUB RUNNER BUG #8659\n\nRemoving GCC 13 as it breaks Clang14"
         sudo rm -f /etc/apt/sources.list.d/ubuntu-toolchain-r-ubuntu-test-jammy.list
@@ -85,6 +86,9 @@ jobs:
     - name: Install EGL [22.04]
       if: matrix.os == 'ubuntu-22.04'
       run: sudo apt-get install libegl1-mesa-dev
+    - name: Install Wayland [22.04]
+      if: matrix.os == 'ubuntu-22.04'
+      run: sudo apt-get install libwayland-dev
     - name: Checkout libfp
       uses: actions/checkout@v3
       with:
