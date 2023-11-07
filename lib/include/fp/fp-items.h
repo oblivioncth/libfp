@@ -308,7 +308,7 @@ public:
     //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
     std::optional<int> mId;
-    std::optional<QUuid> mPlaylistId;
+    QUuid mPlaylistId;
     int mOrder;
     QUuid mGameId;
 
@@ -319,7 +319,7 @@ public:
     //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
     std::optional<int> id() const;
-    std::optional<QUuid> playlistId() const;
+    QUuid playlistId() const;
     int order() const;
     QUuid gameId() const;
 };
