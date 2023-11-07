@@ -15,7 +15,7 @@ struct PlaylistGame
 {
     std::optional<int> id;
     std::optional<QString> playlistId;
-    int order;
+    std::optional<int> order;
     QString gameId;
 
     QX_JSON_STRUCT(
@@ -155,12 +155,13 @@ Qx::Error PlaylistManager::populate()
           .wLibrary(jPlaylist.library)
           .wIcon(jPlaylist.icon);
 
-        for(const Json::PlaylistGame& jPlaylistGame : qAsConst(jPlaylist.games))
+        // TODO: Good use for std::ranges::views::enumerate when using C++23
+        for(int backupOrder = 0; const Json::PlaylistGame& jPlaylistGame : qAsConst(jPlaylist.games))
         {
             PlaylistGame::Builder pgb;
             pgb.wId(jPlaylistGame.id)
-               .wPlaylistId(jPlaylistGame.playlistId ? jPlaylistGame.playlistId.value() : QString())
-               .wOrder(jPlaylistGame.order)
+               .wPlaylistId(jPlaylistGame.playlistId ? jPlaylistGame.playlistId.value() : jPlaylist.id)
+               .wOrder(jPlaylistGame.order ? jPlaylistGame.order.value() : backupOrder++)
                .wGameId(jPlaylistGame.gameId);
 
             pb.wPlaylistGame(pgb.build());
