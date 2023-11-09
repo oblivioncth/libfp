@@ -853,7 +853,7 @@ DbError Db::getGameData(GameData& data, const QUuid& gameId)
     return DbError();
 }
 
-DbError Db::updateGameDataOnDiskState(int packId, bool onDisk)
+DbError Db::updateGameDataOnDiskState(QList<int> packIds, bool onDisk)
 {
     // Get database
     QSqlDatabase fpDb;
@@ -862,8 +862,9 @@ DbError Db::updateGameDataOnDiskState(int packId, bool onDisk)
         return DbError::fromSqlError(dbError);
 
     // Make query
+    QString filter = Qx::String::join(packIds, [](int i){ return QString::number(i); }, u","_s);
     QString dataUpdateCommand = u"UPDATE "_s + Table_Game_Data::NAME + u" SET "_s + Table_Game_Data::COL_PRES_ON_DISK + u" = "_s + QString::number(onDisk) +
-                                u" WHERE "_s + Table_Game_Data::COL_ID + u" = "_s + QString::number(packId);
+                                u" WHERE "_s + Table_Game_Data::COL_ID + u" IN ("_s + filter + ')';
 
     QSqlQuery packUpdateQuery(fpDb);
     packUpdateQuery.setForwardOnly(true);
@@ -874,11 +875,10 @@ DbError Db::updateGameDataOnDiskState(int packId, bool onDisk)
         return DbError::fromSqlError(packUpdateQuery.lastError());
 
     // Check that expected count was affected
-    int rows = packUpdateQuery.numRowsAffected();
-    if(rows < 1)
-        return DbError(DbError::UpdateIneffective, Table_Game_Data::NAME + u" SET "_s + Table_Game_Data::COL_PRES_ON_DISK);
-    else if(rows > 1)
-        return DbError(DbError::UpdateTooMany, Table_Game_Data::NAME + u" SET "_s + Table_Game_Data::COL_PRES_ON_DISK);
+    int expected = packIds.size();
+    int affected = packUpdateQuery.numRowsAffected();
+    if(affected != expected)
+        return DbError(DbError::UpdateRowMismatch, Table_Game_Data::NAME + u" SET "_s + Table_Game_Data::COL_PRES_ON_DISK, u"%1 instead of %2"_s.arg(affected, expected));
 
     return DbError();
 }
