@@ -828,7 +828,7 @@ DbError Db::getGameData(GameData& data, const QUuid& gameId)
     if(searchResult.size == 0)
         return DbError(); // Game doesn't have data pack
     else if(searchResult.size > 1)
-        qWarning("Entry with more than one data pack, using most recent.");
+        qWarning("Entry %s has more than one data pack, using most recent.", qPrintable(gameId.toString(QUuid::WithoutBraces)));
 
     // Advance result to first record
     searchResult.result.next();
