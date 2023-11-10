@@ -21,17 +21,62 @@
 #include "fp/settings/fp-services.h"
 #include "fp/fp-macro.h"
 #include "fp/fp-db.h"
-#include "fp/fp-items.h"
 #include "fp/fp-playlistmanager.h"
 #include "fp/fp-daemon.h"
+#include "fp/fp-toolkit.h"
 
 namespace Fp
 {
 
 inline const QString NAME = u"Flashpoint"_s;
 
+class QX_ERROR_TYPE(InstallError, "Fp::InstallError", 1100)
+{
+    friend class Install;
+    //-Class Enums-------------------------------------------------------------
+public:
+    enum Type
+    {
+        NoError,
+        FileMissing,
+        DaemonCountMismatch,
+        DatapackSourceMissing
+    };
+
+    //-Class Variables-------------------------------------------------------------
+private:
+    static inline const QHash<Type, QString> ERR_STRINGS{
+        {NoError, u""_s},
+        {FileMissing, u"A required flashpoint install file is missing."_s},
+        {DaemonCountMismatch, u"The number of configured daemons differs from the expected amount."_s},
+        {DatapackSourceMissing, u"Expected datapack source missing."_s}
+    };
+
+    //-Instance Variables-------------------------------------------------------------
+private:
+    Type mType;
+    QString mSpecific;
+
+    //-Constructor-------------------------------------------------------------
+private:
+    InstallError(Type t = NoError, const QString& s = {});
+
+    //-Instance Functions-------------------------------------------------------------
+public:
+    bool isValid() const;
+    Type type() const;
+    QString specific() const;
+
+private:
+    Qx::Severity deriveSeverity() const override;
+    quint32 deriveValue() const override;
+    QString derivePrimary() const override;
+    QString deriveSecondary() const override;
+};
+
 class FP_FP_EXPORT Install
 {
+    friend class Toolkit;
 //-Class Enums---------------------------------------------------------------------------------------------------
 enum class Edition {Ultimate, Infinity, Core};
 
@@ -51,10 +96,6 @@ private:
     static inline const QString PREFERENCES_JSON_PATH = u"preferences.json"_s;
     static inline const QString VER_TXT_PATH = u"version.txt"_s;
 
-    // File Info
-    static inline const QString IMAGE_EXT = u".png"_s;
-    static inline const QString IMAGE_COMPRESSED_URL_SUFFIX = u"?type=jpg"_s;
-
     // Dynamic path file names
     static inline const QString SERVICES_JSON_NAME = u"services.json"_s;
     static inline const QString EXECS_JSON_NAME = u"execs.json"_s;
@@ -66,17 +107,11 @@ private:
     static inline const QString LOGOS_FOLDER_NAME = u"Logos"_s;
     static inline const QString SCREENSHOTS_FOLDER_NAME = u"Screenshots"_s;
 
-    // Error
-    static inline const QString ERR_FILE_MISSING = u"A required flashpoint install file is missing."_s;
-
-    // Settings
-    static inline const QString MACRO_FP_PATH = u"<fpPath>"_s;
+    // Main datapack source
+    static inline const QString MAIN_DATAPACK_SOURCE = u"Flashpoint Project"_s;
 
     // Regex
     static inline const QRegularExpression VERSION_NUMBER_REGEX = QRegularExpression(u"[fF]lashpoint (?<version>.*?) "_s);
-
-public:
-    static inline const QFileInfo SECURE_PLAYER_INFO = QFileInfo(u"FlashpointSecurePlayer.exe"_s);
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
@@ -106,14 +141,11 @@ private:
     Execs mExecs;
     Daemon mDaemon;
 
-    // Database
+    // Facilities
     Db* mDatabase = nullptr;
-
-    // Playlist Manager
     PlaylistManager* mPlaylistManager = nullptr;
-
-    // Utilities
     MacroResolver* mMacroResolver = nullptr;
+    Toolkit* mToolkit = nullptr;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -122,13 +154,6 @@ public:
 //-Destructor-------------------------------------------------------------------------------------------------
 public:
     ~Install();
-
-//-Class Functions------------------------------------------------------------------------------------------------------
-private:
-    static QString standardImageSubPath(QUuid gameId);
-
-public:
-    static Qx::Error appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
@@ -146,13 +171,13 @@ public:
     Qx::VersionNumber version() const;
     QString launcherChecksum() const;
 
-    // Database
+    // Facilities
     Db* database();
-
-    // Playlist Manager
     PlaylistManager* playlistManager();
+    const MacroResolver* macroResolver() const;
+    const Toolkit* toolkit() const;
 
-    // Support Application Checks
+    // Settings
     // TODO: At some point create a "Settings" object that wraps all of these, would need to rename existing Fp::Settings
     const Config& config() const;
     const Preferences& preferences() const;
@@ -165,14 +190,7 @@ public:
     QDir entryLogosDirectory() const;
     QDir entryScreenshotsDirectory() const;
     QDir extrasDirectory() const;
-    QString platformLogoPath(const QString& platform);
-    QString entryImageLocalPath(ImageType imageType, const QUuid& gameId) const;
-    QUrl entryImageRemoteUrl(ImageType imageType, const QUuid& gameId) const;
-    const MacroResolver* macroResolver() const;
-
-    // Helper
-    QString resolveAppPathOverrides(const QString& appPath) const;
-    QString resolveExecSwaps(const QString& appPath, const QString& platform) const;
+    QDir platformLogosDirectory() const;
 };
 
 }

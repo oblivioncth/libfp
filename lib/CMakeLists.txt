@@ -14,6 +14,7 @@ ob_add_standard_library(${LIB_TARGET_NAME}
             fp-items.h
             fp-macro.h
             fp-playlistmanager.h
+            fp-toolkit.h
             settings/fp-config.h
             settings/fp-execs.h
             settings/fp-preferences.h
@@ -25,6 +26,7 @@ ob_add_standard_library(${LIB_TARGET_NAME}
         fp-macro.cpp
         fp-items.cpp
         fp-playlistmanager.cpp
+        fp-toolkit.cpp
         settings/fp-config.cpp
         settings/fp-execs.cpp
         settings/fp-preferences.cpp
