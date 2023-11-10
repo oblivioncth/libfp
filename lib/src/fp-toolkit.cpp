@@ -31,6 +31,8 @@ Toolkit::Toolkit(const Install& install, const Key&) :
     mDatapackLocalDir = mInstall.fullPath() + '/' + mInstall.preferences().dataPacksFolderPath;
     Q_ASSERT(mInstall.preferences().gameDataSources.contains(mInstall.MAIN_DATAPACK_SOURCE));
     mDatapackRemoteBase = mInstall.preferences().gameDataSources.value(mInstall.MAIN_DATAPACK_SOURCE).arguments.value(0);
+    if(mDatapackRemoteBase.back() == '/')
+        mDatapackRemoteBase.chop(1);
 }
 
 //-Class Functions------------------------------------------------------------------------------------------------
