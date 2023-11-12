@@ -28,7 +28,7 @@ Toolkit::Toolkit(const Install& install, const Key&) :
         mEntryRemoteLogoTemplate += IMAGE_COMPRESSED_URL_SUFFIX;
         mEntryRemoteScreenshotTemplate += IMAGE_COMPRESSED_URL_SUFFIX;
     }
-    mDatapackLocalDir = mInstall.fullPath() + '/' + mInstall.preferences().dataPacksFolderPath;
+    mDatapackLocalDir = mInstall.mRootDirectory.absoluteFilePath(mInstall.preferences().dataPacksFolderPath);
     Q_ASSERT(mInstall.preferences().gameDataSources.contains(mInstall.MAIN_DATAPACK_SOURCE));
     mDatapackRemoteBase = mInstall.preferences().gameDataSources.value(mInstall.MAIN_DATAPACK_SOURCE).arguments.value(0);
     if(mDatapackRemoteBase.back() == '/')
@@ -152,7 +152,7 @@ bool Toolkit::resolveExecSwaps(QString& appPath, const QString& platform) const
 bool Toolkit::resolveTrueAppPath(QString& appPath, const QString& platform, QHash<QString, QString> overrides, bool absolute) const
 {
     // If appPath is absolute, convert it to relative temporarily
-    QString fpPath = mInstall.fullPath();
+    QString fpPath = mInstall.mRootDirectory.absolutePath();
     bool isFpAbsolute = appPath.startsWith(fpPath);
     if(isFpAbsolute)
     {

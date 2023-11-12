@@ -270,7 +270,7 @@ const Services& Install::services() const { return mServices; }
 const Execs& Install::execs() const { return mExecs; }
 Daemon Install::outfittedDaemon() const { return mDaemon; }
 
-QString Install::fullPath() const { return mRootDirectory.absolutePath(); }
+QDir Install::dir() const { return mRootDirectory; }
 QDir Install::entryLogosDirectory() const { return mEntryLogosDirectory; }
 QDir Install::entryScreenshotsDirectory() const { return mEntryScreenshotsDirectory; }
 QDir Install::extrasDirectory() const { return mExtrasDirectory; }

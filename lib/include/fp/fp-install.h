@@ -186,7 +186,7 @@ public:
     Daemon outfittedDaemon() const;
 
     // Data access
-    QString fullPath() const;
+    QDir dir() const;
     QDir entryLogosDirectory() const;
     QDir entryScreenshotsDirectory() const;
     QDir extrasDirectory() const;
