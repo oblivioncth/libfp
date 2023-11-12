@@ -368,7 +368,7 @@ public:
     DbError entryUsesDataPack(bool& resultBuffer, const QUuid& gameId);
 
     // Helper
-    DbError getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId);
+    DbError getEntry(Entry& entry, const QUuid& entryId);
     DbError getGameData(GameData& data, const QUuid& gameId);
     DbError updateGameDataOnDiskState(QList<int> packIds, bool onDisk);
 

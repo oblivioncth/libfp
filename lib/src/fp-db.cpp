@@ -746,7 +746,7 @@ DbError Db::entryUsesDataPack(bool& resultBuffer, const QUuid& gameId)
     return DbError();
 }
 
-DbError Db::getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId)
+DbError Db::getEntry(Entry& entry, const QUuid& entryId)
 {
     // Find title
     Db::EntryFilter mainFilter{.type = Fp::Db::EntryType::PrimaryThenAddApp, .id = entryId};
