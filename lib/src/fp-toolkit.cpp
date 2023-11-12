@@ -72,6 +72,22 @@ Qx::Error Toolkit::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appIn
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
+std::optional<ServerDaemon> Toolkit::getServer(QString server) const
+{
+    if(server.isEmpty())
+        server = mInstall.mPreferences.server;
+
+    auto servers = mInstall.mServices.server;
+    if(servers.contains(server))
+        return servers[server];
+
+    for(const auto& s : qAsConst(servers))
+        if(s.aliases && s.aliases.value().contains(server))
+            return s;
+
+    return std::nullopt;
+}
+
 QString Toolkit::platformLogoPath(const QString& platform) const
 {
     QString path = mInstall.platformLogosDirectory().absoluteFilePath(platform + IMAGE_EXT);

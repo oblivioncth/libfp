@@ -14,6 +14,7 @@
 
 // Project Includes
 #include "fp/fp-items.h"
+#include "fp/settings/fp-services.h"
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -72,6 +73,9 @@ private:
     QString entryLocalLogoPath();
 
 public:
+    // Config
+    std::optional<ServerDaemon> getServer(QString server = {}) const;
+
     // Images
     QString platformLogoPath(const QString& platform) const;
     QString entryImageLocalPath(ImageType imageType, const QUuid& gameId) const;
