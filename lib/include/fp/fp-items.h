@@ -118,6 +118,30 @@ public:
     Game build();
 };
 
+class FP_FP_EXPORT GameDataParameters
+{
+//-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    bool mExtract;
+    QString mExtractedMarkerFile;
+    QString mServer;
+
+    QString mErrorStr;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    GameDataParameters(const QString& rawParameters);
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    bool isExtract() const;
+    QString extractedMarkerFile() const;
+    QString server() const;
+
+    bool hasError() const;
+    QString errorString() const;
+};
+
 class FP_FP_EXPORT GameData
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
@@ -137,7 +161,7 @@ private:
     bool mPresentOnDisk;
     QString mPath;
     quint32 mSize;
-    QString mParameters;
+    QString mRawParameters;
     QString mAppPath;
     QString mLaunchCommand;
 
@@ -158,7 +182,8 @@ public:
     bool presentOnDisk() const;
     QString path() const;
     quint32 size() const;
-    QString parameters() const;
+    QString rawParameters() const;
+    GameDataParameters parameters() const;
     QString appPath() const;
     QString launchCommand() const;
 };
@@ -184,7 +209,7 @@ public:
     Builder& wPresentOnDisk(QStringView rawBroken);
     Builder& wPath(const QString& path);
     Builder& wSize(QStringView rawSize);
-    Builder& wParameters(const QString& parameters);
+    Builder& wRawParameters(const QString& parameters);
     Builder& wAppPath(const QString& appPath);
     Builder& wLaunchCommand(const QString& launchCommand);
 

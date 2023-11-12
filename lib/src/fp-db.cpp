@@ -844,7 +844,7 @@ DbError Db::getGameData(GameData& data, const QUuid& gameId)
     fpGdb.wPresentOnDisk(searchResult.result.value(Fp::Db::Table_Game_Data::COL_PRES_ON_DISK).toString());
     fpGdb.wPath(searchResult.result.value(Fp::Db::Table_Game_Data::COL_PATH).toString());
     fpGdb.wSize(searchResult.result.value(Fp::Db::Table_Game_Data::COL_SIZE).toString());
-    fpGdb.wParameters(searchResult.result.value(Fp::Db::Table_Game_Data::COL_PARAM).toString());
+    fpGdb.wRawParameters(searchResult.result.value(Fp::Db::Table_Game_Data::COL_PARAM).toString());
     fpGdb.wAppPath(searchResult.result.value(Fp::Db::Table_Game_Data::COL_APP_PATH).toString());
     fpGdb.wLaunchCommand(searchResult.result.value(Fp::Db::Table_Game_Data::COL_LAUNCH_COMMAND).toString());
 

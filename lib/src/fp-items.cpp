@@ -1,6 +1,10 @@
 // Unit Include
 #include "fp/fp-items.h"
 
+// Qt Includes
+#include <QCommandLineParser>
+#include <QProcess>
+
 // Qx Includes
 #include <qx/core/qx-string.h>
 
@@ -96,6 +100,56 @@ Game::Builder& Game::Builder::wPlatformName(const QString& platformName) { mGame
 Game Game::Builder::build() { return mGameBlueprint; }
 
 //===============================================================================================================
+// GameDataParameters
+//===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+GameDataParameters::GameDataParameters(const QString& rawParameters)
+{
+    static const auto OPT_EXTRACT = QCommandLineOption(u"extract"_s);
+    static const auto OPT_EXTRACTED = QCommandLineOption(u"extracted"_s);
+    static const auto OPT_SERVER = QCommandLineOption(u"server"_s);
+
+    QCommandLineParser parser;
+    parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
+    Q_ASSERT(parser.addOptions({
+        OPT_EXTRACT,
+        OPT_EXTRACTED,
+        OPT_SERVER
+    }));
+
+    // Determine params
+    QStringList param{u"GDP"_s}; // Need to add dummy "executable name" for QCommandLineParser, it's ignored
+    param.append(QProcess::splitCommand(rawParameters));
+
+    // Parse
+    if(!parser.parse(param))
+        mErrorStr = parser.errorText();
+    QStringList posArgs = parser.positionalArguments();
+    if(!posArgs.isEmpty())
+    {
+        if(!mErrorStr.isEmpty())
+            mErrorStr += ' ';
+        mErrorStr += u"Unexpected positional arguments: {"_s + posArgs.join(',') + u"}."_s;
+    }
+
+    // Set values
+    mExtract = parser.isSet(OPT_EXTRACT);
+    mExtractedMarkerFile = parser.value(OPT_EXTRACTED);
+    mServer = parser.value(OPT_SERVER);
+}
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Public:
+bool GameDataParameters::isExtract() const { return mExtract; }
+QString GameDataParameters::extractedMarkerFile() const { return mExtractedMarkerFile; }
+QString GameDataParameters::server() const { return mServer; }
+
+bool GameDataParameters::hasError() const { return !mErrorStr.isEmpty(); }
+QString GameDataParameters::errorString() const { return mErrorStr; }
+
+//===============================================================================================================
 // GameData
 //===============================================================================================================
 
@@ -118,7 +172,8 @@ quint32 GameData::crc32() const { return mCrc32; }
 bool GameData::presentOnDisk() const { return mPresentOnDisk; }
 QString GameData::path() const { return mPath; }
 quint32 GameData::size() const { return mSize; }
-QString GameData::parameters() const { return mParameters; }
+QString GameData::rawParameters() const { return mRawParameters; }
+GameDataParameters GameData::parameters() const { return GameDataParameters(mRawParameters); }
 QString GameData::appPath() const { return mAppPath; }
 QString GameData::launchCommand() const { return mLaunchCommand; }
 
@@ -141,7 +196,7 @@ GameData::Builder& GameData::Builder::wCrc32(QStringView rawCrc32) { mGameDataBl
 GameData::Builder& GameData::Builder::wPresentOnDisk(QStringView rawBroken) { mGameDataBlueprint.mPresentOnDisk = rawBroken.toInt() != 0; return *this; }
 GameData::Builder& GameData::Builder::wPath(const QString& path) { mGameDataBlueprint.mPath = path; return *this; }
 GameData::Builder& GameData::Builder::wSize(QStringView rawSize) { mGameDataBlueprint.mSize = rawSize.toInt(); return *this; }
-GameData::Builder& GameData::Builder::wParameters(const QString& parameters) { mGameDataBlueprint.mParameters = parameters; return *this; }
+GameData::Builder& GameData::Builder::wRawParameters(const QString& parameters) { mGameDataBlueprint.mRawParameters = parameters; return *this; }
 GameData::Builder& GameData::Builder::wAppPath(const QString& appPath) { mGameDataBlueprint.mAppPath = appPath; return *this; }
 GameData::Builder& GameData::Builder::wLaunchCommand(const QString& launchCommand) { mGameDataBlueprint.mLaunchCommand = launchCommand; return *this; }
 
