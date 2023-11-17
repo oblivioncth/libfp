@@ -108,8 +108,8 @@ Game Game::Builder::build() { return mGameBlueprint; }
 GameDataParameters::GameDataParameters(const QString& rawParameters)
 {
     static const auto OPT_EXTRACT = QCommandLineOption(u"extract"_s);
-    static const auto OPT_EXTRACTED = QCommandLineOption(u"extracted"_s);
-    static const auto OPT_SERVER = QCommandLineOption(u"server"_s);
+    static const auto OPT_EXTRACTED = QCommandLineOption(u"extracted"_s, {}, u"extracted"_s); // Takes value
+    static const auto OPT_SERVER = QCommandLineOption(u"server"_s, {}, u"server"_s); // Takes value
 
     QCommandLineParser parser;
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
