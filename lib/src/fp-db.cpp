@@ -746,7 +746,7 @@ DbError Db::entryUsesDataPack(bool& resultBuffer, const QUuid& gameId)
     return DbError();
 }
 
-DbError Db::getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId)
+DbError Db::getEntry(Entry& entry, const QUuid& entryId)
 {
     // Find title
     Db::EntryFilter mainFilter{.type = Fp::Db::EntryType::PrimaryThenAddApp, .id = entryId};
@@ -828,7 +828,7 @@ DbError Db::getGameData(GameData& data, const QUuid& gameId)
     if(searchResult.size == 0)
         return DbError(); // Game doesn't have data pack
     else if(searchResult.size > 1)
-        qWarning("Entry with more than one data pack, using most recent.");
+        qWarning("Entry %s has more than one data pack, using most recent.", qPrintable(gameId.toString(QUuid::WithoutBraces)));
 
     // Advance result to first record
     searchResult.result.next();
@@ -844,7 +844,7 @@ DbError Db::getGameData(GameData& data, const QUuid& gameId)
     fpGdb.wPresentOnDisk(searchResult.result.value(Fp::Db::Table_Game_Data::COL_PRES_ON_DISK).toString());
     fpGdb.wPath(searchResult.result.value(Fp::Db::Table_Game_Data::COL_PATH).toString());
     fpGdb.wSize(searchResult.result.value(Fp::Db::Table_Game_Data::COL_SIZE).toString());
-    fpGdb.wParameters(searchResult.result.value(Fp::Db::Table_Game_Data::COL_PARAM).toString());
+    fpGdb.wRawParameters(searchResult.result.value(Fp::Db::Table_Game_Data::COL_PARAM).toString());
     fpGdb.wAppPath(searchResult.result.value(Fp::Db::Table_Game_Data::COL_APP_PATH).toString());
     fpGdb.wLaunchCommand(searchResult.result.value(Fp::Db::Table_Game_Data::COL_LAUNCH_COMMAND).toString());
 
@@ -853,7 +853,7 @@ DbError Db::getGameData(GameData& data, const QUuid& gameId)
     return DbError();
 }
 
-DbError Db::updateGameDataOnDiskState(int packId, bool onDisk)
+DbError Db::updateGameDataOnDiskState(QList<int> packIds, bool onDisk)
 {
     // Get database
     QSqlDatabase fpDb;
@@ -862,8 +862,9 @@ DbError Db::updateGameDataOnDiskState(int packId, bool onDisk)
         return DbError::fromSqlError(dbError);
 
     // Make query
+    QString filter = Qx::String::join(packIds, [](int i){ return QString::number(i); }, u","_s);
     QString dataUpdateCommand = u"UPDATE "_s + Table_Game_Data::NAME + u" SET "_s + Table_Game_Data::COL_PRES_ON_DISK + u" = "_s + QString::number(onDisk) +
-                                u" WHERE "_s + Table_Game_Data::COL_ID + u" = "_s + QString::number(packId);
+                                u" WHERE "_s + Table_Game_Data::COL_ID + u" IN ("_s + filter + ')';
 
     QSqlQuery packUpdateQuery(fpDb);
     packUpdateQuery.setForwardOnly(true);
@@ -874,11 +875,10 @@ DbError Db::updateGameDataOnDiskState(int packId, bool onDisk)
         return DbError::fromSqlError(packUpdateQuery.lastError());
 
     // Check that expected count was affected
-    int rows = packUpdateQuery.numRowsAffected();
-    if(rows < 1)
-        return DbError(DbError::UpdateIneffective, Table_Game_Data::NAME + u" SET "_s + Table_Game_Data::COL_PRES_ON_DISK);
-    else if(rows > 1)
-        return DbError(DbError::UpdateTooMany, Table_Game_Data::NAME + u" SET "_s + Table_Game_Data::COL_PRES_ON_DISK);
+    int expected = packIds.size();
+    int affected = packUpdateQuery.numRowsAffected();
+    if(affected != expected)
+        return DbError(DbError::UpdateRowMismatch, Table_Game_Data::NAME + u" SET "_s + Table_Game_Data::COL_PRES_ON_DISK, u"%1 instead of %2"_s.arg(affected, expected));
 
     return DbError();
 }

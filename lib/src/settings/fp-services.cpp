@@ -21,6 +21,7 @@ QString keygen<QString, Fp::ServerDaemon>(const Fp::ServerDaemon& value)
 // Json struct parsing implementation
 QX_JSON_STRUCT_OUTSIDE(Fp::ServerDaemon,
     name,
+    aliases,
     path,
     filename,
     arguments,

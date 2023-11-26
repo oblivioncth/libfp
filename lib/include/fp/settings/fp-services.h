@@ -17,6 +17,7 @@ namespace Fp
 struct FP_FP_EXPORT ServerDaemon
 {
     QString name;
+    std::optional<QStringList> aliases;
     QString path;
     QString filename;
     QStringList arguments;

@@ -32,8 +32,7 @@ public:
         InvalidSchema = 2,
         IdCollision = 3,
         IncompleteSearch = 4,
-        UpdateIneffective = 5,
-        UpdateTooMany = 6
+        UpdateRowMismatch = 5
     };
 
 //-Class Variables-------------------------------------------------------------
@@ -44,8 +43,7 @@ private:
         {InvalidSchema, u"The schema of the database was different than expected."_s},
         {IdCollision, u"A duplicate of a unique ID was found."_s},
         {IncompleteSearch, u"A data search could not be completed."_s},
-        {UpdateIneffective, u"An update statement unexpectedly affected 0 rows."_s},
-        {UpdateTooMany, u"An update statement affected more rows than expected."_s}
+        {UpdateRowMismatch, u"An update statement affected a different number of rows than expected."_s},
     };
 
 //-Instance Variables-------------------------------------------------------------
@@ -370,9 +368,9 @@ public:
     DbError entryUsesDataPack(bool& resultBuffer, const QUuid& gameId);
 
     // Helper
-    DbError getEntry(std::variant<Game, AddApp>& entry, const QUuid& entryId);
+    DbError getEntry(Entry& entry, const QUuid& entryId);
     DbError getGameData(GameData& data, const QUuid& gameId);
-    DbError updateGameDataOnDiskState(int packId, bool onDisk);
+    DbError updateGameDataOnDiskState(QList<int> packIds, bool onDisk);
 
 //-Slots ------------------------------------------------------------------------------------------------------
 private:

@@ -3,10 +3,32 @@
 
 // Qx Includes
 #include <qx/utility/qx-helpers.h>
-#include <qx/core/qx-genericerror.h>
 
 namespace Fp
 {
+//===============================================================================================================
+// InstallError
+//===============================================================================================================
+
+//-Constructor-------------------------------------------------------------
+//Private:
+InstallError::InstallError(Type t, const QString& s) :
+    mType(t),
+    mSpecific(s)
+{}
+
+//-Instance Functions-------------------------------------------------------------
+//Public:
+bool InstallError::isValid() const { return mType != NoError; }
+QString InstallError::specific() const { return mSpecific; }
+InstallError::Type InstallError::type() const { return mType; }
+
+//Private:
+Qx::Severity InstallError::deriveSeverity() const { return Qx::Critical; }
+quint32 InstallError::deriveValue() const { return mType; }
+QString InstallError::derivePrimary() const { return ERR_STRINGS.value(mType); }
+QString InstallError::deriveSecondary() const { return mSpecific; }
+
 //===============================================================================================================
 // INSTALL
 //===============================================================================================================
@@ -46,7 +68,7 @@ Install::Install(QString installPath, bool preloadPlaylists) :
         QFileInfo fileInfo(*file);
         if(!fileInfo.exists() || !fileInfo.isFile())
         {
-            mError = Qx::GenericError(Qx::Critical, 1, ERR_FILE_MISSING, fileInfo.filePath());
+            mError = InstallError(InstallError::FileMissing, fileInfo.filePath());
             return;
         }
     }
@@ -78,10 +100,17 @@ Install::Install(QString installPath, bool preloadPlaylists) :
             return;
     }
 
+    // Ensure expected datapack source exists
+    if(!mPreferences.gameDataSources.contains(MAIN_DATAPACK_SOURCE))
+    {
+        mError = InstallError(InstallError::DatapackSourceMissing, MAIN_DATAPACK_SOURCE);
+        return;
+    }
+
     // Note daemon
     if(mServices.daemon.size() != 1)
     {
-        mError = Qx::GenericError(Qx::Critical, 11101, "The number of configured daemons differs from the expected amount", "1");
+        mError = InstallError(InstallError::DaemonCountMismatch, "1");
         return;
     }
 
@@ -106,6 +135,9 @@ Install::Install(QString installPath, bool preloadPlaylists) :
             return;
     }
 
+    // Add toolkit
+    mToolkit = new Toolkit(*this, {});
+
     // Give the OK
     mValid = true;
     validityGuard.dismiss();
@@ -121,41 +153,8 @@ Install::~Install()
         delete mDatabase;
     if(mPlaylistManager)
         delete mPlaylistManager;
-}
-
-//-Class Functions------------------------------------------------------------------------------------------------
-//Private:
-QString Install::standardImageSubPath(QUuid gameId)
-{
-    QString gameIdString = gameId.toString(QUuid::WithoutBraces);
-    return gameIdString.left(2) + '/' + gameIdString.mid(2, 2) + '/' + gameIdString;
-}
-
-//Public:
-Qx::Error Install::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo)
-{
-    // Reset buffer
-    involvesBuffer = false;
-
-    if(appInfo.fileName().contains(SECURE_PLAYER_INFO.baseName()))
-    {
-        involvesBuffer = true;
-        return Qx::Error();
-    }
-    else if(appInfo.suffix().compare(u"bat"_s, Qt::CaseInsensitive) == 0)
-    {
-        // Check if bat uses secure player
-        QFile batFile(appInfo.absoluteFilePath());
-        Qx::IoOpReport readReport = Qx::fileContainsString(involvesBuffer, batFile, SECURE_PLAYER_INFO.baseName());
-
-        // Check for read errors
-        if(readReport.isFailure())
-            return Qx::Error(readReport).setSeverity(Qx::Critical);
-        else
-            return Qx::Error();
-    }
-    else
-        return Qx::Error();
+    if(mToolkit)
+        delete mToolkit;
 }
 
 //-Instance Functions------------------------------------------------------------------------------------------------
@@ -204,6 +203,8 @@ void Install::nullify()
         qxDelete(mDatabase);
     if(mPlaylistManager)
         qxDelete(mPlaylistManager);
+    if(mToolkit)
+        qxDelete(mToolkit);
 
     // Settings
     mConfig = {};
@@ -260,6 +261,8 @@ QString Install::launcherChecksum() const
 
 Db* Install::database() { return mDatabase; }
 PlaylistManager* Install::playlistManager() { return mPlaylistManager; }
+const MacroResolver* Install::macroResolver() const { return mMacroResolver; }
+const Toolkit* Install::toolkit() const { return mToolkit; }
 
 const Config& Install::config() const { return mConfig; }
 const Preferences& Install::preferences() const { return mPreferences; }
@@ -267,71 +270,10 @@ const Services& Install::services() const { return mServices; }
 const Execs& Install::execs() const { return mExecs; }
 Daemon Install::outfittedDaemon() const { return mDaemon; }
 
-QString Install::fullPath() const { return mRootDirectory.absolutePath(); }
+QDir Install::dir() const { return mRootDirectory; }
 QDir Install::entryLogosDirectory() const { return mEntryLogosDirectory; }
 QDir Install::entryScreenshotsDirectory() const { return mEntryScreenshotsDirectory; }
 QDir Install::extrasDirectory() const { return mExtrasDirectory; }
-
-QString Install::platformLogoPath(const QString& platform)
-{
-    QString path = mPlatformLogosDirectory.absoluteFilePath(platform + IMAGE_EXT);
-    return QFile::exists(path) ? path : QString();
-}
-
-QString Install::entryImageLocalPath(ImageType imageType, const QUuid& gameId) const
-{
-    // Defaults to using compression if the setting isn't present
-    const QDir& sourceDir = imageType == ImageType::Logo ? mEntryLogosDirectory : mEntryScreenshotsDirectory;
-    QString localSubPath = standardImageSubPath(gameId) + IMAGE_EXT;
-
-    return sourceDir.absolutePath() + '/' + localSubPath;
-}
-
-QUrl Install::entryImageRemoteUrl(ImageType imageType, const QUuid& gameId) const
-{
-    // Defaults to using compression if the setting isn't present
-    const QString typeFolder = (imageType == ImageType::Logo ? LOGOS_FOLDER_NAME : SCREENSHOTS_FOLDER_NAME);
-    bool compressed = !mPreferences.onDemandImagesCompressed.has_value() || mPreferences.onDemandImagesCompressed.value();
-    QString remoteSubPath = standardImageSubPath(gameId) + IMAGE_EXT;
-
-    if(compressed)
-        remoteSubPath += IMAGE_COMPRESSED_URL_SUFFIX;
-
-    return QUrl(mPreferences.onDemandBaseUrl + typeFolder + '/' + remoteSubPath);
-}
-
-const MacroResolver* Install::macroResolver() const { return mMacroResolver; }
-
-QString Install::resolveAppPathOverrides(const QString& appPath) const
-{
-    // Check if path has an associated override
-    for(const AppPathOverride& override : qAsConst(mPreferences.appPathOverrides))
-    {
-        if(override.path == appPath && override.enabled)
-            return override.override;
-    }
-
-    return appPath;
-}
-
-QString Install::resolveExecSwaps(const QString& appPath, const QString& platform) const
-{
-    // Get swap preference
-    bool preferNative = mPreferences.nativePlatforms.contains(platform);
-
-    // Check if path has an associated swap
-    for(const Exec& swap : qAsConst(mExecs.execs))
-    {
-        if(swap.win32 == appPath)
-        {
-            if(preferNative && !swap.linux.isEmpty())
-                return swap.linux;
-            else if(swap.wine.has_value() && !swap.wine->isEmpty())
-                return swap.wine.value();
-        }
-    }
-
-    return appPath;
-}
+QDir Install::platformLogosDirectory() const { return mPlatformLogosDirectory; }
 
 }
