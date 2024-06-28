@@ -43,6 +43,8 @@ QString Toolkit::standardImageSubPath(QUuid gameId)
     return gameIdString.left(2) + '/' + gameIdString.mid(2, 2) + '/' + gameIdString;
 }
 
+QString Toolkit::datapackFilename(const Fp::GameData& gameData) { return gameData.gameId().toString(QUuid::WithoutBraces) + '-' + QString::number(gameData.dateAdded().toMSecsSinceEpoch()) + u".zip"_s; }
+
 //Public:
 Qx::Error Toolkit::appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo)
 {
@@ -185,9 +187,9 @@ bool Toolkit::resolveTrueAppPath(QString& appPath, const QString& platform, QHas
     return swapped;
 }
 
-QString Toolkit::datapackPath(const Fp::GameData& gameData) const { return mDatapackLocalDir.absoluteFilePath(gameData.path()); }
+QString Toolkit::datapackPath(const Fp::GameData& gameData) const { return mDatapackLocalDir.absoluteFilePath(datapackFilename(gameData)); }
 
-QUrl Toolkit::datapackUrl(const Fp::GameData& gameData) const { return mDatapackRemoteBase + '/' + gameData.path(); }
+QUrl Toolkit::datapackUrl(const Fp::GameData& gameData) const { return mDatapackRemoteBase + '/' + datapackFilename(gameData); }
 
 bool Toolkit::datapackIsPresent(const Fp::GameData& gameData) const
 {
