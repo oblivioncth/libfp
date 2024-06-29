@@ -29,10 +29,14 @@ Toolkit::Toolkit(const Install& install, const Key&) :
         mEntryRemoteScreenshotTemplate += IMAGE_COMPRESSED_URL_SUFFIX;
     }
     mDatapackLocalDir = mInstall.mRootDirectory.absoluteFilePath(mInstall.preferences().dataPacksFolderPath);
-    Q_ASSERT(mInstall.preferences().gameDataSources.contains(mInstall.MAIN_DATAPACK_SOURCE));
-    mDatapackRemoteBase = mInstall.preferences().gameDataSources.value(mInstall.MAIN_DATAPACK_SOURCE).arguments.value(0);
-    if(mDatapackRemoteBase.back() == '/')
-        mDatapackRemoteBase.chop(1);
+    if(mInstall.preferences().gameDataSources)
+    {
+        Q_ASSERT(mInstall.preferences().gameDataSources->contains(mInstall.MAIN_DATAPACK_SOURCE));
+        mDatapackRemoteBase = mInstall.preferences().gameDataSources->value(mInstall.MAIN_DATAPACK_SOURCE).arguments.value(0);
+
+        if(mDatapackRemoteBase.back() == '/')
+            mDatapackRemoteBase.chop(1);
+    }
 }
 
 //-Class Functions------------------------------------------------------------------------------------------------
@@ -187,9 +191,11 @@ bool Toolkit::resolveTrueAppPath(QString& appPath, const QString& platform, QHas
     return swapped;
 }
 
+bool Toolkit::canDownloadDatapacks() const { return !mDatapackRemoteBase.isEmpty(); }
+
 QString Toolkit::datapackPath(const Fp::GameData& gameData) const { return mDatapackLocalDir.absoluteFilePath(datapackFilename(gameData)); }
 
-QUrl Toolkit::datapackUrl(const Fp::GameData& gameData) const { return mDatapackRemoteBase + '/' + datapackFilename(gameData); }
+QUrl Toolkit::datapackUrl(const Fp::GameData& gameData) const { return canDownloadDatapacks() ? mDatapackRemoteBase + '/' + datapackFilename(gameData) : QUrl(); }
 
 bool Toolkit::datapackIsPresent(const Fp::GameData& gameData) const
 {

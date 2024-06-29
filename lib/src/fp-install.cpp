@@ -100,8 +100,8 @@ Install::Install(QString installPath, bool preloadPlaylists) :
             return;
     }
 
-    // Ensure expected datapack source exists
-    if(!mPreferences.gameDataSources.contains(MAIN_DATAPACK_SOURCE))
+    // Ensure expected datapack source exists on Infinity
+    if(edition() == Edition::Infinity && (!mPreferences.gameDataSources || !mPreferences.gameDataSources->contains(MAIN_DATAPACK_SOURCE)))
     {
         mError = InstallError(InstallError::DatapackSourceMissing, MAIN_DATAPACK_SOURCE);
         return;

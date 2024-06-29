@@ -78,7 +78,8 @@ class FP_FP_EXPORT Install
 {
     friend class Toolkit;
 //-Class Enums---------------------------------------------------------------------------------------------------
-enum class Edition {Ultimate, Infinity, Core};
+public:
+    enum class Edition {Ultimate, Infinity, Core};
 
 //-Class Variables-----------------------------------------------------------------------------------------------
 public: // Ugh
