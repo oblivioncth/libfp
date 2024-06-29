@@ -64,10 +64,12 @@ public:
  //-Class Functions-----------------------------------------------------------------------------------------------
 private:
     static QString standardImageSubPath(QUuid gameId);
-    static QString datapackFilename(const Fp::GameData& gameData);
 
 public:
     static Qx::Error appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo);
+
+    // Datapacks
+    static QString datapackFilename(const Fp::GameData& gameData);
 
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
