@@ -145,6 +145,18 @@ public:
                                                       COL_APP_PATH, COL_LAUNCH_COMMAND};
     };
 
+    class Table_Game_Redirect
+    {
+    public:
+        static inline const QString NAME = u"game_redirect"_s;
+
+        static inline const QString COL_ID = u"id"_s;
+        static inline const QString COL_SOURCE_ID = u"sourceId"_s;
+
+        static inline const QStringList COLUMN_LIST = {COL_ID, COL_SOURCE_ID};
+    };
+
+
     class Table_Add_App
     {
     public:
@@ -291,6 +303,7 @@ private:
         {Db::Table_Tag::NAME, Db::Table_Tag::COLUMN_LIST},
         {Db::Table_Tag_Alias::NAME, Db::Table_Tag_Alias::COLUMN_LIST},
         {Db::Table_Tag_Category::NAME, Db::Table_Tag_Category::COLUMN_LIST},
+        {Db::Table_Game_Redirect::NAME, Db::Table_Game_Redirect::COLUMN_LIST},
     };
     static inline const QString GENERAL_QUERY_SIZE_COMMAND = u"COUNT(1)"_s;
 
@@ -315,6 +328,7 @@ private:
     QStringList mPlatformNames;
     QStringList mPlaylistList;
     QMap<int, TagCategory> mTagMap; // Order matters for display in tag selector
+    QHash<QUuid, QUuid> mGameRedirects;
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -341,6 +355,7 @@ private:
     QSqlError checkDatabaseForRequiredColumns(QSet<QString>& missingColumsBuffer);
     QSqlError populateAvailableItems();
     QSqlError populateTags();
+    QSqlError populateGameRedirects();
 
 public:
     // Validity
@@ -371,6 +386,7 @@ public:
     DbError getEntry(Entry& entry, const QUuid& entryId);
     DbError getGameData(GameData& data, const QUuid& gameId);
     DbError updateGameDataOnDiskState(QList<int> packIds, bool onDisk);
+    QUuid handleGameRedirects(const QUuid& gameId);
 
 //-Slots ------------------------------------------------------------------------------------------------------
 private:
