@@ -100,8 +100,13 @@ Install::Install(QString installPath, bool preloadPlaylists) :
             return;
     }
 
+    // Read version info (assumes file exists from earlier, only read first line in case there is a trailing newline)
+    QString verTxtStr;
+    Qx::readTextFromFile(verTxtStr, *mVersionFile, Qx::Start, Qx::TextPos(Qx::First, Qx::Last));
+    mVersionInfo = std::make_shared<VersionInfo>(verTxtStr);
+
     // Ensure expected datapack source exists on Infinity
-    if(edition() == Edition::Infinity && (!mPreferences.gameDataSources || !mPreferences.gameDataSources->contains(MAIN_DATAPACK_SOURCE)))
+    if(!mVersionInfo->isNull() && mVersionInfo->edition() == VersionInfo::Infinity && (!mPreferences.gameDataSources || !mPreferences.gameDataSources->contains(MAIN_DATAPACK_SOURCE)))
     {
         mError = InstallError(InstallError::DatapackSourceMissing, MAIN_DATAPACK_SOURCE);
         return;
@@ -197,6 +202,7 @@ void Install::nullify()
     mPreferencesJsonFile.reset();
     mServicesJsonFile.reset();
     mVersionFile.reset();
+    mVersionInfo.reset();
     if(mMacroResolver)
         qxDelete(mMacroResolver);
     if(mDatabase)
@@ -216,40 +222,7 @@ void Install::nullify()
 bool Install::isValid() const { return mValid; }
 Qx::Error Install::error() const { return mError; }
 
-Install::Edition Install::edition() const
-{
-    QString nameVer = nameVersionString();
-
-    return nameVer.contains(u"ultimate"_s, Qt::CaseInsensitive) ? Edition::Ultimate :
-           nameVer.contains(u"infinity"_s, Qt::CaseInsensitive) ? Edition::Infinity :
-                                                               Edition::Core;
-}
-
-QString Install::nameVersionString() const
-{
-    // Check version file (only read first line in case there is a trailing newline character)
-    QString readVersion = QString();
-    if(mVersionFile->exists())
-        Qx::readTextFromFile(readVersion, *mVersionFile, Qx::Start, Qx::TextPos(Qx::First, Qx::Last));
-
-    return readVersion;
-}
-
-Qx::VersionNumber Install::version() const
-{
-    QString nameVer = nameVersionString();
-    QRegularExpressionMatch versionMatch = VERSION_NUMBER_REGEX.match(nameVer);
-
-    if(versionMatch.hasMatch())
-    {
-        Qx::VersionNumber fpVersion = Qx::VersionNumber::fromString(versionMatch.captured(u"version"_s));
-        if(!fpVersion.isNull())
-            return fpVersion;
-    }
-
-    qWarning("Could not determine flashpoint version number!");
-    return Qx::VersionNumber();
-}
+std::shared_ptr<Install::VersionInfo> Install::versionInfo() const { return mVersionInfo; }
 
 QString Install::launcherChecksum() const
 {
@@ -275,5 +248,43 @@ QDir Install::entryLogosDirectory() const { return mEntryLogosDirectory; }
 QDir Install::entryScreenshotsDirectory() const { return mEntryScreenshotsDirectory; }
 QDir Install::extrasDirectory() const { return mExtrasDirectory; }
 QDir Install::platformLogosDirectory() const { return mPlatformLogosDirectory; }
+
+//===============================================================================================================
+// Install::VersionInfo
+//===============================================================================================================
+
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+Install::VersionInfo::VersionInfo(const QString& verTxtStr) :
+    mEdition(Edition::Core)
+{
+    QRegularExpressionMatch rem = VER_TXT_REGEX.match(verTxtStr);
+    if(!rem.hasMatch() ||
+       !(rem.hasCaptured(VER_TXT_GRP_EDITIONA) || rem.hasCaptured(VER_TXT_GRP_EDITIONB)) ||
+       !rem.hasCaptured(VER_TXT_GRP_VERSION) ||
+       !rem.hasCaptured(VER_TXT_GRP_NICK))
+    {
+        qWarning("Unknown version.txt format!");
+        return;
+    }
+
+    mFullString = verTxtStr;
+    QString edStr = rem.hasCaptured(VER_TXT_GRP_EDITIONA) ? rem.captured(VER_TXT_GRP_EDITIONA) : rem.captured(VER_TXT_GRP_EDITIONB);
+    mEdition = edStr.contains(u"ultimate"_s, Qt::CaseInsensitive) ? Edition::Ultimate :
+               edStr.contains(u"infinity"_s, Qt::CaseInsensitive) ? Edition::Infinity :
+                                                                    Edition::Core;
+    mVersion = Qx::VersionNumber::fromString(rem.captured(VER_TXT_GRP_VERSION));
+    Q_ASSERT(!mVersion.isNull()); // Regex should fail before this
+    mNickname = rem.captured(VER_TXT_GRP_NICK);
+}
+
+//-Instance Functions------------------------------------------------------------------------------------------------------
+//Public:
+bool Install::VersionInfo::isNull() const { return mFullString.isEmpty(); }
+QString Install::VersionInfo::fullString() const { return mFullString; }
+Install::VersionInfo::Edition Install::VersionInfo::edition() const { return mEdition; }
+Qx::VersionNumber Install::VersionInfo::version() const { return mVersion; }
+QString Install::VersionInfo::nickname() const { return mNickname; }
 
 }
