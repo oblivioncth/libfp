@@ -197,7 +197,7 @@ class Install::VersionInfo
 {
 //-Class Enums---------------------------------------------------------------------------------------------------
 public:
-    enum Edition {Ultimate, Infinity, Core};
+    enum Edition { Ultimate, Infinity, Linux, Core, Unknown };
 
 //-Class Variables
 private:
@@ -208,9 +208,9 @@ private:
     static inline const QString VER_TXT_GRP_NICK = u"n"_s;
     static inline const QRegularExpression VER_TXT_REGEX = QRegularExpression(
         uR"([fF]lashpoint\s+(?<)"_s + VER_TXT_GRP_EDITIONA +
-        uR"(>[a-zA-Z]+)?\s*(?<)"_s + VER_TXT_GRP_VERSION +
+        uR"(>[a-zA-Z ]+)?\s*(?<)"_s + VER_TXT_GRP_VERSION +
         uR"(>[0-9]+(?:\.[0-9]+)?)?\s*(?<)"_s + VER_TXT_GRP_EDITIONB +
-        uR"(>[a-zA-Z]+)?\s+-\s+(?<)"_s + VER_TXT_GRP_NICK +
+        uR"(>[a-zA-Z ]+)?\s+-\s+(?<)"_s + VER_TXT_GRP_NICK +
         uR"(>.*))"_s
     );
 

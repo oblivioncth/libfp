@@ -106,7 +106,10 @@ Install::Install(QString installPath, bool preloadPlaylists) :
     mVersionInfo = std::make_shared<VersionInfo>(verTxtStr);
 
     // Ensure expected datapack source exists on Infinity
-    if(!mVersionInfo->isNull() && mVersionInfo->edition() == VersionInfo::Infinity && (!mPreferences.gameDataSources || !mPreferences.gameDataSources->contains(MAIN_DATAPACK_SOURCE)))
+    bool onlineEdition = !mVersionInfo->isNull() && (mVersionInfo->edition() == VersionInfo::Infinity || mVersionInfo->edition() == VersionInfo::Linux);
+    bool canDownload = mPreferences.gameDataSources && mPreferences.gameDataSources->contains(MAIN_DATAPACK_SOURCE);
+    // Could use Toolkit::canDownloadDatapacks() here, but we need to check for the main datasource specifically since that's all we're setup to handle
+    if(onlineEdition && !canDownload)
     {
         mError = InstallError(InstallError::DatapackSourceMissing, MAIN_DATAPACK_SOURCE);
         return;
@@ -257,7 +260,7 @@ QDir Install::platformLogosDirectory() const { return mPlatformLogosDirectory; }
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 Install::VersionInfo::VersionInfo(const QString& verTxtStr) :
-    mEdition(Edition::Core)
+    mEdition(Edition::Unknown)
 {
     QRegularExpressionMatch rem = VER_TXT_REGEX.match(verTxtStr);
     if(!rem.hasMatch() ||
@@ -273,7 +276,9 @@ Install::VersionInfo::VersionInfo(const QString& verTxtStr) :
     QString edStr = rem.hasCaptured(VER_TXT_GRP_EDITIONA) ? rem.captured(VER_TXT_GRP_EDITIONA) : rem.captured(VER_TXT_GRP_EDITIONB);
     mEdition = edStr.contains(u"ultimate"_s, Qt::CaseInsensitive) ? Edition::Ultimate :
                edStr.contains(u"infinity"_s, Qt::CaseInsensitive) ? Edition::Infinity :
-                                                                    Edition::Core;
+               edStr.contains(u"core"_s, Qt::CaseInsensitive) ? Edition::Core :
+               edStr.contains(u"linux"_s, Qt::CaseInsensitive) ? Edition::Linux :
+                                                                 Edition::Unknown;
     mVersion = Qx::VersionNumber::fromString(rem.captured(VER_TXT_GRP_VERSION));
     Q_ASSERT(!mVersion.isNull()); // Regex should fail before this
     mNickname = rem.captured(VER_TXT_GRP_NICK);
