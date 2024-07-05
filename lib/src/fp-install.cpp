@@ -49,8 +49,6 @@ Install::Install(QString installPath, bool preloadPlaylists) :
     mVersionFile = std::make_unique<QFile>(installPath + u"/"_s + VER_TXT_PATH);
     mExtrasDirectory = QDir(installPath + u"/"_s + EXTRAS_PATH);
 
-    // Create macro resolver
-    mMacroResolver = new MacroResolver(mRootDirectory.absolutePath(), {});
 
     //-Check install validity--------------------------------------------
 
@@ -73,11 +71,28 @@ Install::Install(QString installPath, bool preloadPlaylists) :
         }
     }
 
-    // Get settings
+    // Get config
     ConfigReader configReader(&mConfig, mConfigJsonFile);
     if((mError = configReader.readInto()).isValid())
         return;
 
+    /* Create macro resolver
+     *
+     * NOTE: Macro resolver essentially just needs the FP root folder, but technically it's suppsoed to source this from
+     * the value in config.json, which can be different than the actual root. Sometimes this causes shenanigans as the
+     * value in config.json will be relative and therefore specific to the Flashpoint launcher folder, but the FP team
+     * designs the releases knowing this so trusting that value is generally best.
+     *
+     * FIXME: The comments in the Launcher source make it clear that the <fpPath> macro is supposed to resolve to the
+     * fpPath value in config.json, resolved to an absolute path; however, currently it does not actually resolve it to
+     * an absolute path and substitutes it verbatim. I'd prefer to not do this, but due to a quirk realted to FlashpointGameServer
+     * not accepting absolute paths for it's command line arguments, we must respect that behavior for things to work.
+     * As soon as absolute paths are possible again, switch back to them.
+     */
+    //mMacroResolver = new MacroResolver(mRootDirectory.absolutePath(), {});
+    mMacroResolver = new MacroResolver(mConfig.flashpointPath, {});
+
+    // Get other settings
     PreferencesReader prefReader(&mPreferences, mPreferencesJsonFile);
     if((mError = prefReader.readInto()).isValid())
         return;
