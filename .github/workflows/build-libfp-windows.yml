@@ -44,7 +44,7 @@ jobs:
         path: ${{ env.qt_install_dir }}
         credentials: ${{ secrets.qt_ffynnon_cred }}
     - name: Checkout libfp
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: ${{ env.libfp_src_suffix }}
         fetch-depth: 0 # Required for verbose versioning to work correctly
@@ -70,7 +70,7 @@ jobs:
         $artifact_name=$((Get-ChildItem -Path "${{ env.libfp_package_path }}" -Filter *.zip)[0].BaseName)
         echo "current_artifact_name=$artifact_name" >> $Env:GITHUB_ENV
     - name: Upload libfp build artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.current_artifact_name }}
         path: ${{ env.libfp_install_path }}
