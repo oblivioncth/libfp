@@ -113,11 +113,12 @@ GameDataParameters::GameDataParameters(const QString& rawParameters)
 
     QCommandLineParser parser;
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
-    Q_ASSERT(parser.addOptions({
+    bool optAdd = parser.addOptions({
         OPT_EXTRACT,
         OPT_EXTRACTED,
         OPT_SERVER
-    }));
+    });
+    Q_ASSERT(optAdd);
 
     // Determine params
     QStringList param{u"GDP"_s}; // Need to add dummy "executable name" for QCommandLineParser, it's ignored
