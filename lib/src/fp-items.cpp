@@ -113,11 +113,12 @@ GameDataParameters::GameDataParameters(const QString& rawParameters)
 
     QCommandLineParser parser;
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
-    Q_ASSERT(parser.addOptions({
+    bool optAdd = parser.addOptions({
         OPT_EXTRACT,
         OPT_EXTRACTED,
         OPT_SERVER
-    }));
+    });
+    Q_ASSERT(optAdd);
 
     // Determine params
     QStringList param{u"GDP"_s}; // Need to add dummy "executable name" for QCommandLineParser, it's ignored
@@ -190,7 +191,17 @@ GameData::Builder::Builder() {}
 GameData::Builder& GameData::Builder::wId(QStringView rawId) { mGameDataBlueprint.mId = rawId.toInt(); return *this; }
 GameData::Builder& GameData::Builder::wGameId(QStringView rawId) { mGameDataBlueprint.mGameId = QUuid(rawId); return *this; }
 GameData::Builder& GameData::Builder::wTitle(const QString& title) { mGameDataBlueprint.mTitle = title; return *this; }
-GameData::Builder& GameData::Builder::wDateAdded(QStringView rawDateAdded) { mGameDataBlueprint.mDateAdded = QDateTime::fromString(rawDateAdded, Qt::ISODateWithMs); return *this; }
+
+GameData::Builder& GameData::Builder::wDateAdded(const QString& rawDateAdded)
+{
+    QString cleanDate = rawDateAdded;
+    if(!cleanDate.endsWith('z', Qt::CaseInsensitive))
+        cleanDate.append('Z');// Times should always been in UTC
+    mGameDataBlueprint.mDateAdded = QDateTime::fromString(cleanDate, Qt::ISODateWithMs);
+
+    return *this;
+}
+
 GameData::Builder& GameData::Builder::wSha256(const QString& sha256) { mGameDataBlueprint.mSha256 = sha256; return *this; }
 GameData::Builder& GameData::Builder::wCrc32(QStringView rawCrc32) { mGameDataBlueprint.mCrc32 = rawCrc32.toInt(); return *this; }
 GameData::Builder& GameData::Builder::wPresentOnDisk(QStringView rawBroken) { mGameDataBlueprint.mPresentOnDisk = rawBroken.toInt() != 0; return *this; }

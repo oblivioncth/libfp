@@ -41,9 +41,9 @@ struct FP_FP_EXPORT GameMetadataSource
 
 struct FP_FP_EXPORT Preferences : public Settings
 {
-    QString fpfssBaseUrl;
-    QHash<QString, GameDataSource> gameDataSources;
-    QHash<QString, GameMetadataSource> gameMetadataSources;
+    std::optional<QString> fpfssBaseUrl;
+    std::optional<QHash<QString, GameDataSource>> gameDataSources;
+    std::optional<QHash<QString, GameMetadataSource>> gameMetadataSources;
     QString imageFolderPath;
     QString logoFolderPath;
     QString playlistFolderPath;

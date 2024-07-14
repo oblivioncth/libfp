@@ -33,7 +33,7 @@ inline const QString NAME = u"Flashpoint"_s;
 class QX_ERROR_TYPE(InstallError, "Fp::InstallError", 1100)
 {
     friend class Install;
-    //-Class Enums-------------------------------------------------------------
+//-Class Enums-------------------------------------------------------------
 public:
     enum Type
     {
@@ -43,7 +43,7 @@ public:
         DatapackSourceMissing
     };
 
-    //-Class Variables-------------------------------------------------------------
+//-Class Variables-------------------------------------------------------------
 private:
     static inline const QHash<Type, QString> ERR_STRINGS{
         {NoError, u""_s},
@@ -52,16 +52,16 @@ private:
         {DatapackSourceMissing, u"Expected datapack source missing."_s}
     };
 
-    //-Instance Variables-------------------------------------------------------------
+//-Instance Variables-------------------------------------------------------------
 private:
     Type mType;
     QString mSpecific;
 
-    //-Constructor-------------------------------------------------------------
+//-Constructor-------------------------------------------------------------
 private:
     InstallError(Type t = NoError, const QString& s = {});
 
-    //-Instance Functions-------------------------------------------------------------
+//-Instance Functions-------------------------------------------------------------
 public:
     bool isValid() const;
     Type type() const;
@@ -77,8 +77,10 @@ private:
 class FP_FP_EXPORT Install
 {
     friend class Toolkit;
-//-Class Enums---------------------------------------------------------------------------------------------------
-enum class Edition {Ultimate, Infinity, Core};
+
+//-Inner Class---------------------------------------------------------------------------------------------------
+public:
+    class FP_FP_EXPORT VersionInfo;
 
 //-Class Variables-----------------------------------------------------------------------------------------------
 public: // Ugh
@@ -110,9 +112,6 @@ private:
     // Main datapack source
     static inline const QString MAIN_DATAPACK_SOURCE = u"Flashpoint Project"_s;
 
-    // Regex
-    static inline const QRegularExpression VERSION_NUMBER_REGEX = QRegularExpression(u"[fF]lashpoint (?<version>.*?) "_s);
-
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
     // Validity
@@ -133,6 +132,9 @@ private:
     std::shared_ptr<QFile> mServicesJsonFile;
     std::shared_ptr<QFile> mExecsJsonFile;
     std::unique_ptr<QFile> mVersionFile;
+
+    // Info
+    std::shared_ptr<VersionInfo> mVersionInfo;
 
     // Settings
     Config mConfig;
@@ -166,9 +168,7 @@ public:
     Qx::Error error() const;
 
     // General information
-    Edition edition() const;
-    QString nameVersionString() const;
-    Qx::VersionNumber version() const;
+    std::shared_ptr<VersionInfo> versionInfo() const;
     QString launcherChecksum() const;
 
     // Facilities
@@ -191,6 +191,47 @@ public:
     QDir entryScreenshotsDirectory() const;
     QDir extrasDirectory() const;
     QDir platformLogosDirectory() const;
+};
+
+class Install::VersionInfo
+{
+//-Class Enums---------------------------------------------------------------------------------------------------
+public:
+    enum Edition { Ultimate, Infinity, Linux, Core, Unknown };
+
+//-Class Variables
+private:
+    // Regex
+    static inline const QString VER_TXT_GRP_EDITIONA = u"e1"_s;
+    static inline const QString VER_TXT_GRP_EDITIONB = u"e2"_s;
+    static inline const QString VER_TXT_GRP_VERSION = u"v"_s;
+    static inline const QString VER_TXT_GRP_NICK = u"n"_s;
+    static inline const QRegularExpression VER_TXT_REGEX = QRegularExpression(
+        uR"([fF]lashpoint\s+(?<)"_s + VER_TXT_GRP_EDITIONA +
+        uR"(>[a-zA-Z ]+)?\s*(?<)"_s + VER_TXT_GRP_VERSION +
+        uR"(>[0-9]+(?:\.[0-9]+)?)?\s*(?<)"_s + VER_TXT_GRP_EDITIONB +
+        uR"(>[a-zA-Z ]+)?\s+-\s+(?<)"_s + VER_TXT_GRP_NICK +
+        uR"(>.*))"_s
+    );
+
+//-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    QString mFullString;
+    Edition mEdition;
+    Qx::VersionNumber mVersion;
+    QString mNickname;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    VersionInfo(const QString& verTxtStr);
+
+//-Instance Functions------------------------------------------------------------------------------------------------------
+public:
+    bool isNull() const;
+    QString fullString() const;
+    Edition edition() const;
+    Qx::VersionNumber version() const;
+    QString nickname() const;
 };
 
 }
