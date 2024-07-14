@@ -203,7 +203,7 @@ public:
     Builder& wId(QStringView rawId);
     Builder& wGameId(QStringView rawId);
     Builder& wTitle(const QString& title);
-    Builder& wDateAdded(QStringView rawDateAdded);
+    Builder& wDateAdded(const QString& rawDateAdded);
     Builder& wSha256(const QString& sha256);
     Builder& wCrc32(QStringView rawCrc32);
     Builder& wPresentOnDisk(QStringView rawBroken);

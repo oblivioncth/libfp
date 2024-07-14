@@ -68,6 +68,9 @@ private:
 public:
     static Qx::Error appInvolvesSecurePlayer(bool& involvesBuffer, QFileInfo appInfo);
 
+    // Datapacks
+    static QString datapackFilename(const Fp::GameData& gameData);
+
 //-Instance Functions------------------------------------------------------------------------------------------------------
 private:
     QString entryLocalLogoPath();
@@ -87,6 +90,7 @@ public:
     bool resolveTrueAppPath(QString& appPath, const QString& platform, QHash<QString, QString> overrides = {}, bool absolute = false) const;
 
     // Datapacks
+    bool canDownloadDatapacks() const;
     QString datapackPath(const Fp::GameData& gameData) const;
     QUrl datapackUrl(const Fp::GameData& gameData) const;
     bool datapackIsPresent(const Fp::GameData& gameData) const;

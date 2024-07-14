@@ -49,8 +49,6 @@ Install::Install(QString installPath, bool preloadPlaylists) :
     mVersionFile = std::make_unique<QFile>(installPath + u"/"_s + VER_TXT_PATH);
     mExtrasDirectory = QDir(installPath + u"/"_s + EXTRAS_PATH);
 
-    // Create macro resolver
-    mMacroResolver = new MacroResolver(mRootDirectory.absolutePath(), {});
 
     //-Check install validity--------------------------------------------
 
@@ -73,11 +71,28 @@ Install::Install(QString installPath, bool preloadPlaylists) :
         }
     }
 
-    // Get settings
+    // Get config
     ConfigReader configReader(&mConfig, mConfigJsonFile);
     if((mError = configReader.readInto()).isValid())
         return;
 
+    /* Create macro resolver
+     *
+     * NOTE: Macro resolver essentially just needs the FP root folder, but technically it's suppsoed to source this from
+     * the value in config.json, which can be different than the actual root. Sometimes this causes shenanigans as the
+     * value in config.json will be relative and therefore specific to the Flashpoint launcher folder, but the FP team
+     * designs the releases knowing this so trusting that value is generally best.
+     *
+     * FIXME: The comments in the Launcher source make it clear that the <fpPath> macro is supposed to resolve to the
+     * fpPath value in config.json, resolved to an absolute path; however, currently it does not actually resolve it to
+     * an absolute path and substitutes it verbatim. I'd prefer to not do this, but due to a quirk realted to FlashpointGameServer
+     * not accepting absolute paths for it's command line arguments, we must respect that behavior for things to work.
+     * As soon as absolute paths are possible again, switch back to them.
+     */
+    //mMacroResolver = new MacroResolver(mRootDirectory.absolutePath(), {});
+    mMacroResolver = new MacroResolver(mConfig.flashpointPath, {});
+
+    // Get other settings
     PreferencesReader prefReader(&mPreferences, mPreferencesJsonFile);
     if((mError = prefReader.readInto()).isValid())
         return;
@@ -100,8 +115,16 @@ Install::Install(QString installPath, bool preloadPlaylists) :
             return;
     }
 
-    // Ensure expected datapack source exists
-    if(!mPreferences.gameDataSources.contains(MAIN_DATAPACK_SOURCE))
+    // Read version info (assumes file exists from earlier, only read first line in case there is a trailing newline)
+    QString verTxtStr;
+    Qx::readTextFromFile(verTxtStr, *mVersionFile, Qx::Start, Qx::TextPos(Qx::First, Qx::Last));
+    mVersionInfo = std::make_shared<VersionInfo>(verTxtStr);
+
+    // Ensure expected datapack source exists on Infinity
+    bool onlineEdition = !mVersionInfo->isNull() && (mVersionInfo->edition() == VersionInfo::Infinity || mVersionInfo->edition() == VersionInfo::Linux);
+    bool canDownload = mPreferences.gameDataSources && mPreferences.gameDataSources->contains(MAIN_DATAPACK_SOURCE);
+    // Could use Toolkit::canDownloadDatapacks() here, but we need to check for the main datasource specifically since that's all we're setup to handle
+    if(onlineEdition && !canDownload)
     {
         mError = InstallError(InstallError::DatapackSourceMissing, MAIN_DATAPACK_SOURCE);
         return;
@@ -197,6 +220,7 @@ void Install::nullify()
     mPreferencesJsonFile.reset();
     mServicesJsonFile.reset();
     mVersionFile.reset();
+    mVersionInfo.reset();
     if(mMacroResolver)
         qxDelete(mMacroResolver);
     if(mDatabase)
@@ -216,40 +240,7 @@ void Install::nullify()
 bool Install::isValid() const { return mValid; }
 Qx::Error Install::error() const { return mError; }
 
-Install::Edition Install::edition() const
-{
-    QString nameVer = nameVersionString();
-
-    return nameVer.contains(u"ultimate"_s, Qt::CaseInsensitive) ? Edition::Ultimate :
-           nameVer.contains(u"infinity"_s, Qt::CaseInsensitive) ? Edition::Infinity :
-                                                               Edition::Core;
-}
-
-QString Install::nameVersionString() const
-{
-    // Check version file (only read first line in case there is a trailing newline character)
-    QString readVersion = QString();
-    if(mVersionFile->exists())
-        Qx::readTextFromFile(readVersion, *mVersionFile, Qx::Start, Qx::TextPos(Qx::First, Qx::Last));
-
-    return readVersion;
-}
-
-Qx::VersionNumber Install::version() const
-{
-    QString nameVer = nameVersionString();
-    QRegularExpressionMatch versionMatch = VERSION_NUMBER_REGEX.match(nameVer);
-
-    if(versionMatch.hasMatch())
-    {
-        Qx::VersionNumber fpVersion = Qx::VersionNumber::fromString(versionMatch.captured(u"version"_s));
-        if(!fpVersion.isNull())
-            return fpVersion;
-    }
-
-    qWarning("Could not determine flashpoint version number!");
-    return Qx::VersionNumber();
-}
+std::shared_ptr<Install::VersionInfo> Install::versionInfo() const { return mVersionInfo; }
 
 QString Install::launcherChecksum() const
 {
@@ -275,5 +266,45 @@ QDir Install::entryLogosDirectory() const { return mEntryLogosDirectory; }
 QDir Install::entryScreenshotsDirectory() const { return mEntryScreenshotsDirectory; }
 QDir Install::extrasDirectory() const { return mExtrasDirectory; }
 QDir Install::platformLogosDirectory() const { return mPlatformLogosDirectory; }
+
+//===============================================================================================================
+// Install::VersionInfo
+//===============================================================================================================
+
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+Install::VersionInfo::VersionInfo(const QString& verTxtStr) :
+    mEdition(Edition::Unknown)
+{
+    QRegularExpressionMatch rem = VER_TXT_REGEX.match(verTxtStr);
+    if(!rem.hasMatch() ||
+       !(rem.hasCaptured(VER_TXT_GRP_EDITIONA) || rem.hasCaptured(VER_TXT_GRP_EDITIONB)) ||
+       !rem.hasCaptured(VER_TXT_GRP_VERSION) ||
+       !rem.hasCaptured(VER_TXT_GRP_NICK))
+    {
+        qWarning("Unknown version.txt format!");
+        return;
+    }
+
+    mFullString = verTxtStr;
+    QString edStr = rem.hasCaptured(VER_TXT_GRP_EDITIONA) ? rem.captured(VER_TXT_GRP_EDITIONA) : rem.captured(VER_TXT_GRP_EDITIONB);
+    mEdition = edStr.contains(u"ultimate"_s, Qt::CaseInsensitive) ? Edition::Ultimate :
+               edStr.contains(u"infinity"_s, Qt::CaseInsensitive) ? Edition::Infinity :
+               edStr.contains(u"core"_s, Qt::CaseInsensitive) ? Edition::Core :
+               edStr.contains(u"linux"_s, Qt::CaseInsensitive) ? Edition::Linux :
+                                                                 Edition::Unknown;
+    mVersion = Qx::VersionNumber::fromString(rem.captured(VER_TXT_GRP_VERSION));
+    Q_ASSERT(!mVersion.isNull()); // Regex should fail before this
+    mNickname = rem.captured(VER_TXT_GRP_NICK);
+}
+
+//-Instance Functions------------------------------------------------------------------------------------------------------
+//Public:
+bool Install::VersionInfo::isNull() const { return mFullString.isEmpty(); }
+QString Install::VersionInfo::fullString() const { return mFullString; }
+Install::VersionInfo::Edition Install::VersionInfo::edition() const { return mEdition; }
+Qx::VersionNumber Install::VersionInfo::version() const { return mVersion; }
+QString Install::VersionInfo::nickname() const { return mNickname; }
 
 }

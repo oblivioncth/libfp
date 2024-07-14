@@ -116,6 +116,13 @@ Db::Db(const QString& databaseName, const Key&) :
         return;
     }
 
+    // Populate game redirects
+    if((databaseError = populateGameRedirects()).isValid())
+    {
+        mError = DbError(DbError::SqlError, databaseError.text());
+        return;
+    }
+
     // Give the ok
     mValid = true;
     validityGuard.dismiss();
@@ -406,6 +413,42 @@ QSqlError Db::populateTags()
         tag.primaryAlias = primaryAliases.value(tagQuery.value(Table_Tag::COL_PRIMARY_ALIAS_ID).toInt());
 
         mTagMap[tagQuery.value(Table_Tag::COL_CATEGORY_ID).toInt()].tags[tag.id] = tag;
+    }
+
+    // Return invalid SqlError
+    return QSqlError();
+}
+
+QSqlError Db::populateGameRedirects()
+{
+    // Get database
+    QSqlDatabase fpDb;
+    QSqlError dbError = getThreadConnection(fpDb);
+    if(dbError.isValid())
+        return dbError;
+
+    // Ensure map is reset
+    mGameRedirects.clear();
+
+    // Make redirect query
+    QSqlQuery redirectQuery(u"SELECT `"_s + Table_Game_Redirect::COLUMN_LIST.join(u"`,`"_s) + u"` FROM "_s + Table_Game_Redirect::NAME, fpDb);
+
+    // Return if error occurs
+    if(redirectQuery.lastError().isValid())
+        return redirectQuery.lastError();
+
+    // Parse query
+    while(redirectQuery.next())
+    {
+        QUuid src(redirectQuery.value(Table_Game_Redirect::COL_SOURCE_ID).toString());
+        if(src.isNull())
+            continue;
+
+        QUuid dest(redirectQuery.value(Table_Game_Redirect::COL_ID).toString());
+        if(dest.isNull())
+            continue;
+
+        mGameRedirects[src] = dest;
     }
 
     // Return invalid SqlError
@@ -882,6 +925,15 @@ DbError Db::updateGameDataOnDiskState(QList<int> packIds, bool onDisk)
 
     return DbError();
 }
+
+/* TODO: Technically this is a shortcut. The regular launcher will check for Game Redirects in all cases where an ID is searched
+ * for, often using coalesce (see https://github.com/FlashpointProject/FPA-Rust/blob/03a4ddc4af9ae0b2773c5f678268cb9c944d893f/crates/flashpoint-archive/src/game/mod.rs#L323).
+ * This makes sense if anyone is using this lib for any reason (which although that is the intention, currently no one is); but in the case of CLIFp/FIL, where
+ * IDs are only sought out directly, or in bulk, we can just swap the target ID (if a direct is present) before even hitting the database with it.
+ * Just keep in mind the ideal long term thing to do is have the redirects considered whenever checking the database for a game ID at all. This could
+ * also be an issue if a source ID is still used somewhere else in the DB, for example add_app or game_data, but that does not seem to be the case currently.
+ */
+QUuid Db::handleGameRedirects(const QUuid& gameId) { return mGameRedirects.value(gameId, gameId); }
 
 //-Slots ------------------------------------------------------------------------------------------------------
 //Private:
