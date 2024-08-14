@@ -7,6 +7,7 @@
 
 // Qx Includes
 #include <qx/core/qx-string.h>
+#include <qx/core/qx-algorithm.h>
 
 namespace Fp
 {
@@ -194,9 +195,30 @@ GameData::Builder& GameData::Builder::wTitle(const QString& title) { mGameDataBl
 
 GameData::Builder& GameData::Builder::wDateAdded(const QString& rawDateAdded)
 {
+    /* Have to bodge fractional time because of: https://github.com/qt/qtbase/blob/4e7f5c43a3be609502ccc15861319503dc2c842b/src/corelib/time/qdatetime.cpp#L2515
+     * It seems that the converter was supposed to floor to the previous MS (which is what JS's Date() does), but qRound() was accidentally used,
+     * and then aftewards additional functionality/tests were built around the fact that the conversion can round up, so a change being accepted
+     * is potentially unlikely
+     */
+
     QString cleanDate = rawDateAdded;
     if(!cleanDate.endsWith('z', Qt::CaseInsensitive))
         cleanDate.append('Z');// Times should always been in UTC
+    int dotPos = cleanDate.indexOf('.'); // Fractional time (could be comma, but seems to be unused in FP)
+    if(dotPos != -1)
+    {
+        // Ignore fractional precision past whole MS (how JS's Date() handles it
+        constexpr int MAX_DECIMALS = 3;
+        int decimalStart = dotPos + 1;
+        int decimalEnd = cleanDate.size() - 2; // Extra -1 because of 'Z'
+        int decimalPlaces = Qx::length(decimalStart, decimalEnd);
+        if(decimalPlaces > MAX_DECIMALS)
+        {
+            int extra = decimalPlaces - MAX_DECIMALS;
+            cleanDate.remove(decimalStart + MAX_DECIMALS, extra);
+        }
+
+    }
     mGameDataBlueprint.mDateAdded = QDateTime::fromString(cleanDate, Qt::ISODateWithMs);
 
     return *this;
