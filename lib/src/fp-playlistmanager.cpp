@@ -94,6 +94,14 @@ QX_JSON_MEMBER_OVERRIDE(Json::Playlist, icon,
 
         return member.isNull() ? convErr : Qx::JsonError();
     }
+
+    // TODO: Kill this once Qx is updated to no longer require it
+    static QString toJson(const QImage& member)
+    {
+        Q_UNUSED(member);
+        qCritical("SHOULD NOT BE USED");
+        return "";
+    }
 )
 
 namespace Fp
