@@ -164,7 +164,7 @@ Qx::Error PlaylistManager::populate()
           .wIcon(jPlaylist.icon);
 
         // TODO: Good use for std::ranges::views::enumerate when using C++23
-        for(int backupOrder = 0; const Json::PlaylistGame& jPlaylistGame : qAsConst(jPlaylist.games))
+        for(int backupOrder = 0; const Json::PlaylistGame& jPlaylistGame : std::as_const(jPlaylist.games))
         {
             PlaylistGame::Builder pgb;
             pgb.wId(jPlaylistGame.id)

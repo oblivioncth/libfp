@@ -87,7 +87,7 @@ std::optional<ServerDaemon> Toolkit::getServer(QString server) const
     if(servers.contains(server))
         return servers[server];
 
-    for(const auto& s : qAsConst(servers))
+    for(const auto& s : std::as_const(servers))
         if(s.aliases && s.aliases.value().contains(server))
             return s;
 
@@ -117,7 +117,7 @@ QUrl Toolkit::entryImageRemotePath(ImageType imageType, const QUuid& gameId) con
 bool Toolkit::resolveAppPathOverrides(QString& appPath) const
 {
     // Check if path has an associated override
-    for(const AppPathOverride& override : qAsConst(mInstall.preferences().appPathOverrides))
+    for(const AppPathOverride& override : std::as_const(mInstall.preferences().appPathOverrides))
     {
         if(override.path == appPath && override.enabled)
         {
@@ -135,7 +135,7 @@ bool Toolkit::resolveExecSwaps(QString& appPath, const QString& platform) const
     bool preferNative = mInstall.preferences().nativePlatforms.contains(platform);
 
     // Check if path has an associated swap
-    for(const Exec& swap : qAsConst(mInstall.execs().execs))
+    for(const Exec& swap : std::as_const(mInstall.execs().execs))
     {
         if(swap.win32 == appPath)
         {
