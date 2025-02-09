@@ -13,7 +13,7 @@ project(libfp
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("d64498ec2654e7f3145d7efa36bfaa73ac30cc74")
+fetch_ob_cmake("3010a962688a63689cdc365722423f5de40c3c59")
 
 # Initialize project according to standard rules
 include(OB/Project)
@@ -52,7 +52,7 @@ set(LIBFP_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "1bfe8bdb6047c1d6c3246e431652869e63cbe797"
+    REF "eec4cfa0462c43abaa6cf9aeb37b338a1f5caa9e"
     COMPONENTS
         ${LIBFP_QX_COMPONENTS}
 )
