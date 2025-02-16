@@ -28,6 +28,45 @@ QX_JSON_STRUCT_OUTSIDE(Fp::ServerDaemon,
     kill
 );
 
+QX_JSON_MEMBER_OVERRIDE(Fp::ServerDaemon, aliases,
+    static Qx::JsonError fromJson(std::optional<QStringList>& aliases, const QJsonValue& jv)
+    {
+        /* This requires manual conversion because we always want the result to be an optional
+         * list, but sometimes the aliases entry in JSON is a single string instead of an array
+         */
+
+
+        // TODO: Maybe make Qx default conversions not in a private namespace and then document how to call them
+        // specificially so they an be used as a fallback, or make public wrappers that call the private method
+        if(jv.isArray())
+        {
+            QStringList aliasList;
+            auto err = QxJsonPrivate::standardParse<QStringList>(aliasList, jv);
+            aliases = aliasList;
+            return err;
+        }
+        else if(jv.isString())
+        {
+            QString alias;
+            auto err = QxJsonPrivate::standardParse<QString>(alias, jv);
+            aliases = !alias.isNull() ?  QStringList({alias}) : QStringList();
+            return err;
+        }
+        else // TODO: Make private accessor to type conversion error
+        {
+            return Qx::JsonError(QxJsonPrivate::ERR_CONV_TYPE.arg(QxJsonPrivate::typeString<QJsonArray>()), Qx::JsonError::TypeMismatch)
+            .withContext(QxJson::Array());
+        }
+    }
+
+    static QJsonArray toJson(const std::optional<QStringList>& aliases)
+    {
+        Q_UNUSED(aliases);
+        qFatal("Never used.");
+        return {};
+    }
+)
+
 QX_JSON_STRUCT_OUTSIDE(Fp::StartStop,
     path,
     filename,
