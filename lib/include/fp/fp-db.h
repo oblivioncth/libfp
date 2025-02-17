@@ -275,16 +275,16 @@ public:
 
     struct InclusionOptions
     {
-        QSet<int> excludedTagIds;
-        bool includeAnimations;
+        QSet<int> excludedTagIds = {};
+        bool includeAnimations = {};
     };
 
     struct EntryFilter
     {
         EntryType type = EntryType::PrimaryThenAddApp;
-        QUuid id;
-        QUuid parent;
-        QString name;
+        QUuid id = {};
+        QUuid parent = {};
+        QString name = {};
         bool playableOnly = false;
         bool exactName = true;
     };

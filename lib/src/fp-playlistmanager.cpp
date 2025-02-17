@@ -94,6 +94,14 @@ QX_JSON_MEMBER_OVERRIDE(Json::Playlist, icon,
 
         return member.isNull() ? convErr : Qx::JsonError();
     }
+
+    // TODO: Kill this once Qx is updated to no longer require it
+    static QString toJson(const QImage& member)
+    {
+        Q_UNUSED(member);
+        qCritical("SHOULD NOT BE USED");
+        return "";
+    }
 )
 
 namespace Fp
@@ -156,7 +164,7 @@ Qx::Error PlaylistManager::populate()
           .wIcon(jPlaylist.icon);
 
         // TODO: Good use for std::ranges::views::enumerate when using C++23
-        for(int backupOrder = 0; const Json::PlaylistGame& jPlaylistGame : qAsConst(jPlaylist.games))
+        for(int backupOrder = 0; const Json::PlaylistGame& jPlaylistGame : std::as_const(jPlaylist.games))
         {
             PlaylistGame::Builder pgb;
             pgb.wId(jPlaylistGame.id)

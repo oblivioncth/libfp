@@ -246,7 +246,7 @@ QSqlError Db::makeNonBindQuery(QueryBuffer& resultBuffer, QSqlDatabase* database
     int querySize = sizeQuery.value(0).toInt();
 
     // Set buffer instance to result
-    resultBuffer.result = mainQuery;
+    resultBuffer.result = std::move(mainQuery);
     resultBuffer.size = querySize;
 
     // Return invalid SqlError
@@ -540,7 +540,7 @@ DbError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, const QString
 
         // Add result to buffer if there were any hits
         if(querySize > 0)
-            resultBuffer.append({platform, initialQuery, querySize});
+            resultBuffer.append({platform, std::move(initialQuery), querySize});
     }
 
     // Return invalid error

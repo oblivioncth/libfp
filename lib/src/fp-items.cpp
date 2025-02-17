@@ -257,18 +257,17 @@ bool operator== (const AddApp& lhs, const AddApp& rhs) noexcept
 }
 
 //-Hashing------------------------------------------------------------------------------------------------------
-uint qHash(const AddApp& key, uint seed) noexcept
+size_t qHash(const AddApp& key, size_t seed) noexcept
 {
-    QtPrivate::QHashCombine hash;
-    seed = hash(seed, key.mId);
-    seed = hash(seed, key.mAppPath);
-    seed = hash(seed, key.mAutorunBefore);
-    seed = hash(seed, key.mLaunchCommand);
-    seed = hash(seed, key.mName);
-    seed = hash(seed, key.mWaitExit);
-    seed = hash(seed, key.mParentId);
-
-    return seed;
+    return qHashMulti(seed,
+        key.mId,
+        key.mAppPath,
+        key.mAutorunBefore,
+        key.mLaunchCommand,
+        key.mName,
+        key.mWaitExit,
+        key.mParentId
+    );
 }
 
 //-Instance Functions------------------------------------------------------------------------------------------------
