@@ -19,9 +19,10 @@ namespace Fp
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 //Public:
-SettingsReader::SettingsReader(Settings* targetSettings, std::shared_ptr<QFile> sourceJsonFile) :
+SettingsReader::SettingsReader(Settings* targetSettings, std::shared_ptr<QFile> sourceJsonFile, bool optional) :
     mTargetSettings(targetSettings),
-    mSourceJsonFile(sourceJsonFile)
+    mSourceJsonFile(sourceJsonFile),
+    mOptional(optional)
 {}
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
@@ -33,7 +34,11 @@ Qx::Error SettingsReader::readInto()
     Qx::IoOpReport settingsLoadReport = Qx::readBytesFromFile(settingsData, *mSourceJsonFile);
 
     if(settingsLoadReport.isFailure())
+    {
+        if(settingsLoadReport.result() == Qx::IO_ERR_DNE && mOptional)
+            return Qx::IoOpReport(Qx::IO_OP_INSPECT, Qx::IO_SUCCESS, *mSourceJsonFile);
         return settingsLoadReport;
+    }
 
     // Parse original JSON data
     QJsonParseError parseError;

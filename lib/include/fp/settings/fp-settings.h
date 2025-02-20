@@ -15,6 +15,10 @@
 #include <qx/core/qx-json.h>
 #include <qx/utility/qx-concepts.h>
 
+/* TODO: Make this a template to avoid need for static_cast for the derived type, and so traits can be used for "optional"
+ * (the whole file) instead.
+ */
+
 namespace Fp
 {
 
@@ -26,10 +30,11 @@ class FP_FP_EXPORT SettingsReader
 protected:
     Settings* mTargetSettings;
     std::shared_ptr<QFile> mSourceJsonFile;
+    bool mOptional;
 
 //-Constructor--------------------------------------------------------------------------------------------------------
 public:
-    SettingsReader(Settings* targetSettings, std::shared_ptr<QFile> sourceJsonFile);
+    SettingsReader(Settings* targetSettings, std::shared_ptr<QFile> sourceJsonFile, bool optional = false);
 
 //-Instance Functions-------------------------------------------------------------------------------------------------
 private:
