@@ -846,6 +846,7 @@ DbError Db::getEntry(Entry& entry, const QUuid& entryId)
         fpGb.wOrderTitle(searchResult.result.value(Fp::Db::Table_Game::COL_ORDER_TITLE).toString().remove(Qx::RegularExpression::LINE_BREAKS));
         fpGb.wLibrary(searchResult.result.value(Fp::Db::Table_Game::COL_LIBRARY).toString());
         fpGb.wPlatformName(searchResult.result.value(Fp::Db::Table_Game::COL_PLATFORM_NAME).toString());
+        fpGb.wRuffleSupport(searchResult.result.value(Fp::Db::Table_Game::COL_RUFFLE_SUPPORT).toString());
 
         entry = fpGb.build();
     }

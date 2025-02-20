@@ -47,6 +47,7 @@ private:
     QString mOrderTitle;
     QString mLibrary;
     QString mPlatformName;
+    QString mRuffleSupport; // Could be an enum
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
@@ -75,6 +76,7 @@ public:
     QString orderTitle() const;
     QString library() const;
     QString platformName() const;
+    QString ruffleSupport() const;
 };
 
 class FP_FP_EXPORT Game::Builder
@@ -114,6 +116,7 @@ public:
     Builder& wOrderTitle(const QString& orderTitle);
     Builder& wLibrary(const QString& library);
     Builder& wPlatformName(const QString& platformName);
+    Builder& wRuffleSupport(const QString& ruffleSupport);
 
     Game build();
 };
