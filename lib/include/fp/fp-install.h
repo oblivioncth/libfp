@@ -214,7 +214,7 @@ private:
     static inline const QRegularExpression VER_TXT_REGEX = QRegularExpression(
         uR"([fF]lashpoint\s+(?<)"_s + VER_TXT_GRP_EDITIONA +
         uR"(>[a-zA-Z ]+)?\s*(?<)"_s + VER_TXT_GRP_VERSION +
-        uR"(>[0-9]+(?:\.[0-9]+)?)?\s*(?<)"_s + VER_TXT_GRP_EDITIONB +
+        uR"(>[0-9]+(?:\.[0-9]+)*)?\s*(?<)"_s + VER_TXT_GRP_EDITIONB +
         uR"(>[a-zA-Z ]+)?\s+-\s+(?<)"_s + VER_TXT_GRP_NICK +
         uR"(>.*))"_s
     );
