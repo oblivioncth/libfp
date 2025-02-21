@@ -17,6 +17,7 @@ ob_add_standard_library(${LIB_TARGET_NAME}
             fp-toolkit.h
             settings/fp-config.h
             settings/fp-execs.h
+            settings/fp-extconfig.h
             settings/fp-preferences.h
             settings/fp-services.h
             settings/fp-settings.h
@@ -29,6 +30,7 @@ ob_add_standard_library(${LIB_TARGET_NAME}
         fp-toolkit.cpp
         settings/fp-config.cpp
         settings/fp-execs.cpp
+        settings/fp-extconfig.cpp
         settings/fp-preferences.cpp
         settings/fp-services.cpp
         settings/fp-settings.cpp

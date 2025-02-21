@@ -113,10 +113,11 @@ public:
         static inline const QString COL_LIBRARY = u"library"_s;
         static inline const QString COL_ORDER_TITLE = u"orderTitle"_s;
         static inline const QString COL_PLATFORM_NAME = u"platformName"_s;
+        static inline const QString COL_RUFFLE_SUPPORT = u"ruffleSupport"_s;
 
         static inline const QStringList COLUMN_LIST = {COL_ID, COL_PARENT_ID, COL_TITLE, COL_SERIES, COL_DEVELOPER, COL_PUBLISHER, COL_DATE_ADDED, COL_DATE_MODIFIED,
                                                COL_BROKEN, COL_EXTREME, COL_PLAY_MODE, COL_STATUS, COL_NOTES, COL_SOURCE, COL_APP_PATH, COL_LAUNCH_COMMAND, COL_RELEASE_DATE,
-                                               COL_VERSION, COL_ORIGINAL_DESC, COL_LANGUAGE, COL_LIBRARY, COL_ORDER_TITLE, COL_PLATFORM_NAME};
+                                               COL_VERSION, COL_ORIGINAL_DESC, COL_LANGUAGE, COL_LIBRARY, COL_ORDER_TITLE, COL_PLATFORM_NAME, COL_RUFFLE_SUPPORT};
 
         static inline const QString ENTRY_GAME_LIBRARY = u"arcade"_s;
         static inline const QString ENTRY_ANIM_LIBRARY = u"theatre"_s;

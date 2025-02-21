@@ -45,6 +45,7 @@ Install::Install(QString installPath, bool preloadPlaylists) :
     mLauncherFile = std::make_unique<QFile>(installPath + u"/"_s + LAUNCHER_PATH);
     mDatabaseFile = std::make_unique<QFile>(installPath + u"/"_s + DATABASE_PATH);
     mConfigJsonFile = std::make_shared<QFile>(installPath + u"/"_s + CONFIG_JSON_PATH);
+    mExtConfigJsonFile = std::make_shared<QFile>(installPath + u"/"_s + EXT_CONFIG_JSON_PATH);
     mPreferencesJsonFile = std::make_shared<QFile>(installPath + u"/"_s + PREFERENCES_JSON_PATH);
     mVersionFile = std::make_unique<QFile>(installPath + u"/"_s + VER_TXT_PATH);
     mExtrasDirectory = QDir(installPath + u"/"_s + EXTRAS_PATH);
@@ -56,6 +57,7 @@ Install::Install(QString installPath, bool preloadPlaylists) :
     const QList<const QFile*> filesToCheck{
         mDatabaseFile.get(),
         mConfigJsonFile.get(),
+        // mExtConfigJsonFile.get(), OPTIONAL
         mPreferencesJsonFile.get(),
         mLauncherFile.get(),
         mVersionFile.get(),
@@ -95,6 +97,10 @@ Install::Install(QString installPath, bool preloadPlaylists) :
     // Get other settings
     PreferencesReader prefReader(&mPreferences, mPreferencesJsonFile);
     if((mError = prefReader.readInto()).isValid())
+        return;
+
+    ExtConfigReader extConfigReader(&mExtConfig, mExtConfigJsonFile);
+    if((mError = extConfigReader.readInto()).isValid())
         return;
 
     mServicesJsonFile = std::make_shared<QFile>(installPath + u"/"_s + mPreferences.jsonFolderPath + u"/"_s + SERVICES_JSON_NAME);
@@ -256,6 +262,7 @@ const MacroResolver* Install::macroResolver() const { return mMacroResolver; }
 const Toolkit* Install::toolkit() const { return mToolkit; }
 
 const Config& Install::config() const { return mConfig; }
+const ExtConfig& Install::extConfig() const { return mExtConfig; }
 const Preferences& Install::preferences() const { return mPreferences; }
 const Services& Install::services() const { return mServices; }
 const Execs& Install::execs() const { return mExecs; }

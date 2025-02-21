@@ -17,6 +17,7 @@
 // Project Includes
 #include "fp/settings/fp-config.h"
 #include "fp/settings/fp-execs.h"
+#include "fp/settings/fp-extconfig.h"
 #include "fp/settings/fp-preferences.h"
 #include "fp/settings/fp-services.h"
 #include "fp/fp-macro.h"
@@ -95,6 +96,7 @@ private:
     static inline const QString LAUNCHER_PATH =  u"Launcher/"_s + LAUNCHER_NAME;
     static inline const QString DATABASE_PATH = u"Data/flashpoint.sqlite"_s;
     static inline const QString CONFIG_JSON_PATH = u"Launcher/config.json"_s;
+    static inline const QString EXT_CONFIG_JSON_PATH = u"extConfig.json"_s;
     static inline const QString PREFERENCES_JSON_PATH = u"preferences.json"_s;
     static inline const QString VER_TXT_PATH = u"version.txt"_s;
 
@@ -128,6 +130,7 @@ private:
     std::unique_ptr<QFile> mLauncherFile;
     std::unique_ptr<QFile> mDatabaseFile;
     std::shared_ptr<QFile> mConfigJsonFile;
+    std::shared_ptr<QFile> mExtConfigJsonFile;
     std::shared_ptr<QFile> mPreferencesJsonFile;
     std::shared_ptr<QFile> mServicesJsonFile;
     std::shared_ptr<QFile> mExecsJsonFile;
@@ -138,6 +141,7 @@ private:
 
     // Settings
     Config mConfig;
+    ExtConfig mExtConfig;
     Preferences mPreferences;
     Services mServices;
     Execs mExecs;
@@ -180,6 +184,7 @@ public:
     // Settings
     // TODO: At some point create a "Settings" object that wraps all of these, would need to rename existing Fp::Settings
     const Config& config() const;
+    const ExtConfig& extConfig() const;
     const Preferences& preferences() const;
     const Services& services() const;
     const Execs& execs() const;
@@ -209,7 +214,7 @@ private:
     static inline const QRegularExpression VER_TXT_REGEX = QRegularExpression(
         uR"([fF]lashpoint\s+(?<)"_s + VER_TXT_GRP_EDITIONA +
         uR"(>[a-zA-Z ]+)?\s*(?<)"_s + VER_TXT_GRP_VERSION +
-        uR"(>[0-9]+(?:\.[0-9]+)?)?\s*(?<)"_s + VER_TXT_GRP_EDITIONB +
+        uR"(>[0-9]+(?:\.[0-9]+)*)?\s*(?<)"_s + VER_TXT_GRP_EDITIONB +
         uR"(>[a-zA-Z ]+)?\s+-\s+(?<)"_s + VER_TXT_GRP_NICK +
         uR"(>.*))"_s
     );

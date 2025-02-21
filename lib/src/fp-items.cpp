@@ -43,6 +43,7 @@ QString Game::language() const { return mLanguage; }
 QString Game::orderTitle() const { return mOrderTitle; }
 QString Game::library() const { return mLibrary; }
 QString Game::platformName() const { return mPlatformName; }
+QString Game::ruffleSupport() const { return mRuffleSupport; }
 
 //===============================================================================================================
 // Game::Builder
@@ -97,6 +98,7 @@ Game::Builder& Game::Builder::wLanguage(const QString& language)  { mGameBluepri
 Game::Builder& Game::Builder::wOrderTitle(const QString& orderTitle)  { mGameBlueprint.mOrderTitle = orderTitle; return *this; }
 Game::Builder& Game::Builder::wLibrary(const QString& library) { mGameBlueprint.mLibrary = library; return *this; }
 Game::Builder& Game::Builder::wPlatformName(const QString& platformName) { mGameBlueprint.mPlatformName = platformName; return *this; }
+Game::Builder& Game::Builder::wRuffleSupport(const QString& ruffleSupport) { mGameBlueprint.mRuffleSupport = ruffleSupport; return *this; }
 
 Game Game::Builder::build() { return mGameBlueprint; }
 
