@@ -153,7 +153,7 @@ void Db::nullify()
 {
    mPlatformNames.clear();
     mPlaylistList.clear();
-    mTagMap.clear();
+    mTagDirectory.clear();
 }
 
 void Db::closeConnection(const QThread* thread)
@@ -364,11 +364,10 @@ QSqlError Db::populateTags()
     if(dbError.isValid())
         return dbError;
 
-    // Ensure list is reset
-    mTagMap.clear();
+    // Ensure directory is reset
+    mTagDirectory.clear();
 
-    // Temporary id map
-    QHash<int, QString> primaryAliases;
+    QMap<int, QString> tagAliasMap; // Tag Alias ID -> Tag Alias Name
 
     // Make tag category query
     QSqlQuery categoryQuery(u"SELECT `"_s + Table_Tag_Category::COLUMN_LIST.join(u"`,`"_s) + u"` FROM "_s + Table_Tag_Category::NAME, fpDb);
@@ -384,7 +383,7 @@ QSqlError Db::populateTags()
         tc.name = categoryQuery.value(Table_Tag_Category::COL_NAME).toString();
         tc.color = QColor(categoryQuery.value(Table_Tag_Category::COL_COLOR).toString());
 
-        mTagMap[categoryQuery.value(Table_Tag_Category::COL_ID).toInt()] = tc;
+        mTagDirectory[categoryQuery.value(Table_Tag_Category::COL_ID).toInt()] = tc;
     }
 
     // Make tag alias query
@@ -396,7 +395,7 @@ QSqlError Db::populateTags()
 
     // Parse query
     while(aliasQuery.next())
-        primaryAliases[aliasQuery.value(Table_Tag_Alias::COL_ID).toInt()] = aliasQuery.value(Table_Tag_Alias::COL_NAME).toString();
+        tagAliasMap[aliasQuery.value(Table_Tag_Alias::COL_ID).toInt()] = aliasQuery.value(Table_Tag_Alias::COL_NAME).toString();
 
     // Make tag query
     QSqlQuery tagQuery(u"SELECT `"_s + Table_Tag::COLUMN_LIST.join(u"`,`"_s) + u"` FROM "_s + Table_Tag::NAME, fpDb);
@@ -408,11 +407,18 @@ QSqlError Db::populateTags()
     // Parse query
     while(tagQuery.next())
     {
+        // Create Tag
         Tag tag;
         tag.id = tagQuery.value(Table_Tag::COL_ID).toInt();
-        tag.primaryAlias = primaryAliases.value(tagQuery.value(Table_Tag::COL_PRIMARY_ALIAS_ID).toInt());
+        tag.primaryAlias = tagAliasMap.value(tagQuery.value(Table_Tag::COL_PRIMARY_ALIAS_ID).toInt());
+        int catId = tagQuery.value(Table_Tag::COL_CATEGORY_ID).toInt();
+        Q_ASSERT(mTagDirectory.contains(catId));
+        TagCategory& tc = mTagDirectory[catId];
+        tag.category = tc.name; // CoW reduces overhead
 
-        mTagMap[tagQuery.value(Table_Tag::COL_CATEGORY_ID).toInt()].tags[tag.id] = tag;
+        // Insert and add pointer to tag map
+        Tag& insertedTag = tc.tags.insert(tag.id, tag).value();
+        mTagMap[insertedTag.id] = &insertedTag;
     }
 
     // Return invalid SqlError
@@ -742,7 +748,7 @@ DbError Db::queryAllGameIds(QueryBuffer& resultBuffer, const LibraryFilter& incl
 }
 
 QStringList Db::platformNames() const { return mPlatformNames; } //TODO: Probably should use RAII for this.
-QMap<int, Db::TagCategory> Db::tags() const { return mTagMap; }
+QMap<int, Db::TagCategory> Db::tags() const { return mTagDirectory; }
 
 DbError Db::entryUsesDataPack(bool& resultBuffer, const QUuid& gameId)
 {
@@ -893,6 +899,40 @@ DbError Db::getGameData(GameData& data, const QUuid& gameId)
     fpGdb.wLaunchCommand(searchResult.result.value(Fp::Db::Table_Game_Data::COL_LAUNCH_COMMAND).toString());
 
     data = fpGdb.build();
+
+    return DbError();
+}
+
+DbError Db::getGameTags(GameTags& tags, const QUuid& gameId)
+{
+    // Get database
+    QSqlDatabase fpDb;
+    if(QSqlError dbError = getThreadConnection(fpDb); dbError.isValid())
+        return DbError::fromSqlError(dbError);
+
+    // Query tags
+    QSqlQuery tagQuery(fpDb);
+    tagQuery.setForwardOnly(true);
+    tagQuery.prepare(u"SELECT `"_s + Table_Game_Tags_Tag::COLUMN_LIST.join(u"`,`"_s) + u"` FROM "_s + Table_Game_Tags_Tag::NAME + u" WHERE "_s +
+                     Table_Game_Tags_Tag::COL_GAME_ID + u" == '"_s + gameId.toString(QUuid::WithoutBraces) + u"' "_s);
+    if(!tagQuery.exec())
+        return DbError::fromSqlError(tagQuery.lastError());
+
+    // Parse query
+    GameTags::Builder gtb;
+    while(tagQuery.next())
+    {
+        int tagId = tagQuery.value(Table_Game_Tags_Tag::COL_TAG_ID).toInt();
+        auto tagItr = mTagMap.constFind(tagId);
+        if(tagItr != mTagMap.constEnd())
+        {
+            auto tag = *tagItr;
+            gtb.wTag(tag->category, tag->primaryAlias);
+        }
+        else
+            qWarning("Table %s contains invalid tag ID %d for game %s", qPrintable(Table_Game_Tags_Tag::NAME), tagId, qPrintable(gameId.toString()));
+    }
+    tags = gtb.build();
 
     return DbError();
 }
