@@ -219,6 +219,43 @@ public:
     GameData build();
 };
 
+class FP_FP_EXPORT GameTags
+{
+//-Inner Classes----------------------------------------------------------------------------------------------------
+public:
+    class Builder;
+
+//-Instance Variables-----------------------------------------------------------------------------------------------
+private:
+    QHash<QString, QStringList> mTags;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    GameTags();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    QStringList tags() const;
+    QStringList tags(const QString& category) const;
+};
+
+class FP_FP_EXPORT GameTags::Builder
+{
+//-Instance Variables------------------------------------------------------------------------------------------
+private:
+    GameTags mGameTagsBlueprint;
+
+//-Constructor-------------------------------------------------------------------------------------------------
+public:
+    Builder();
+
+//-Instance Functions------------------------------------------------------------------------------------------
+public:
+    Builder& wTag(const QString& genre, const QString& tag);
+
+    GameTags build();
+};
+
 class FP_FP_EXPORT AddApp
 {
 //-Inner Classes----------------------------------------------------------------------------------------------------
@@ -296,6 +333,7 @@ public:
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
     Game mGame;
+    GameTags mTags;
     QList<AddApp> mAddApps;
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -305,6 +343,7 @@ public:
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
     const Game& game() const;
+    const GameTags& tags() const;
     const QList<AddApp>& addApps() const;
 };
 
@@ -321,6 +360,7 @@ public:
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
     Builder& wGame(const Game& game);
+    Builder& wTags(const GameTags& tags);
     Builder& wAddApp(const AddApp& addApp);
     Builder& wAddApps(const QList<AddApp>& addApps);
 

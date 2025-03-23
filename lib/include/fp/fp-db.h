@@ -263,6 +263,7 @@ public:
     {
         int id;
         QString primaryAlias;
+        QString category;
     };
 
     struct TagCategory
@@ -328,7 +329,8 @@ private:
     const QString mDatabaseName;
     QStringList mPlatformNames;
     QStringList mPlaylistList;
-    QMap<int, TagCategory> mTagMap; // Order matters for display in tag selector
+    QMap<int, TagCategory> mTagDirectory; // Tag category id -> Tag category
+    QHash<int, const Tag*> mTagMap; // Tag id -> Tag
     QHash<QUuid, QUuid> mGameRedirects;
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -386,6 +388,7 @@ public:
     // Helper
     DbError getEntry(Entry& entry, const QUuid& entryId);
     DbError getGameData(GameData& data, const QUuid& gameId);
+    DbError getGameTags(GameTags& tags, const QUuid& gameId);
     DbError updateGameDataOnDiskState(QList<int> packIds, bool onDisk);
     QUuid handleGameRedirects(const QUuid& gameId);
 

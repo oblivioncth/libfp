@@ -22,7 +22,7 @@ Toolkit::Toolkit(const Install& install, const Key&) :
     mEntryLocalLogoTemplate = mInstall.mEntryLogosDirectory.absoluteFilePath(u"%1"_s + IMAGE_EXT);
     mEntryLocalScreenshotTemplate = mInstall.mEntryScreenshotsDirectory.absoluteFilePath(u"%1"_s + IMAGE_EXT);
     mEntryRemoteLogoTemplate = p.onDemandBaseUrl + mInstall.LOGOS_FOLDER_NAME + u"/%1"_s + IMAGE_EXT;
-    mEntryRemoteLogoTemplate = p.onDemandBaseUrl + mInstall.SCREENSHOTS_FOLDER_NAME + u"/%1"_s + IMAGE_EXT;
+    mEntryRemoteScreenshotTemplate = p.onDemandBaseUrl + mInstall.SCREENSHOTS_FOLDER_NAME + u"/%1"_s + IMAGE_EXT;
     if(!p.onDemandImagesCompressed.has_value() || p.onDemandImagesCompressed.value())
     {
         mEntryRemoteLogoTemplate += IMAGE_COMPRESSED_URL_SUFFIX;

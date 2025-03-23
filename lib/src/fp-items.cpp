@@ -238,6 +238,41 @@ GameData::Builder& GameData::Builder::wLaunchCommand(const QString& launchComman
 GameData GameData::Builder::build() { mGameDataBlueprint.mNull = false; return mGameDataBlueprint; }
 
 //===============================================================================================================
+// GameTags
+//===============================================================================================================
+
+//-Constructor------------------------------------------------------------------------------------------------
+//Public:
+GameTags::GameTags() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------------
+//Public:
+QStringList GameTags::tags() const
+{
+    QStringList all;
+    for(const QStringList& tl : mTags)
+        all.append(tl);
+
+    return all;
+}
+
+QStringList GameTags::tags(const QString& category) const { return mTags.value(category); }
+
+//===============================================================================================================
+// GameTags::Builder
+//===============================================================================================================
+
+//-Constructor-------------------------------------------------------------------------------------------------
+//Public:
+GameTags::Builder::Builder() {}
+
+//-Instance Functions------------------------------------------------------------------------------------------
+//Public:
+GameTags::Builder& GameTags::Builder::wTag(const QString& genre, const QString& tag) { mGameTagsBlueprint.mTags[genre].append(tag); return *this; }
+
+GameTags GameTags::Builder::build() { return mGameTagsBlueprint; }
+
+//===============================================================================================================
 // AddApp
 //===============================================================================================================
 
@@ -314,6 +349,7 @@ Set::Set() {}
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
 const Game& Set::game() const { return mGame; }
+const GameTags& Set::tags() const { return mTags; }
 const QList<AddApp>& Set::addApps() const { return mAddApps; }
 
 //===============================================================================================================
@@ -327,6 +363,7 @@ Set::Builder::Builder() {}
 //-Instance Functions------------------------------------------------------------------------------------------
 //Public:
 Set::Builder& Set::Builder::wGame(const Game& game) { mSetBlueprint.mGame = game; return *this; }
+Set::Builder& Set::Builder::wTags(const GameTags& tags) { mSetBlueprint.mTags = tags; return *this; }
 Set::Builder& Set::Builder::wAddApp(const AddApp& addApp) { mSetBlueprint.mAddApps.append(addApp); return *this; }
 Set::Builder& Set::Builder::wAddApps(const QList<AddApp>& addApps) { mSetBlueprint.mAddApps.append(addApps); return *this; }
 
