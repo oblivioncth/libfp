@@ -49,7 +49,7 @@ Install::Install(QString installPath, bool preloadPlaylists) :
     mPreferencesJsonFile = std::make_shared<QFile>(installPath + u"/"_s + PREFERENCES_JSON_PATH);
     mVersionFile = std::make_unique<QFile>(installPath + u"/"_s + VER_TXT_PATH);
     mExtrasDirectory = QDir(installPath + u"/"_s + EXTRAS_PATH);
-
+    mArchiveDataDirectory = QDir(installPath + u"/"_s + ARCHIVE_DATA_PATH);
 
     //-Check install validity--------------------------------------------
 
@@ -273,6 +273,7 @@ QDir Install::entryLogosDirectory() const { return mEntryLogosDirectory; }
 QDir Install::entryScreenshotsDirectory() const { return mEntryScreenshotsDirectory; }
 QDir Install::extrasDirectory() const { return mExtrasDirectory; }
 QDir Install::platformLogosDirectory() const { return mPlatformLogosDirectory; }
+QDir Install::archiveDataDirectory() const { return mArchiveDataDirectory; }
 
 //===============================================================================================================
 // Install::VersionInfo

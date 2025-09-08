@@ -99,6 +99,7 @@ private:
     static inline const QString EXT_CONFIG_JSON_PATH = u"extConfig.json"_s;
     static inline const QString PREFERENCES_JSON_PATH = u"preferences.json"_s;
     static inline const QString VER_TXT_PATH = u"version.txt"_s;
+    static inline const QString ARCHIVE_DATA_PATH = u"Data/ArchiveData"_s;
 
     // Dynamic path file names
     static inline const QString SERVICES_JSON_NAME = u"services.json"_s;
@@ -127,6 +128,7 @@ private:
     QDir mEntryScreenshotsDirectory;
     QDir mExtrasDirectory;
     QDir mPlaylistsDirectory;
+    QDir mArchiveDataDirectory;
     std::unique_ptr<QFile> mLauncherFile;
     std::unique_ptr<QFile> mDatabaseFile;
     std::shared_ptr<QFile> mConfigJsonFile;
@@ -196,6 +198,7 @@ public:
     QDir entryScreenshotsDirectory() const;
     QDir extrasDirectory() const;
     QDir platformLogosDirectory() const;
+    QDir archiveDataDirectory() const;
 };
 
 class Install::VersionInfo
