@@ -48,11 +48,12 @@ ob_find_package_qt(REQUIRED COMPONENTS ${LIBFP_QT_COMPONENTS})
 set(LIBFP_QX_COMPONENTS
     Core
     Io
+    Sql
 )
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "v0.6.2"
+    REF "3a008d16fdfda3d22db02d515f01ed834966d3a5"
     COMPONENTS
         ${LIBFP_QX_COMPONENTS}
 )

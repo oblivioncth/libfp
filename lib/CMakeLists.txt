@@ -41,5 +41,6 @@ ob_add_standard_library(${LIB_TARGET_NAME}
             Qt6::Gui
             Qx::Core
             Qx::Io
+            Qx::Sql
     CONFIG STANDARD
  )
