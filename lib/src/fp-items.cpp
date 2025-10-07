@@ -200,7 +200,10 @@ QString AddApp::launchCommand() const { return mData.launchCommand; }
 QString AddApp::name() const { return mData.name; }
 bool AddApp::isWaitExit() const { return mData.waitExit; }
 QUuid AddApp::parentId() const { return mData.parentId; }
-bool AddApp::isPlayable() const { return mData.appPath != Sql::ENTRY_EXTRAS && mData.appPath != Sql::ENTRY_MESSAGE && !mData.autorunBefore; }
+
+bool AddApp::isPlayable() const { return !isMessage() && !isExtra() && !mData.autorunBefore; }
+bool AddApp::isMessage() const { return mData.appPath == Sql::ENTRY_MESSAGE; }
+bool AddApp::isExtra() const { return mData.appPath == Sql::ENTRY_EXTRAS; }
 
 //===============================================================================================================
 // Entry

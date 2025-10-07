@@ -237,7 +237,10 @@ public:
     QString name() const;
     bool isWaitExit() const;
     QUuid parentId() const;
+
     bool isPlayable() const;
+    bool isMessage() const;
+    bool isExtra() const;
 };
 
 class FP_FP_EXPORT Entry
