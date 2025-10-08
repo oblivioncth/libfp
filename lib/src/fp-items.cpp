@@ -241,6 +241,11 @@ QString Entry::title() const { return name(); }
 bool Entry::holdsGame() const { return std::holds_alternative<Game>(mData); }
 bool Entry::holdsAddApp() const { return std::holds_alternative<AddApp>(mData); }
 
+Game& Entry::getGame() { return std::get<Game>(mData); }
+const Game& Entry::getGame() const { return std::get<Game>(mData); }
+AddApp& Entry::getAddApp() { return std::get<AddApp>(mData); }
+const AddApp& Entry::getAddApp() const { return std::get<AddApp>(mData); }
+
 //===============================================================================================================
 // Set
 //===============================================================================================================

@@ -285,6 +285,11 @@ public:
     {
         return std::visit(std::forward<Visitor>(v), mData);
     }
+
+    Game& getGame();
+    const Game& getGame() const;
+    AddApp& getAddApp();
+    const AddApp& getAddApp() const;
 };
 
 class FP_FP_EXPORT Set
