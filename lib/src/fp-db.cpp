@@ -668,7 +668,7 @@ DbError Db::searchAddAppIds(QList<QUuid>& addAppIds, const AddAppFilter& filter)
     return invokeWithCleanBuffer(addAppIds, [&]{ return searchImpl(addAppIds, filter); });
 }
 
-DbError Db::searchEntrys(QList<Entry>& entries, const EntryFilter& filter)
+DbError Db::searchEntries(QList<Entry>& entries, const EntryFilter& filter)
 {
     return invokeWithCleanBuffer(entries, [&]{ return searchEntryImpl(entries, filter); });
 }

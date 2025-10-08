@@ -221,7 +221,7 @@ public:
     DbError searchGameIds(QList<QUuid>& gameIds, const GameFilter& filter);
     DbError searchAddApps(QList<AddApp>& addApps, const AddAppFilter& filter);
     DbError searchAddAppIds(QList<QUuid>& addAppIds, const AddAppFilter& filter);
-    DbError searchEntrys(QList<Entry>& entries, const EntryFilter& filter);
+    DbError searchEntries(QList<Entry>& entries, const EntryFilter& filter);
     DbError searchEntryIds(QList<QUuid>& entryIds, const EntryFilter& filter);
 
     DbError getGame(Game& game, const QUuid& gameId);
