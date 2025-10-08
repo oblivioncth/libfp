@@ -271,6 +271,8 @@ public:
     QUuid id() const;
     QString name() const;
     QString title() const;
+    bool holdsGame() const;
+    bool holdsAddApp() const;
 
     template <typename Visitor>
     decltype(auto) visit(Visitor&& v)

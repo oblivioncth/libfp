@@ -238,6 +238,9 @@ QString Entry::name() const
 
 QString Entry::title() const { return name(); }
 
+bool Entry::holdsGame() const { return std::holds_alternative<Game>(mData); }
+bool Entry::holdsAddApp() const { return std::holds_alternative<AddApp>(mData); }
+
 //===============================================================================================================
 // Set
 //===============================================================================================================
