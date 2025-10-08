@@ -219,7 +219,7 @@ DbError::DbError(const Qx::SqlError& e) :
 
 DbError::DbError(const Qx::SqlSchemaReport& sr)
 {
-    if(sr.hasDefects())
+    if(!sr.hasDefects())
         mType = NoError;
     else
     {
