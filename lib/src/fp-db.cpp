@@ -554,9 +554,6 @@ template<typename T, typename F>
     requires Qx::any_of<T, Game, AddApp, Entry>
 Fp::DbError Db::searchImpl(QList<T>& buffer, const F& filter)
 {
-    // Clear buffer
-    buffer.clear();
-
     // Make query
     using buffer_t = typename search_traits<F>::buffer_type;
     auto query = mDatabase.SELECT<buffer_t>();
@@ -586,7 +583,7 @@ Fp::DbError Db::searchImpl(QList<QUuid>& buffer, const F& filter)
     using trs = search_traits<F>;
     auto query = mDatabase.SELECT(trs::idString);
     prepareSearchQuery(query, filter);
-    return query.execute(buffer);
+    return query.appendExecute(buffer); // append - Keep existing results
 }
 
 template<typename T>
@@ -802,7 +799,7 @@ DbError Db::getGameTags(GameTags& tags, const QUuid& gameId)
         if(auto err = tagQueryRes.value(sql); err.isValid())
             return err;
 
-        int tagId = sql.tagId;
+        int tagId = sql.tagId; // clazy:exclude=core.uninitialized.Assign
         auto tagItr = mTagMap.constFind(tagId);
         if(tagItr != mTagMap.constEnd())
         {
