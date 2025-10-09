@@ -40,7 +40,7 @@ bool Game::isBroken() const { return mData.broken; }
 QString Game::status() const { return mData.status; }
 QString Game::notes() const{ return mData.notes; }
 QString Game::source() const { return mData.source; }
-QString Game::appPath() const { return mData.appPath; }
+QString Game::applicationPath() const { return mData.applicationPath; }
 QString Game::launchCommand() const { return mData.launchCommand; }
 QDateTime Game::releaseDate() const { return mData.releaseDate; }
 QString Game::version() const { return mData.version; }
@@ -131,9 +131,9 @@ quint32 GameData::crc32() const { return mData.crc32; }
 bool GameData::presentOnDisk() const { return mData.presentOnDisk; }
 QString GameData::path() const { return mData.path; }
 quint32 GameData::size() const { return mData.size; }
-QString GameData::rawParameters() const { return mData.rawParameters; }
-GameDataParameters GameData::parameters() const { return GameDataParameters(mData.rawParameters); }
-QString GameData::appPath() const { return mData.appPath; }
+QString GameData::parameters() const { return mData.parameters; }
+GameDataParameters GameData::parsedParameters() const { return GameDataParameters(mData.parameters); }
+QString GameData::applicationPath() const { return mData.applicationPath; }
 QString GameData::launchCommand() const { return mData.launchCommand; }
 
 //===============================================================================================================
@@ -182,28 +182,28 @@ size_t qHash(const AddApp& key, size_t seed) noexcept
 {
     return qHashMulti(seed,
         key.mData.id,
-        key.mData.appPath,
+        key.mData.applicationPath,
         key.mData.autorunBefore,
         key.mData.launchCommand,
         key.mData.name,
-        key.mData.waitExit,
-        key.mData.parentId
+        key.mData.waitForExit,
+        key.mData.parentGameId
     );
 }
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Public:
 QUuid AddApp::id() const { return mData.id; }
-QString AddApp::appPath() const { return mData.appPath; }
+QString AddApp::applicationPath() const { return mData.applicationPath; }
 bool AddApp::isAutorunBefore() const { return  mData.autorunBefore; }
 QString AddApp::launchCommand() const { return mData.launchCommand; }
 QString AddApp::name() const { return mData.name; }
-bool AddApp::isWaitExit() const { return mData.waitExit; }
-QUuid AddApp::parentId() const { return mData.parentId; }
+bool AddApp::isWaitForExit() const { return mData.waitForExit; }
+QUuid AddApp::parentGameId() const { return mData.parentGameId; }
 
 bool AddApp::isPlayable() const { return !isMessage() && !isExtra() && !mData.autorunBefore; }
-bool AddApp::isMessage() const { return mData.appPath == Sql::ENTRY_MESSAGE; }
-bool AddApp::isExtra() const { return mData.appPath == Sql::ENTRY_EXTRAS; }
+bool AddApp::isMessage() const { return mData.applicationPath == Sql::ENTRY_MESSAGE; }
+bool AddApp::isExtra() const { return mData.applicationPath == Sql::ENTRY_EXTRAS; }
 
 //===============================================================================================================
 // Entry

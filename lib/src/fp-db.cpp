@@ -53,14 +53,14 @@ struct TagCategorySql
 QX_SQL_STRUCT_OUTSIDE_FULL(Fp::Game::Sql, "game", GameSqlQ,
     id, title, series, developer, publisher, dateAdded,
     dateModified, broken, playMode, status, notes, source,
-    appPath, launchCommand, releaseDate, version,
+    applicationPath, launchCommand, releaseDate, version,
     originalDescription, language, orderTitle, library,
     platformName, ruffleSupport
 );
 
 QX_SQL_STRUCT_OUTSIDE_FULL(Fp::GameData::Sql, "game_data", GameDataSqlQ,
     id, gameId, title, dateAdded, sha256, crc32, presentOnDisk, path,
-    size, rawParameters, appPath, launchCommand
+    size, parameters, applicationPath, launchCommand
 );
 
 QX_SQL_MEMBER_OVERRIDE(Fp::GameData::Sql, dateAdded,
@@ -98,8 +98,8 @@ QX_SQL_MEMBER_OVERRIDE(Fp::GameData::Sql, dateAdded,
 )
 
 QX_SQL_STRUCT_OUTSIDE_FULL(Fp::AddApp::Sql, "additional_app", AddAppSqlQ,
-    id, appPath, autorunBefore, launchCommand, name,
-    waitExit, parentId,
+    id, applicationPath, autorunBefore, launchCommand, name,
+    waitForExit, parentGameId,
 );
 
 QX_SQL_STRUCT_OUTSIDE_FULL(GameRedirectSql, "game_redirect", GameRedirectSqlQ,
@@ -542,9 +542,9 @@ void Db::prepareSearchQuery(Qx::SqlDqlQuery& query, const Fp::Db::AddAppFilter& 
         }
     }
     if(!filter.parent.isNull())
-        andWhere(where, AddAppSqlQ::parentId == filter.parent);
+        andWhere(where, AddAppSqlQ::parentGameId == filter.parent);
     if(filter.playableOnly)
-        andWhere(where, AddAppSqlQ::autorunBefore != true && AddAppSqlQ::appPath |= !IN(sqs(AddApp::Sql::ENTRY_EXTRAS), sqs(AddApp::Sql::ENTRY_MESSAGE)));
+        andWhere(where, AddAppSqlQ::autorunBefore != true && AddAppSqlQ::applicationPath |= !IN(sqs(AddApp::Sql::ENTRY_EXTRAS), sqs(AddApp::Sql::ENTRY_MESSAGE)));
 
     query.WHERE(where);
 }

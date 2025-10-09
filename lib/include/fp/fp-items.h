@@ -42,7 +42,7 @@ private:
         QString status;
         QString notes;
         QString source;
-        QString appPath;
+        QString applicationPath;
         QString launchCommand;
         QDateTime releaseDate;
         QString version;
@@ -79,7 +79,7 @@ public:
     QString status() const;
     QString notes() const;
     QString source() const;
-    QString appPath() const;
+    QString applicationPath() const;
     QString launchCommand() const;
     QDateTime releaseDate() const;
     QString version() const;
@@ -131,8 +131,8 @@ private:
         bool presentOnDisk;
         QString path;
         quint32 size;
-        QString rawParameters;
-        QString appPath;
+        QString parameters;
+        QString applicationPath;
         QString launchCommand;
     };
 
@@ -161,9 +161,9 @@ public:
     bool presentOnDisk() const;
     QString path() const;
     quint32 size() const;
-    QString rawParameters() const;
-    GameDataParameters parameters() const;
-    QString appPath() const;
+    QString parameters() const;
+    GameDataParameters parsedParameters() const;
+    QString applicationPath() const;
     QString launchCommand() const;
 };
 
@@ -199,12 +199,12 @@ private:
         static inline const QString ENTRY_MESSAGE = u":message:"_s;
 
         QUuid id;
-        QString appPath;
+        QString applicationPath;
         bool autorunBefore;
         QString launchCommand;
         QString name;
-        bool waitExit;
-        QUuid parentId;
+        bool waitForExit;
+        QUuid parentGameId;
 
         bool operator==(const Sql& other) const noexcept = default;
     };
@@ -231,12 +231,12 @@ public:
 //-Instance Functions------------------------------------------------------------------------------------------------------
 public:
     QUuid id() const;
-    QString appPath() const;
+    QString applicationPath() const;
     bool isAutorunBefore() const;
     QString launchCommand() const;
     QString name() const;
-    bool isWaitExit() const;
-    QUuid parentId() const;
+    bool isWaitForExit() const;
+    QUuid parentGameId() const;
 
     bool isPlayable() const;
     bool isMessage() const;
