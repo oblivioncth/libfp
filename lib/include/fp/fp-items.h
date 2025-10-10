@@ -31,6 +31,7 @@ class FP_FP_EXPORT Game
 {
     friend class Db;
     friend class Entry;
+    friend class Playlist;
 //-Inner Struct----------------------------------------------------------------------------------------------------
 private:
     struct Sql
@@ -402,7 +403,7 @@ private:
     QString mTitle;
     QString mDescription;
     QString mAuthor;
-    QString mLibrary;
+    Library mLibrary;
     QImage mIcon;
 
     QList<PlaylistGame> mPlaylistGames;
@@ -417,7 +418,7 @@ public:
     QString title() const;
     QString description() const;
     QString author() const;
-    QString library() const;
+    Library library() const;
     QImage icon() const;
 
     const QList<PlaylistGame>& playlistGames() const;
