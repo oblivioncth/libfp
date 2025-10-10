@@ -94,7 +94,6 @@ private:
     struct search_traits;
 
 public:
-    enum class LibraryFilter{ Game, Anim, Either };
     enum class EntryType{ Game, AddApp, GameThenAddApp, GameAndAddApp };
 
     struct Tag
@@ -229,7 +228,7 @@ public:
     DbError getEntry(Entry& entry, const QUuid& entryId);
     DbError getGameData(GameData& data, const QUuid& gameId);
     DbError getGameTags(GameTags& tags, const QUuid& gameId);
-    DbError getAllGameIds(QList<QUuid>& ids, const LibraryFilter& filter);
+    DbError getAllGameIds(QList<QUuid>& ids, const Libraries& filter);
     DbError getAllAddApps(QList<AddApp>& addApps);
     DbError getAllEntryTags();
 

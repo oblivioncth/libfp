@@ -799,7 +799,7 @@ DbError Db::getGameTags(GameTags& tags, const QUuid& gameId)
         if(auto err = tagQueryRes.value(sql); err.isValid())
             return err;
 
-        int tagId = sql.tagId; // clazy:exclude=core.uninitialized.Assign
+        int tagId = sql.tagId; //NOTE: Ignore garbage value warning
         auto tagItr = mTagMap.constFind(tagId);
         if(tagItr != mTagMap.constEnd())
         {
@@ -814,7 +814,7 @@ DbError Db::getGameTags(GameTags& tags, const QUuid& gameId)
     return DbError();
 }
 
-DbError Db::getAllGameIds(QList<QUuid>& ids, const LibraryFilter& filter)
+DbError Db::getAllGameIds(QList<QUuid>& ids, const Libraries& filter)
 {
     // Clear buffer
     ids = {};
@@ -822,9 +822,9 @@ DbError Db::getAllGameIds(QList<QUuid>& ids, const LibraryFilter& filter)
     // Make query
     using namespace QxSql;
     auto sqlFilter = GameSqlQ::status != sqi(Game::Sql::ENTRY_NOT_WORK);
-    if(filter == LibraryFilter::Game)
+    if(filter.testFlag(Library::Game))
         sqlFilter = sqlFilter && (GameSqlQ::library == sqs(Game::Sql::ENTRY_GAME_LIBRARY));
-    else if(filter == LibraryFilter::Anim)
+    else if(filter.testFlag(Library::Animation))
         sqlFilter = sqlFilter && (GameSqlQ::library == sqs(Game::Sql::ENTRY_ANIM_LIBRARY));
 
     return mDatabase.SELECT(GameSqlQ::id)

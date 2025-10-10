@@ -16,6 +16,15 @@ namespace Fp
 {
 //-Enums----------------------------------------------------------------------------------------------------------
 enum class ImageType { Logo, Screenshot };
+enum class Library
+{
+    Unknown = 0x0,
+    Game = 0x1,
+    Animation = 0x2,
+    All = Game | Animation
+};
+Q_DECLARE_FLAGS(Libraries, Library);
+Q_DECLARE_OPERATORS_FOR_FLAGS(Libraries);
 
 //-Namespace Classes---------------------------------------------------------------------------------------------
 class FP_FP_EXPORT Game
@@ -86,7 +95,7 @@ public:
     QString originalDescription() const;
     QString language() const;
     QString orderTitle() const;
-    QString library() const;
+    Library library() const;
     QString platformName() const;
     QString ruffleSupport() const;
 };
@@ -103,7 +112,8 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    GameDataParameters(const QString& rawParameters);
+    GameDataParameters();
+    explicit GameDataParameters(const QString& rawParameters);
 
 //-Instance Functions------------------------------------------------------------------------------------------
 public:
@@ -139,6 +149,7 @@ private:
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
     Sql mData;
+    GameDataParameters mGdp;
     bool mNull;
 
 //-Constructor-------------------------------------------------------------------------------------------------
@@ -161,8 +172,7 @@ public:
     bool presentOnDisk() const;
     QString path() const;
     quint32 size() const;
-    QString parameters() const;
-    GameDataParameters parsedParameters() const;
+    GameDataParameters parameters() const;
     QString applicationPath() const;
     QString launchCommand() const;
 };

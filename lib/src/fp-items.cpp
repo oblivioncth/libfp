@@ -47,7 +47,13 @@ QString Game::version() const { return mData.version; }
 QString Game::originalDescription() const { return mData.originalDescription; }
 QString Game::language() const { return mData.language; }
 QString Game::orderTitle() const { return mData.orderTitle; }
-QString Game::library() const { return mData.library; }
+
+Library Game::library() const
+{
+    const auto& l = mData.library;
+    return l == Sql::ENTRY_GAME_LIBRARY ? Library::Game : l == Sql::ENTRY_ANIM_LIBRARY ? Library::Animation : Library::Unknown;
+}
+
 QString Game::platformName() const { return mData.platformName; }
 QString Game::ruffleSupport() const { return mData.ruffleSupport; }
 
@@ -57,6 +63,10 @@ QString Game::ruffleSupport() const { return mData.ruffleSupport; }
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
+GameDataParameters::GameDataParameters() :
+    mExtract(false)
+{}
+
 GameDataParameters::GameDataParameters(const QString& rawParameters)
 {
     static const auto OPT_EXTRACT = QCommandLineOption(u"extract"_s);
@@ -110,6 +120,7 @@ QString GameDataParameters::errorString() const { return mErrorStr; }
 //Private:
 GameData::GameData(Sql&& sql) :
     mData(sql),
+    mGdp(sql.parameters),
     mNull(false)
 {}
 
@@ -131,8 +142,7 @@ quint32 GameData::crc32() const { return mData.crc32; }
 bool GameData::presentOnDisk() const { return mData.presentOnDisk; }
 QString GameData::path() const { return mData.path; }
 quint32 GameData::size() const { return mData.size; }
-QString GameData::parameters() const { return mData.parameters; }
-GameDataParameters GameData::parsedParameters() const { return GameDataParameters(mData.parameters); }
+GameDataParameters GameData::parameters() const { return mGdp; }
 QString GameData::applicationPath() const { return mData.applicationPath; }
 QString GameData::launchCommand() const { return mData.launchCommand; }
 
