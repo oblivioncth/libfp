@@ -28,11 +28,11 @@ Toolkit::Toolkit(const Install& install, const Key&) :
         mEntryRemoteLogoTemplate += IMAGE_COMPRESSED_URL_SUFFIX;
         mEntryRemoteScreenshotTemplate += IMAGE_COMPRESSED_URL_SUFFIX;
     }
-    mDatapackLocalDir = mInstall.mRootDirectory.absoluteFilePath(mInstall.preferences().dataPacksFolderPath);
-    if(mInstall.preferences().gameDataSources)
+    mDatapackLocalDir = mInstall.mRootDirectory.absoluteFilePath(p.dataPacksFolderPath);
+    if(p.gameDataSources && !p.gameDataSources->isEmpty())
     {
-        Q_ASSERT(mInstall.preferences().gameDataSources->contains(mInstall.MAIN_DATAPACK_SOURCE));
-        mDatapackRemoteBase = mInstall.preferences().gameDataSources->value(mInstall.MAIN_DATAPACK_SOURCE).arguments.value(0);
+        Q_ASSERT(p.gameDataSources->contains(mInstall.MAIN_DATAPACK_SOURCE));
+        mDatapackRemoteBase = p.gameDataSources->value(mInstall.MAIN_DATAPACK_SOURCE).arguments.value(0);
 
         if(mDatapackRemoteBase.back() == '/')
             mDatapackRemoteBase.chop(1);

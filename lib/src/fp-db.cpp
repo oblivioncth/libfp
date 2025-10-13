@@ -1,9 +1,187 @@
 // Unit Includes
 #include "fp/fp-db.h"
 
+// Qt Includes
+#include <QSqlError>
+
 // Qx Includes
 #include <qx/core/qx-string.h>
 #include <qx/core/qx-regularexpression.h>
+#include <qx/core/qx-error.h>
+#include <qx/core/qx-algorithm.h>
+#include <qx/sql/qx-sqlquery.h>
+#include <qx/sql/qx-sqlinlines.h>
+
+namespace
+{
+
+struct GameRedirectSql
+{
+    QUuid id;
+    QUuid sourceId;
+};
+
+struct GameTagsTagSql
+{
+    QUuid gameId;
+    int tagId;
+};
+
+struct TagSql
+{
+    int id;
+    int primaryAliasId;
+    int categoryId;
+};
+
+struct TagAliasSql
+{
+    int id;
+    int tagId;
+    QString name;
+};
+
+struct TagCategorySql
+{
+    int id;
+    QString name;
+    QColor color;
+};
+
+}
+
+QX_SQL_STRUCT_OUTSIDE_FULL(Fp::Game::Sql, "game", GameSqlQ,
+    id, title, series, developer, publisher, dateAdded,
+    dateModified, broken, playMode, status, notes, source,
+    applicationPath, launchCommand, releaseDate, version,
+    originalDescription, language, orderTitle, library,
+    platformName, ruffleSupport
+);
+
+QX_SQL_STRUCT_OUTSIDE_FULL(Fp::GameData::Sql, "game_data", GameDataSqlQ,
+    id, gameId, title, dateAdded, sha256, crc32, presentOnDisk, path,
+    size, parameters, applicationPath, launchCommand
+);
+
+QX_SQL_MEMBER_OVERRIDE(Fp::GameData::Sql, dateAdded,
+    static Qx::SqlError fromSql(QDateTime& dateAdded, const QVariant& v)
+    {
+        /* Have to bodge fractional time because of: https://github.com/qt/qtbase/blob/4e7f5c43a3be609502ccc15861319503dc2c842b/src/corelib/time/qdatetime.cpp#L2515
+        * It seems that the converter was supposed to floor to the previous MS (which is what JS's Date() does), but qRound() was accidentally used,
+        * and then afterwards additional functionality/tests were built around the fact that the conversion can round up, so a change being accepted
+        * is potentially unlikely
+        */
+
+        QString cleanDate = v.toString();
+        if(!cleanDate.endsWith('z', Qt::CaseInsensitive))
+            cleanDate.append('Z');// Times should always been in UTC
+        int dotPos = cleanDate.indexOf('.'); // Fractional time (could be comma, but seems to be unused in FP)
+        if(dotPos != -1)
+        {
+            // Ignore fractional precision past whole MS (how JS's Date() handles it
+            constexpr int MAX_DECIMALS = 3;
+            int decimalStart = dotPos + 1;
+            int decimalEnd = cleanDate.size() - 2; // Extra -1 because of 'Z'
+            int decimalPlaces = Qx::length(decimalStart, decimalEnd);
+            if(decimalPlaces > MAX_DECIMALS)
+            {
+                int extra = decimalPlaces - MAX_DECIMALS;
+                cleanDate.remove(decimalStart + MAX_DECIMALS, extra);
+            }
+        }
+        dateAdded = QDateTime::fromString(cleanDate, Qt::ISODateWithMs);
+
+        return {};
+    }
+
+    static QVariant toSql(const QDateTime& dateAdded); // UNIMPLEMENTED
+)
+
+QX_SQL_STRUCT_OUTSIDE_FULL(Fp::AddApp::Sql, "additional_app", AddAppSqlQ,
+    id, applicationPath, autorunBefore, launchCommand, name,
+    waitForExit, parentGameId,
+);
+
+QX_SQL_STRUCT_OUTSIDE_FULL(GameRedirectSql, "game_redirect", GameRedirectSqlQ,
+    id, sourceId
+);
+
+QX_SQL_STRUCT_OUTSIDE_FULL(GameTagsTagSql, "game_tags_tag", GameTagsTagSqlQ,
+    gameId, tagId
+);
+
+QX_SQL_STRUCT_OUTSIDE_FULL(TagSql, "tag", TagSqlQ,
+    id, primaryAliasId, categoryId
+);
+
+QX_SQL_STRUCT_OUTSIDE_FULL(TagAliasSql, "tag_alias", TagAliasSqlQ,
+    id, tagId, name
+);
+
+QX_SQL_STRUCT_OUTSIDE_FULL(TagCategorySql, "tag_category", TagCategorySqlQ,
+    id, name, color
+);
+
+namespace QxSql
+{
+    // Some date-times in DB do not adhere to the standard
+    template<>
+    struct Converter<QDateTime>
+    {
+        static Qx::SqlError fromSql(QDateTime& dt, const QVariant& vValue)
+        {
+            QString dts = vValue.toString();
+
+            static const QString DEFAULT_MONTH = u"-01"_s;
+            static const QString DEFAULT_DAY = u"-01"_s;
+
+            if(Qx::String::isOnlyNumbers(dts) && dts.length() == 4) // Year only
+                dt = QDateTime::fromString(dts + DEFAULT_MONTH + DEFAULT_DAY, Qt::ISODateWithMs);
+            else if(Qx::String::isOnlyNumbers(dts.left(4)) &&
+                    Qx::String::isOnlyNumbers(dts.mid(5,2)) &&
+                    dts.at(4) == '-' && dts.length() == 7) // Year and month only
+                dt = QDateTime::fromString(dts + DEFAULT_DAY, Qt::ISODateWithMs);
+            else if(Qx::String::isOnlyNumbers(dts.left(4)) &&
+                    Qx::String::isOnlyNumbers(dts.mid(5,2)) &&
+                    Qx::String::isOnlyNumbers(dts.mid(8,2)) &&
+                    dts.at(4) == '-' && dts.at(7) == '-' && dts.length() == 10) // Year month and day
+                dt = QDateTime::fromString(dts, Qt::ISODateWithMs);
+            else
+                dt = QDateTime(); // Invalid date provided
+
+            return {};
+        }
+
+        static QVariant toSql(const QDateTime& value); // UNIMPLEMENTED
+    };
+}
+
+namespace
+{
+
+
+
+template<typename T, typename F>
+    requires std::same_as<std::invoke_result_t<F>, Fp::DbError>
+Fp::DbError invokeWithCleanBuffer(T& buffer, F&& func)
+{
+    buffer = {};
+    Fp::DbError err = func();
+    if(err)
+        buffer = {};
+
+    return err;
+}
+
+void andWhere(Qx::SqlString& where, const Qx::SqlString& nd)
+{
+    if(where.isEmpty())
+        where = nd;
+    else
+        where = where && nd;
+}
+
+}
 
 namespace Fp
 {
@@ -11,6 +189,21 @@ namespace Fp
 //===============================================================================================================
 // DbError
 //===============================================================================================================
+
+//-Class Types-----------------------------------------------------------------------------------------------
+template<>
+struct Db::search_traits<Fp::Db::GameFilter>
+{
+    static inline const Qx::SqlString idString = GameSqlQ::id;
+    using buffer_type = Fp::Game::Sql;
+};
+
+template<>
+struct Db::search_traits<Fp::Db::AddAppFilter>
+{
+    static inline const Qx::SqlString idString = AddAppSqlQ::id;
+    using buffer_type = Fp::AddApp::Sql;
+};
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Private:
@@ -20,17 +213,28 @@ DbError::DbError(Type t, const QString& c, const QString& d):
     mDetails(d)
 {}
 
+DbError::DbError(const Qx::SqlError& e) :
+    DbError(e.isValid() ? SqlError : NoError, e.cause(), e.query())
+{}
+
+DbError::DbError(const Qx::SqlSchemaReport& sr)
+{
+    if(!sr.hasDefects())
+        mType = NoError;
+    else
+    {
+        // "Cheat" with Qx::Error
+        Qx::Error err(sr);
+        mType = InvalidSchema;
+        mCause = err.secondary();
+        mDetails = err.details();
+    }
+}
+
 //Public:
 DbError::DbError() :
     mType(NoError)
 {}
-
-//-Class Functions---------------------------------------------------------------
-//Private:
-DbError DbError::fromSqlError(const QSqlError& e)
-{
-    return e.isValid() ? DbError(SqlError, e.text()) : DbError();
-}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Private:
@@ -62,64 +266,53 @@ bool operator< (const Db::TagCategory& lhs, const Db::TagCategory& rhs) noexcept
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
 Db::Db(const QString& databaseName, const Key&) :
-    QObject(),
     mValid(false), // Instance is invalid until proven otherwise
-    mDatabaseName(databaseName)
+    mDatabase(databaseName, u"QSQLITE"_s)
 {
     QScopeGuard validityGuard([this](){ nullify(); }); // Automatically nullify on fail
 
     // Error tracker
-    QSqlError databaseError;
+    Qx::SqlError databaseError;
 
-    // Ensure required database tables are present
-    QSet<QString> missingTables;
-    if((databaseError = checkDatabaseForRequiredTables(missingTables)).isValid())
+    // Validate schema
+    Qx::SqlSchemaReport schRep;
+    if(databaseError = mDatabase.checkSchema<
+            Game::Sql,
+            GameData::Sql,
+            AddApp::Sql,
+            GameRedirectSql,
+            GameTagsTagSql,
+            TagSql,
+            TagAliasSql,
+            TagCategorySql
+        >(schRep); databaseError.isValid())
     {
-        mError = DbError(DbError::SqlError, databaseError.text());
+        mError = databaseError;
         return;
     }
-
-    // Check if tables are missing
-    if(!missingTables.isEmpty())
+    if(schRep.hasDefects())
     {
-        mError = DbError(DbError::InvalidSchema, ERR_MISSING_TABLE,
-                         QStringList(missingTables.begin(), missingTables.end()).join(u"\n"_s));
-        return;
-    }
-
-    // Ensure the database contains the required columns
-    QSet<QString> missingColumns;
-    if((databaseError = checkDatabaseForRequiredColumns(missingColumns)).isValid())
-    {
-        mError = DbError(DbError::SqlError, databaseError.text());
-        return;
-    }
-
-    // Check if columns are missing
-    if(!missingColumns.isEmpty())
-    {
-        mError = DbError(DbError::InvalidSchema, ERR_MISSING_TABLE,
-                         QStringList(missingColumns.begin(), missingColumns.end()).join(u"\n"_s));
+        mError = schRep;
         return;
     }
 
     // Populate item members
-    if((databaseError = populateAvailableItems()).isValid())
+    if((databaseError = populateAvailablePlatforms()).isValid())
     {
-        mError = DbError(DbError::SqlError, databaseError.text());
+        mError = databaseError;
         return;
     }
 
     if((databaseError = populateTags()).isValid())
     {
-        mError = DbError(DbError::SqlError, databaseError.text());
+        mError = databaseError;
         return;
     }
 
     // Populate game redirects
     if((databaseError = populateGameRedirects()).isValid())
     {
-        mError = DbError(DbError::SqlError, databaseError.text());
+        mError = databaseError;
         return;
     }
 
@@ -130,288 +323,99 @@ Db::Db(const QString& databaseName, const Key&) :
 
 //-Destructor------------------------------------------------------------------------------------------------
 //Public:
-Db::~Db()
-{
-    closeAllConnections();
-}
-
-//-Class Functions--------------------------------------------------------------------------------------------
-//Private:
-QString Db::threadConnectionName(const QThread* thread)
-{
-    // Important to also salt using instance "id" so that
-    // different instances don't use the same connection
-   return DATABASE_CONNECTION_NAME +
-           u"_i"_s + QString::number((quint64)this, 16) +
-           u"_t"_s + QString::number((quint64)thread, 16);
-}
-
+Db::~Db() {}
 
 //-Instance Functions------------------------------------------------------------------------------------------------
 //Private:
 void Db::nullify()
 {
-   mPlatformNames.clear();
-    mPlaylistList.clear();
+    mPlatformNames.clear();
     mTagDirectory.clear();
 }
 
-void Db::closeConnection(const QThread* thread)
-{
-    if(mConnectedThreads.contains(thread))
-    {
-        QString tcn = threadConnectionName(thread);
-
-        {
-            /* Scoped because the following QSqlDatabase instance must not exist when the database connection
-             * is removed, (as all connection instances must be deleted before using removeDatabase()), or else
-             * Qt will post a warning since any instances that remain then have a stale reference to the database.
-             */
-            QSqlDatabase connection = QSqlDatabase::database(tcn, false);
-            connection.close();
-        }
-
-        QSqlDatabase::removeDatabase(tcn);
-        mConnectedThreads.remove(thread);
-    }
-}
-
-void Db::closeAllConnections()
-{
-    QSet<const QThread*>::iterator i;
-    while(i != mConnectedThreads.end())
-    {
-        closeConnection(*i);
-        i = mConnectedThreads.erase(i);
-    }
-}
-
-QSqlError Db::getThreadConnection(QSqlDatabase& connection)
-{
-    QThread* thread = QThread::currentThread();
-    QString tcn = threadConnectionName(thread);
-
-    if(mConnectedThreads.contains(thread))
-    {
-        connection = QSqlDatabase::database(tcn, false);
-        return QSqlError();
-    }
-    else
-    {
-        connection = QSqlDatabase::addDatabase(u"QSQLITE"_s, tcn);
-        //connection.setConnectOptions("QSQLITE_OPEN_READONLY"); Lib features some DB writing now
-        connection.setDatabaseName(mDatabaseName);
-
-        if(connection.open())
-        {
-            mConnectedThreads.insert(thread);
-            connect(thread, &QThread::destroyed, this, &Db::connectedThreadDestroyed);
-            return QSqlError();
-        }
-        else
-        {
-            /* Grab error first because I'm not sure if the QSqlDatabase instance
-             * is completely valid once its underlying connection is removed
-             */
-            QSqlError openError = connection.lastError();
-            QSqlDatabase::removeDatabase(tcn);
-            connection = QSqlDatabase();
-            return openError;
-        }
-    }
-}
-
-QSqlError Db::makeNonBindQuery(QueryBuffer& resultBuffer, QSqlDatabase* database, const QString& queryCommand, const QString& sizeQueryCommand) const
-{
-    // Create main query
-    QSqlQuery mainQuery(*database);
-    mainQuery.setForwardOnly(true);
-    mainQuery.prepare(queryCommand);
-
-    // Execute query and return if error occurs
-    if(!mainQuery.exec())
-        return mainQuery.lastError();
-
-    // Create size query
-    QSqlQuery sizeQuery(*database);
-    sizeQuery.setForwardOnly(true);
-    sizeQuery.prepare(sizeQueryCommand);
-
-    // Execute query and return if error occurs
-    if(!sizeQuery.exec())
-        return sizeQuery.lastError();
-
-    // Get query size
-    sizeQuery.next();
-    int querySize = sizeQuery.value(0).toInt();
-
-    // Set buffer instance to result
-    resultBuffer.result = std::move(mainQuery);
-    resultBuffer.size = querySize;
-
-    // Return invalid SqlError
-    return QSqlError();
-}
-
-//Public:
-bool Db::isValid() { return mValid; }
-DbError Db::error() { return mError; }
-
-QSqlError Db::checkDatabaseForRequiredTables(QSet<QString>& missingTablesReturnBuffer)
-{
-    // Prep return buffer
-    missingTablesReturnBuffer.clear();
-
-    for(const TableSpecs& tableAndColumns : DATABASE_SPECS_LIST)
-        missingTablesReturnBuffer.insert(tableAndColumns.name);
-
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return dbError;
-
-    QStringList existingTables = fpDb.tables();
-
-    // Return if DB error occurred
-    if(fpDb.lastError().isValid())
-        return fpDb.lastError();
-
-    for(const QString& table : existingTables)
-        missingTablesReturnBuffer.remove(table);
-
-    // Return an invalid error
-    return  QSqlError();
-}
-
-QSqlError Db::checkDatabaseForRequiredColumns(QSet<QString>& missingColumsReturnBuffer)
-{
-
-    // Ensure return buffer starts empty
-    missingColumsReturnBuffer.clear();
-
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return dbError;
-
-    // Ensure each table has the required columns
-    QSet<QString> existingColumns;
-
-    for(const TableSpecs& tableAndColumns : DATABASE_SPECS_LIST)
-    {
-        // Clear previous data
-        existingColumns.clear();
-
-        // Make column name query
-        QSqlQuery columnQuery(u"PRAGMA table_info("_s + tableAndColumns.name + u")"_s, fpDb);
-
-        // Return if error occurs
-        if(columnQuery.lastError().isValid())
-            return columnQuery.lastError();
-
-        // Parse query
-        while(columnQuery.next())
-            existingColumns.insert(columnQuery.value(u"name"_s).toString());
-
-        // Check for missing columns
-        for(const QString& column : tableAndColumns.columns)
-            if(!existingColumns.contains(column))
-                missingColumsReturnBuffer.insert(tableAndColumns.name + u": "_s + column);
-    }
-
-
-    // Return invalid SqlError
-    return QSqlError();
-}
-
-QSqlError Db::populateAvailableItems()
-{
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return dbError;
-
-    // Ensure lists are reset
-    mPlatformNames.clear();
-    mPlaylistList.clear();
-
-    // Make platform query
-    QSqlQuery platformQuery(u"SELECT DISTINCT "_s + Table_Game::COL_PLATFORM_NAME + u" FROM "_s + Table_Game::NAME, fpDb);
-
-    // Return if error occurs
-    if(platformQuery.lastError().isValid())
-        return platformQuery.lastError();
-
-    // Parse query
-    while(platformQuery.next())
-        mPlatformNames.append(platformQuery.value(Table_Game::COL_PLATFORM_NAME).toString());
+Qx::SqlError Db::populateAvailablePlatforms()
+{   
+    // Query
+    auto err = mDatabase.SELECT_DISTINCT(GameSqlQ::platformName)
+                        .FROM<Game::Sql>()
+                        .execute(mPlatformNames);
+    if(err)
+        return err;
 
     // Sort list
     mPlatformNames.sort();
 
     // Return invalid SqlError
-    return QSqlError();
+    return Qx::SqlError();
 }
 
-QSqlError Db::populateTags()
+Qx::SqlError Db::populateTags()
 {
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return dbError;
-
     // Ensure directory is reset
     mTagDirectory.clear();
 
     QMap<int, QString> tagAliasMap; // Tag Alias ID -> Tag Alias Name
 
     // Make tag category query
-    QSqlQuery categoryQuery(u"SELECT `"_s + Table_Tag_Category::COLUMN_LIST.join(u"`,`"_s) + u"` FROM "_s + Table_Tag_Category::NAME, fpDb);
-
-    // Return if error occurs
-    if(categoryQuery.lastError().isValid())
-        return categoryQuery.lastError();
+    auto catQuery = mDatabase.SELECT<TagCategorySql>()
+                             .FROM<TagCategorySql>();
+    Qx::SqlResult<TagCategorySql> catQueryRes;
+    if(auto err = catQuery.execute(catQueryRes); err.isValid())
+        return err;
 
     // Parse query
-    while(categoryQuery.next())
+    while(catQueryRes.next())
     {
-        TagCategory tc;
-        tc.name = categoryQuery.value(Table_Tag_Category::COL_NAME).toString();
-        tc.color = QColor(categoryQuery.value(Table_Tag_Category::COL_COLOR).toString());
+        TagCategorySql sql;
+        if(auto err = catQueryRes.value(sql); err.isValid())
+            return err;
 
-        mTagDirectory[categoryQuery.value(Table_Tag_Category::COL_ID).toInt()] = tc;
+        TagCategory tc{
+            .name = sql.name,
+            .color = sql.color,
+            .tags = {}
+        };
+        mTagDirectory[sql.id] = tc;
     }
 
     // Make tag alias query
-    QSqlQuery aliasQuery(u"SELECT `"_s + Table_Tag_Alias::COLUMN_LIST.join(u"`,`"_s) + u"` FROM "_s + Table_Tag_Alias::NAME, fpDb);
-
-    // Return if error occurs
-    if(aliasQuery.lastError().isValid())
-        return aliasQuery.lastError();
+    auto aliasQuery = mDatabase.SELECT<TagAliasSql>()
+                               .FROM<TagAliasSql>();
+    Qx::SqlResult<TagAliasSql> aliasQueryRes;
+    if(auto err = aliasQuery.execute(aliasQueryRes); err.isValid())
+        return err;
 
     // Parse query
-    while(aliasQuery.next())
-        tagAliasMap[aliasQuery.value(Table_Tag_Alias::COL_ID).toInt()] = aliasQuery.value(Table_Tag_Alias::COL_NAME).toString();
+    while(aliasQueryRes.next())
+    {
+        TagAliasSql sql;
+        if(auto err = aliasQueryRes.value(sql); err.isValid())
+            return err;
+
+        tagAliasMap[sql.id] = sql.name;
+    }
 
     // Make tag query
-    QSqlQuery tagQuery(u"SELECT `"_s + Table_Tag::COLUMN_LIST.join(u"`,`"_s) + u"` FROM "_s + Table_Tag::NAME, fpDb);
-
-    // Return if error occurs
-    if(tagQuery.lastError().isValid())
-        return tagQuery.lastError();
+    auto tagQuery = mDatabase.SELECT<TagSql>()
+                               .FROM<TagSql>();
+    Qx::SqlResult<TagSql> tagQueryRes;
+    if(auto err = tagQuery.execute(tagQueryRes); err.isValid())
+        return err;
 
     // Parse query
-    while(tagQuery.next())
+    while(tagQueryRes.next())
     {
+        TagSql sql;
+        if(auto err = tagQueryRes.value(sql); err.isValid())
+            return err;
+
         // Create Tag
-        Tag tag;
-        tag.id = tagQuery.value(Table_Tag::COL_ID).toInt();
-        tag.primaryAlias = tagAliasMap.value(tagQuery.value(Table_Tag::COL_PRIMARY_ALIAS_ID).toInt());
-        int catId = tagQuery.value(Table_Tag::COL_CATEGORY_ID).toInt();
+        Tag tag{
+            .id = sql.id,
+            .primaryAlias = tagAliasMap.value(sql.primaryAliasId),
+            .category = {}
+        };
+        int catId = sql.categoryId;
         Q_ASSERT(mTagDirectory.contains(catId));
         TagCategory& tc = mTagDirectory[catId];
         tag.category = tc.name; // CoW reduces overhead
@@ -422,329 +426,254 @@ QSqlError Db::populateTags()
     }
 
     // Return invalid SqlError
-    return QSqlError();
+    return Qx::SqlError();
 }
 
-QSqlError Db::populateGameRedirects()
+Qx::SqlError Db::populateGameRedirects()
 {
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return dbError;
-
     // Ensure map is reset
     mGameRedirects.clear();
 
     // Make redirect query
-    QSqlQuery redirectQuery(u"SELECT `"_s + Table_Game_Redirect::COLUMN_LIST.join(u"`,`"_s) + u"` FROM "_s + Table_Game_Redirect::NAME, fpDb);
-
-    // Return if error occurs
-    if(redirectQuery.lastError().isValid())
-        return redirectQuery.lastError();
+    auto redirectQuery = mDatabase.SELECT<GameRedirectSql>()
+                                  .FROM<GameRedirectSql>();
+    Qx::SqlResult<GameRedirectSql> redirectQueryRes;
+    if(auto err = redirectQuery.execute(redirectQueryRes); err.isValid())
+        return err;
 
     // Parse query
-    while(redirectQuery.next())
+    while(redirectQueryRes.next())
     {
-        QUuid src(redirectQuery.value(Table_Game_Redirect::COL_SOURCE_ID).toString());
-        if(src.isNull())
+        GameRedirectSql sql;
+        if(auto err = redirectQueryRes.value(sql); err.isValid())
+            return err;
+
+        if(sql.sourceId.isNull())
             continue;
 
-        QUuid dest(redirectQuery.value(Table_Game_Redirect::COL_ID).toString());
-        if(dest.isNull())
+        if(sql.id.isNull())
             continue;
 
-        mGameRedirects[src] = dest;
+        mGameRedirects[sql.sourceId] = sql.id;
     }
 
     // Return invalid SqlError
-    return QSqlError();
+    return Qx::SqlError();
 }
 
-DbError Db::queryGamesByPlatform(QList<QueryBuffer>& resultBuffer, const QStringList& platforms, const InclusionOptions& inclusionOptions,
-                                   std::optional<const QList<QUuid>*> idInclusionFilter)
+void Db::prepareSearchQuery(Qx::SqlDqlQuery& query, const Fp::Db::GameFilter& filter)
 {
-    // Ensure return buffer is reset
-    resultBuffer.clear();
+    using namespace QxSql;
 
-    // Empty shortcuts
-    if(platforms.isEmpty() || (idInclusionFilter.has_value() && idInclusionFilter.value()->isEmpty()))
-        return DbError();
+    // Starts after SELECT...
+    query.FROM<Game::Sql>();
 
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return DbError::fromSqlError(dbError);
+    if(filter.title.isNull() && filter.platforms.isEmpty() && filter.excludedTagIds.isEmpty() &&
+       filter.includedIds.isEmpty() && filter.includeAnimations)
+        return;
 
-    // Determine game exclusion filter from tag exclusions if applicable
-    QSet<QUuid> idExclusionFilter;
-    if(!inclusionOptions.excludedTagIds.isEmpty())
+    // Build WHERE
+    Qx::SqlString where;
+    if(!filter.title.isNull())
     {
-        // Make game tag sets query
-        QString tagIdCSV = Qx::String::join(inclusionOptions.excludedTagIds, [](int tagId){return QString::number(tagId);}, u"','"_s);
-        QSqlQuery tagQuery(u"SELECT `"_s + Table_Game_Tags_Tag::COL_GAME_ID + u"` FROM "_s + Table_Game_Tags_Tag::NAME +
-                           u" WHERE "_s + Table_Game_Tags_Tag::COL_TAG_ID + u" IN('"_s + tagIdCSV + u"')"_s, fpDb);
+        if(filter.exactName)
+            andWhere(where, GameSqlQ::title == sqs(filter.title));
+        else
+        {
+            // Escape name to account for SQL LITE %
+            QString escapedName = filter.title;
+            escapedName.replace(uR"(\)"_s, uR"(\\)"_s); // Have to escape the escape char
+            escapedName.replace(uR"(%)"_s, uR"(\%)"_s);
 
-        QSqlError tagQueryError = tagQuery.lastError();
-        if(tagQueryError.isValid())
-            return DbError::fromSqlError(tagQueryError);
+            // Make LIKE param
+            auto like = sqs(u"%%1%"_s.arg(filter.title));
 
-        // Populate exclusion filter
-        while(tagQuery.next())
-            idExclusionFilter.insert(tagQuery.value(Table_Game_Tags_Tag::COL_GAME_ID).toUuid());
+            andWhere(where, GameSqlQ::title |= LIKE(like) |= ESCAPE(u"\\"_sqs));
+        }
+    }
+    if(!filter.platforms.isEmpty())
+        andWhere(where, GameSqlQ::platformName |= IN(filter.platforms));
+    if(!filter.excludedTagIds.isEmpty())
+    {
+        // Use subquery to exclude game ids that match the tag ids.
+        Qx::SqlDqlQuery tagSubQuery;
+        tagSubQuery.SELECT(GameTagsTagSqlQ::gameId)
+          .FROM<GameTagsTagSql>()
+          .WHERE(GameTagsTagSqlQ::tagId |= IN(filter.excludedTagIds));
+
+        andWhere(where, GameSqlQ::id |= !IN(tagSubQuery));
+    }
+    if(!filter.includedIds.isEmpty())
+        andWhere(where, GameSqlQ::id |= IN(filter.includedIds));
+    if(!filter.includeAnimations)
+        andWhere(where, GameSqlQ::library != sqs(Game::Sql::ENTRY_ANIM_LIBRARY));
+
+    query.WHERE(where);
+}
+
+void Db::prepareSearchQuery(Qx::SqlDqlQuery& query, const Fp::Db::AddAppFilter& filter)
+{
+    // Starts after SELECT...
+    using namespace QxSql;
+
+    // Starts after SELECT...
+    query.FROM<AddApp::Sql>();
+
+    if(filter.name.isNull() && filter.parent.isNull() && !filter.playableOnly)
+        return;
+
+    // Build WHERE
+    Qx::SqlString where;
+    if(!filter.name.isNull())
+    {
+        if(filter.exactName)
+            andWhere(where, AddAppSqlQ::name == sqs(filter.name));
+        else
+        {
+            // Escape name to account for SQL LITE %
+            QString escapedName = filter.name;
+            escapedName.replace(uR"(\)"_s, uR"(\\)"_s); // Have to escape the escape char
+            escapedName.replace(uR"(%)"_s, uR"(\%)"_s);
+
+            // Make LIKE param
+            auto like = sqs(u"%%1%"_s.arg(filter.name));
+
+            andWhere(where, AddAppSqlQ::name |= LIKE(like) |= ESCAPE(u"\\"_sqs));
+        }
+    }
+    if(!filter.parent.isNull())
+        andWhere(where, AddAppSqlQ::parentGameId == filter.parent);
+    if(filter.playableOnly)
+        andWhere(where, AddAppSqlQ::autorunBefore != true && AddAppSqlQ::applicationPath |= !IN(sqs(AddApp::Sql::ENTRY_EXTRAS), sqs(AddApp::Sql::ENTRY_MESSAGE)));
+
+    query.WHERE(where);
+}
+
+
+template<typename T, typename F>
+    requires Qx::any_of<T, Game, AddApp, Entry>
+Fp::DbError Db::searchImpl(QList<T>& buffer, const F& filter)
+{
+    // Make query
+    using buffer_t = typename search_traits<F>::buffer_type;
+    auto query = mDatabase.SELECT<buffer_t>();
+    prepareSearchQuery(query, filter);
+    Qx::SqlResult<buffer_t> queryRes;
+    if(auto err = query.execute(queryRes); err.isValid())
+        return err;
+
+    // Parse query
+    QList<T> wipBuffer;
+    while(queryRes.next())
+    {
+        buffer_t sql;
+        if(auto err = queryRes.value(sql); err.isValid())
+            return err;
+
+        wipBuffer.append(std::move(sql));
     }
 
-    for(const QString& platform : platforms)
-    {
-        // Create platform query string
-        QString placeholder = u":platform"_s;
-        QString baseQueryCommand = u"SELECT %1 FROM "_s + Table_Game::NAME + u" WHERE "_s +
-                                   Table_Game::COL_PLATFORM_NAME + u" = "_s + placeholder + u" AND "_s;
-
-        // Handle filtering
-        QString filteredQueryCommand = baseQueryCommand.append(inclusionOptions.includeAnimations ? GAME_AND_ANIM_FILTER : GAME_ONLY_FILTER);
-
-        if(!idExclusionFilter.isEmpty())
-        {
-            QString gameIdCSV = Qx::String::join(idExclusionFilter, [](QUuid id){return id.toString(QUuid::WithoutBraces);}, u"','"_s);
-            filteredQueryCommand += u" AND "_s + Table_Game::COL_ID + u" NOT IN('"_s + gameIdCSV + u"')"_s;
-        }
-
-        if(idInclusionFilter.has_value())
-        {
-            QString gameIdCSV = Qx::String::join(*idInclusionFilter.value(), [](QUuid id){return id.toString(QUuid::WithoutBraces);}, u"','"_s);
-            filteredQueryCommand += u" AND "_s + Table_Game::COL_ID + u" IN('"_s + gameIdCSV + u"')"_s;
-        }
-
-        // Create final command strings
-        QString mainQueryCommand = filteredQueryCommand.arg(u"`"_s + Table_Game::COLUMN_LIST.join(u"`,`"_s) + u"`"_s);
-        QString sizeQueryCommand = filteredQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
-
-        // Create main query and bind current platform
-        QSqlQuery initialQuery(fpDb);
-        initialQuery.setForwardOnly(true);
-        initialQuery.prepare(mainQueryCommand);
-        initialQuery.bindValue(placeholder, platform);
-
-        // Execute query and return if error occurs
-        if(!initialQuery.exec())
-            return DbError::fromSqlError(initialQuery.lastError());
-
-        // Create size query and bind current platform
-        QSqlQuery sizeQuery(fpDb);
-        sizeQuery.prepare(sizeQueryCommand);
-        sizeQuery.bindValue(placeholder, platform);
-
-        // Execute query and return if error occurs
-        if(!sizeQuery.exec())
-            return DbError::fromSqlError(sizeQuery.lastError());
-
-        // Get query size
-        sizeQuery.next();
-        int querySize = sizeQuery.value(0).toInt();
-
-        // Add result to buffer if there were any hits
-        if(querySize > 0)
-            resultBuffer.append({platform, std::move(initialQuery), querySize});
-    }
-
-    // Return invalid error
+    buffer = wipBuffer;
     return DbError();
 }
 
-DbError Db::queryAllAddApps(QueryBuffer& resultBuffer)
+template<typename F>
+Fp::DbError Db::searchImpl(QList<QUuid>& buffer, const F& filter)
 {
-    // Ensure return buffer is effectively null
-    resultBuffer = QueryBuffer();
-
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return DbError::fromSqlError(dbError);
-
-    // Make query
-    QString baseQueryCommand = u"SELECT %1 FROM "_s + Table_Add_App::NAME;
-    QString mainQueryCommand = baseQueryCommand.arg(u"`"_s + Table_Add_App::COLUMN_LIST.join(u"`,`"_s) + u"`"_s);
-    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
-
-    resultBuffer.source = Table_Add_App::NAME;
-    return DbError::fromSqlError(makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand));
+    using trs = search_traits<F>;
+    auto query = mDatabase.SELECT(trs::idString);
+    prepareSearchQuery(query, filter);
+    return query.appendExecute(buffer); // append - Keep existing results
 }
 
-DbError Db::queryEntrys(QueryBuffer& resultBuffer, const EntryFilter& filter)
+template<typename T>
+    requires Qx::any_of<T, Entry, QUuid>
+DbError Db::searchEntryImpl(QList<T>& buffer, const EntryFilter& filter)
 {
-    // Ensure return buffer is effectively null
-    resultBuffer = QueryBuffer();
+    auto checkGames = [&]{
+        return filter.type == EntryType::Game || filter.type == EntryType::GameThenAddApp || filter.type == EntryType::GameAndAddApp;
+    };
+    auto checkAddApps = [&]{
+        return filter.type == EntryType::GameAndAddApp || (filter.type == EntryType::GameThenAddApp && buffer.isEmpty());
+    };
 
-    // Query Constants
-    const QString where = u" WHERE "_s;
-    const QString nd = u" AND "_s;
-    const QString likeTempl = u" LIKE '%%1%' ESCAPE '\\'"_s;
-
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return DbError::fromSqlError(dbError);
-
-    // Check for entry as a game first
-    if(filter.type != EntryType::AddApp)
+    if(checkGames())
     {
-        // Assemble Base Query Command
-        QString baseQueryCommand = u"SELECT %1 FROM "_s + Table_Game::NAME;
-
-        if(!filter.parent.isNull() || !filter.id.isNull() || !filter.name.isNull())
-        {
-            baseQueryCommand += where;
-
-            if(!filter.id.isNull())
-                baseQueryCommand += Table_Game::COL_ID + u" == '"_s + filter.id.toString(QUuid::WithoutBraces) + u"'"_s + nd;
-            if(!filter.parent.isNull())
-                baseQueryCommand += Table_Game::COL_PARENT_ID + u" == '"_s + filter.parent.toString(QUuid::WithoutBraces) + u"'"_s + nd;
-            if(!filter.name.isNull())
-            {
-                if(filter.exactName)
-                    baseQueryCommand += Table_Game::COL_TITLE + u" == '"_s + filter.name + u"'"_s + nd;
-                else
-                {
-                    // Escape name to account for SQL LITE %
-                    QString escapedName = filter.name;
-                    escapedName.replace(uR"(\)"_s, uR"(\\)"_s); // Have to escape the escape char
-                    escapedName.replace(uR"(%)"_s, uR"(\%)"_s);
-
-                    baseQueryCommand += Table_Game::COL_TITLE + likeTempl.arg(escapedName) + nd;
-                }
-            }
-
-            // Remove trailing AND
-            baseQueryCommand.chop(nd.size());
-        }
-
-        // Assemble final query commands
-        QString mainQueryCommand = baseQueryCommand.arg(u"`"_s + Table_Game::COLUMN_LIST.join(u"`,`"_s) + u"`"_s);
-        QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
-
-        // Make query
-        QSqlError queryError;
-        resultBuffer.source = Table_Game::NAME;
-
-        if((queryError = makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand)).isValid())
-            return DbError::fromSqlError(queryError);
-
-        // Return result if one or more results were found (receiver handles situation in latter case)
-        if(resultBuffer.size >= 1)
-            return DbError();
+        GameFilter gf{.title = filter.name, .exactName = filter.exactName, .platforms = filter.platforms, .excludedTagIds = filter.excludedTagIds,
+                      .includedIds = filter.includedIds, .includeAnimations = filter.includeAnimations};
+        if(auto err = searchImpl(buffer, gf); err.isValid())
+            return err;
     }
 
-    // Check for entry as an additional app second
-    if(filter.type != EntryType::Primary)
+    if(checkAddApps())
     {
-        // Assemble Base Query Command
-        QString baseQueryCommand = u"SELECT %1 FROM "_s + Table_Add_App::NAME;
-
-        if(!filter.parent.isNull() || !filter.id.isNull() || !filter.name.isNull())
-        {
-            baseQueryCommand += where;
-
-            if(!filter.id.isNull())
-                baseQueryCommand += Table_Add_App::COL_ID + u" == '"_s + filter.id.toString(QUuid::WithoutBraces) + u"'"_s + nd;
-            if(!filter.parent.isNull())
-                baseQueryCommand += Table_Add_App::COL_PARENT_ID + u" == '"_s + filter.parent.toString(QUuid::WithoutBraces) + u"'"_s + nd;
-            if(!filter.name.isNull())
-            {
-                if(filter.exactName)
-                    baseQueryCommand += Table_Add_App::COL_NAME + u" == '"_s + filter.name + u"'"_s + nd;
-                else
-                {
-                    // Escape name to account for SQL LITE %
-                    QString escapedName = filter.name;
-                    escapedName.replace(uR"(\)"_s, uR"(\\)"_s); // Have to escape the escape char
-                    escapedName.replace(uR"(%)"_s, uR"(\%)"_s);
-
-                    baseQueryCommand += Table_Add_App::COL_NAME + likeTempl.arg(escapedName) + nd;
-                }
-            }
-            if(filter.playableOnly)
-            {
-                baseQueryCommand += Table_Add_App::COL_APP_PATH + u" NOT IN ('"_s + Table_Add_App::ENTRY_EXTRAS + u"','"_s +
-                                    Table_Add_App::ENTRY_MESSAGE + u"') AND "_s + Table_Add_App::COL_AUTORUN + u" != 1"_s +
-                                    nd;
-            }
-
-            // Remove trailing AND
-            baseQueryCommand.chop(nd.size());
-        }
-
-        // Assemble final query commands
-        QString mainQueryCommand = baseQueryCommand.arg(u"`"_s + Table_Add_App::COLUMN_LIST.join(u"`,`"_s) + u"`"_s);
-        QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
-
-        // Make query
-        QSqlError queryError;
-        resultBuffer.source = Table_Add_App::NAME;
-
-        if((queryError = makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand)).isValid())
-            return DbError::fromSqlError(queryError);
-
-        // Return result if one or more results were found (receiver handles situation in latter case)
-        if(resultBuffer.size >= 1)
-            return DbError();
+        AddAppFilter aaf{.name = filter.name, .exactName = filter.exactName, .parent = filter.parent, .playableOnly = filter.playableOnly};
+        if(auto err = searchImpl(buffer, aaf); err.isValid())
+            return err;
     }
 
-    // No result found, return
-    return DbError();
+    return {};
 }
 
-DbError Db::queryEntryDataById(QueryBuffer& resultBuffer, const QUuid& appId)
+template<typename T>
+    requires Qx::any_of<T, Game, AddApp>
+DbError Db::acquireImpl(T& buffer, const QUuid& id)
 {
-    // A few entries have more than one data pack. The results are sorted
-    // by most to least recently added
-
-    // Ensure return buffer is effectively null
-    resultBuffer = QueryBuffer();
-
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return DbError::fromSqlError(dbError);
-
-    // Setup ID query
-    QString baseQueryCommand = u"SELECT %1 FROM "_s + Table_Game_Data::NAME + u" WHERE "_s +
-            Table_Game_Data::COL_GAME_ID + u" == '"_s + appId.toString(QUuid::WithoutBraces) + u"' "_s +
-                               u"ORDER BY "_s + Table_Game_Data::COL_DATE_ADDED + u" DESC"_s;
-    QString mainQueryCommand = baseQueryCommand.arg(u"`"_s + Table_Game_Data::COLUMN_LIST.join(u"`,`"_s) + u"`"_s);
-    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+    auto sqlId = std::same_as<T, Game> ? GameSqlQ::id : AddAppSqlQ::id;
+    using buffer_t = typename T::Sql;
 
     // Make query
-    QSqlError queryError;
-    resultBuffer.source = Table_Game_Data::NAME;
+    auto query = mDatabase.SELECT<buffer_t>()
+                          .template FROM<buffer_t>()
+                          .WHERE(sqlId == id);
 
-    return DbError::fromSqlError(makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand));
+    QList<buffer_t> queryRes;
+    if(auto err = query.execute(queryRes); err.isValid())
+        return err;
+
+    // Check if ID was found and that only one instance was found
+    if(queryRes.size() == 0)
+        return DbError(DbError::IncompleteSearch, ERR_ID_NOT_FOUND);
+    else if(queryRes.size() > 1)
+        return DbError(DbError::IdCollision, ERR_ID_DUPLICATE_ENTRY);
+
+    buffer = std::move(queryRes.first());
+    return {};
 }
 
-DbError Db::queryAllGameIds(QueryBuffer& resultBuffer, const LibraryFilter& includeFilter)
+//Public:
+bool Db::isValid() { return mValid; }
+DbError Db::error() { return mError; }
+
+DbError Db::searchGames(QList<Game>& games, const GameFilter& filter)
 {
-    // Ensure return buffer is effectively null
-    resultBuffer = QueryBuffer();
+    return invokeWithCleanBuffer(games, [&]{ return searchImpl(games, filter); });
+}
 
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return DbError::fromSqlError(dbError);
+DbError Db::searchGameIds(QList<QUuid>& gameIds, const GameFilter& filter)
+{
+    return invokeWithCleanBuffer(gameIds, [&]{ return searchImpl(gameIds, filter); });
+}
 
-    // Make query
-    QString baseQueryCommand = u"SELECT %2 FROM "_s + Table_Game::NAME + u" WHERE "_s +
-                               Table_Game::COL_STATUS + u" != '"_s + Table_Game::ENTRY_NOT_WORK + u"'%1"_s;
-    baseQueryCommand = baseQueryCommand.arg(includeFilter == LibraryFilter::Game ? u" AND "_s + GAME_ONLY_FILTER : (includeFilter == LibraryFilter::Anim ? u" AND "_s + ANIM_ONLY_FILTER : u""_s));
-    QString mainQueryCommand = baseQueryCommand.arg(u"`"_s + Table_Game::COL_ID + u"`"_s);
-    QString sizeQueryCommand = baseQueryCommand.arg(GENERAL_QUERY_SIZE_COMMAND);
+DbError Db::searchAddApps(QList<AddApp>& addApps, const AddAppFilter& filter)
+{
+    return invokeWithCleanBuffer(addApps, [&]{ return searchImpl(addApps, filter); });
+}
 
-    resultBuffer.source = Table_Game::NAME;
-    return DbError::fromSqlError(makeNonBindQuery(resultBuffer, &fpDb, mainQueryCommand, sizeQueryCommand));
+DbError Db::searchAddAppIds(QList<QUuid>& addAppIds, const AddAppFilter& filter)
+{
+    return invokeWithCleanBuffer(addAppIds, [&]{ return searchImpl(addAppIds, filter); });
+}
+
+DbError Db::searchEntries(QList<Entry>& entries, const EntryFilter& filter)
+{
+    return invokeWithCleanBuffer(entries, [&]{ return searchEntryImpl(entries, filter); });
+}
+
+
+DbError Db::searchEntryIds(QList<QUuid>& entryIds, const EntryFilter& filter)
+{
+    return invokeWithCleanBuffer(entryIds, [&]{ return searchEntryImpl(entryIds, filter); });
 }
 
 QStringList Db::platformNames() const { return mPlatformNames; } //TODO: Probably should use RAII for this.
@@ -769,97 +698,57 @@ DbError Db::entryUsesDataPack(bool& resultBuffer, const QUuid& gameId)
     // Default return buffer to false
     resultBuffer = false;
 
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return DbError::fromSqlError(dbError);
-
     // Make query
-    QString packCheckQueryCommand = u"SELECT "_s + GENERAL_QUERY_SIZE_COMMAND + u" FROM "_s + Table_Game_Data::NAME + u" WHERE "_s +
-                                   Table_Game_Data::COL_GAME_ID + u" == '"_s + gameId.toString(QUuid::WithoutBraces) + u"'"_s;
+    using namespace QxSql;
+    auto packCheckQuery = mDatabase.SELECT(COUNT(1))
+                                   .FROM<GameData::Sql>()
+                                   .WHERE(GameDataSqlQ::gameId == gameId);
+    int packCheckQueryRes;
+    if(auto err = packCheckQuery.execute(packCheckQueryRes); err.isValid())
+        return err;
 
-    QSqlQuery packCheckQuery(fpDb);
-    packCheckQuery.setForwardOnly(true);
-    packCheckQuery.prepare(packCheckQueryCommand);
-
-    // Execute query and return if error occurs
-    if(!packCheckQuery.exec())
-        return DbError::fromSqlError(packCheckQuery.lastError());
-
-    // Set buffer based on result
-    packCheckQuery.next();
-    resultBuffer = packCheckQuery.value(0).toInt() > 0;
+    resultBuffer = packCheckQueryRes > 0;
 
     // Return invalid error
     return DbError();
 }
 
+DbError Db::getGame(Game& game, const QUuid& gameId)
+{
+    return invokeWithCleanBuffer(game, [&]{ return acquireImpl(game, gameId); } );
+}
+
+DbError Db::getAddApp(AddApp& addApp, const QUuid& addAppId)
+{
+    return invokeWithCleanBuffer(addApp, [&]{ return acquireImpl(addApp, addAppId); } );
+}
+
 DbError Db::getEntry(Entry& entry, const QUuid& entryId)
 {
-    // Find title
-    Db::EntryFilter mainFilter{.type = Fp::Db::EntryType::PrimaryThenAddApp, .id = entryId};
+    /* Game, then AddApp
+     * TODO: Improve the "no result" check here
+     */
 
-    Fp::Db::QueryBuffer searchResult;
-    DbError searchError = queryEntrys(searchResult, mainFilter);
-    if(searchError.isValid())
-        return searchError;
+    entry = {};
 
-    // Check if ID was found and that only one instance was found
-    if(searchResult.size == 0)
-        return DbError(DbError::IncompleteSearch, ERR_ID_NOT_FOUND);
-    else if(searchResult.size > 1)
-        return DbError(DbError::IdCollision, ERR_ID_DUPLICATE_ENTRY);
-
-    // Advance result to only record
-    searchResult.result.next();
-
-    // Fill variant
-    if(searchResult.source == Db::Table_Add_App::NAME)
+    Game g;
+    if(auto err = acquireImpl(g, entryId); err.isValid())
     {
-        AddApp::Builder fpAab;
-        fpAab.wId(searchResult.result.value(Fp::Db::Table_Add_App::COL_ID).toString());
-        fpAab.wAppPath(searchResult.result.value(Fp::Db::Table_Add_App::COL_APP_PATH).toString());
-        fpAab.wAutorunBefore(searchResult.result.value(Fp::Db::Table_Add_App::COL_AUTORUN).toString());
-        fpAab.wLaunchCommand(searchResult.result.value(Fp::Db::Table_Add_App::COL_LAUNCH_COMMAND).toString());
-        fpAab.wName(searchResult.result.value(Fp::Db::Table_Add_App::COL_NAME).toString().remove(Qx::RegularExpression::LINE_BREAKS));
-        fpAab.wWaitExit(searchResult.result.value(Fp::Db::Table_Add_App::COL_WAIT_EXIT).toString());
-        fpAab.wParentId(searchResult.result.value(Fp::Db::Table_Add_App::COL_PARENT_ID).toString());
-
-        entry = fpAab.build();
-    }
-    else if(searchResult.source == Db::Table_Game::NAME)
-    {
-        Game::Builder fpGb;
-        fpGb.wId(searchResult.result.value(Fp::Db::Table_Game::COL_ID).toString());
-        fpGb.wTitle(searchResult.result.value(Fp::Db::Table_Game::COL_TITLE).toString().remove(Qx::RegularExpression::LINE_BREAKS));
-        fpGb.wSeries(searchResult.result.value(Fp::Db::Table_Game::COL_SERIES).toString().remove(Qx::RegularExpression::LINE_BREAKS));
-        fpGb.wDeveloper(searchResult.result.value(Fp::Db::Table_Game::COL_DEVELOPER).toString().remove(Qx::RegularExpression::LINE_BREAKS));
-        fpGb.wPublisher(searchResult.result.value(Fp::Db::Table_Game::COL_PUBLISHER).toString().remove(Qx::RegularExpression::LINE_BREAKS));
-        fpGb.wDateAdded(searchResult.result.value(Fp::Db::Table_Game::COL_DATE_ADDED).toString());
-        fpGb.wDateModified(searchResult.result.value(Fp::Db::Table_Game::COL_DATE_MODIFIED).toString());
-        fpGb.wBroken(searchResult.result.value(Fp::Db::Table_Game::COL_BROKEN).toString());
-        fpGb.wPlayMode(searchResult.result.value(Fp::Db::Table_Game::COL_PLAY_MODE).toString());
-        fpGb.wStatus(searchResult.result.value(Fp::Db::Table_Game::COL_STATUS).toString());
-        fpGb.wNotes(searchResult.result.value(Fp::Db::Table_Game::COL_NOTES).toString());
-        fpGb.wSource(searchResult.result.value(Fp::Db::Table_Game::COL_SOURCE).toString().remove(Qx::RegularExpression::LINE_BREAKS));
-        fpGb.wAppPath(searchResult.result.value(Fp::Db::Table_Game::COL_APP_PATH).toString());
-        fpGb.wLaunchCommand(searchResult.result.value(Fp::Db::Table_Game::COL_LAUNCH_COMMAND).toString());
-        fpGb.wReleaseDate(searchResult.result.value(Fp::Db::Table_Game::COL_RELEASE_DATE).toString());
-        fpGb.wVersion(searchResult.result.value(Fp::Db::Table_Game::COL_VERSION).toString().remove(Qx::RegularExpression::LINE_BREAKS));
-        fpGb.wOriginalDescription(searchResult.result.value(Fp::Db::Table_Game::COL_ORIGINAL_DESC).toString());
-        fpGb.wLanguage(searchResult.result.value(Fp::Db::Table_Game::COL_LANGUAGE).toString().remove(Qx::RegularExpression::LINE_BREAKS));
-        fpGb.wOrderTitle(searchResult.result.value(Fp::Db::Table_Game::COL_ORDER_TITLE).toString().remove(Qx::RegularExpression::LINE_BREAKS));
-        fpGb.wLibrary(searchResult.result.value(Fp::Db::Table_Game::COL_LIBRARY).toString());
-        fpGb.wPlatformName(searchResult.result.value(Fp::Db::Table_Game::COL_PLATFORM_NAME).toString());
-        fpGb.wRuffleSupport(searchResult.result.value(Fp::Db::Table_Game::COL_RUFFLE_SUPPORT).toString());
-
-        entry = fpGb.build();
+        if(err.type() != DbError::IncompleteSearch) // Error that isn't "no result"
+            return err;
     }
     else
-        qFatal("Entry search result source must be 'game' or 'additional_app'");
+    {
+        entry = g;
+        return {};
+    }
 
-    return DbError();
+    AddApp aa;
+    if(auto err = acquireImpl(aa, entryId); err.isValid())
+        return err;
+
+    entry = aa;
+    return {};
 }
 
 DbError Db::getGameData(GameData& data, const QUuid& gameId)
@@ -867,102 +756,123 @@ DbError Db::getGameData(GameData& data, const QUuid& gameId)
     // Clear buffer
     data = GameData();
 
-    // Get entry data
-    DbError searchError;
-    Fp::Db::QueryBuffer searchResult;
-
-    if((searchError = queryEntryDataById(searchResult, gameId)).isValid())
-        return searchError;
+    // Make query
+    using namespace QxSql;
+    auto packCheckQuery = mDatabase.SELECT<GameData::Sql>()
+                                   .FROM<GameData::Sql>()
+                                   .WHERE(GameDataSqlQ::gameId == gameId)
+                                   .ORDER_BY(GameDataSqlQ::dateAdded |= DESC());
+    QList<GameData::Sql> packCheckQueryRes;
+    if(auto err = packCheckQuery.execute(packCheckQueryRes); err.isValid())
+        return err;
 
     // Check if ID was found and if so that only one instance was found
-    if(searchResult.size == 0)
+    if(packCheckQueryRes.size() == 0)
         return DbError(); // Game doesn't have data pack
-    else if(searchResult.size > 1)
+    else if(packCheckQueryRes.size() > 1)
         qWarning("Entry %s has more than one data pack, using most recent.", qPrintable(gameId.toString(QUuid::WithoutBraces)));
 
-    // Advance result to first record
-    searchResult.result.next();
-
-    // Fill buffer
-    GameData::Builder fpGdb;
-    fpGdb.wId(searchResult.result.value(Fp::Db::Table_Game_Data::COL_ID).toString());
-    fpGdb.wGameId(searchResult.result.value(Fp::Db::Table_Game_Data::COL_GAME_ID).toString());
-    fpGdb.wTitle(searchResult.result.value(Fp::Db::Table_Game_Data::COL_TITLE).toString());
-    fpGdb.wDateAdded(searchResult.result.value(Fp::Db::Table_Game_Data::COL_DATE_ADDED).toString());
-    fpGdb.wSha256(searchResult.result.value(Fp::Db::Table_Game_Data::COL_SHA256).toString());
-    fpGdb.wCrc32(searchResult.result.value(Fp::Db::Table_Game_Data::COL_CRC32).toString());
-    fpGdb.wPresentOnDisk(searchResult.result.value(Fp::Db::Table_Game_Data::COL_PRES_ON_DISK).toString());
-    fpGdb.wPath(searchResult.result.value(Fp::Db::Table_Game_Data::COL_PATH).toString());
-    fpGdb.wSize(searchResult.result.value(Fp::Db::Table_Game_Data::COL_SIZE).toString());
-    fpGdb.wRawParameters(searchResult.result.value(Fp::Db::Table_Game_Data::COL_PARAM).toString());
-    fpGdb.wAppPath(searchResult.result.value(Fp::Db::Table_Game_Data::COL_APP_PATH).toString());
-    fpGdb.wLaunchCommand(searchResult.result.value(Fp::Db::Table_Game_Data::COL_LAUNCH_COMMAND).toString());
-
-    data = fpGdb.build();
+    data = GameData(packCheckQueryRes.takeFirst());
 
     return DbError();
 }
 
 DbError Db::getGameTags(GameTags& tags, const QUuid& gameId)
 {
-    // Get database
-    QSqlDatabase fpDb;
-    if(QSqlError dbError = getThreadConnection(fpDb); dbError.isValid())
-        return DbError::fromSqlError(dbError);
+    // Clear buffer
+    tags = GameTags();
 
-    // Query tags
-    QSqlQuery tagQuery(fpDb);
-    tagQuery.setForwardOnly(true);
-    tagQuery.prepare(u"SELECT `"_s + Table_Game_Tags_Tag::COLUMN_LIST.join(u"`,`"_s) + u"` FROM "_s + Table_Game_Tags_Tag::NAME + u" WHERE "_s +
-                     Table_Game_Tags_Tag::COL_GAME_ID + u" == '"_s + gameId.toString(QUuid::WithoutBraces) + u"' "_s);
-    if(!tagQuery.exec())
-        return DbError::fromSqlError(tagQuery.lastError());
+    // Make query
+    using namespace QxSql;
+    auto tagQuery = mDatabase.SELECT<GameTagsTagSql>()
+                             .FROM<GameTagsTagSql>()
+                             .WHERE(GameTagsTagSqlQ::gameId == gameId);
+    Qx::SqlResult<GameTagsTagSql> tagQueryRes;
+    if(auto err = tagQuery.execute(tagQueryRes); err.isValid())
+        return err;
 
     // Parse query
-    GameTags::Builder gtb;
-    while(tagQuery.next())
+    GameTags wipTags;
+    while(tagQueryRes.next())
     {
-        int tagId = tagQuery.value(Table_Game_Tags_Tag::COL_TAG_ID).toInt();
+        GameTagsTagSql sql;
+        if(auto err = tagQueryRes.value(sql); err.isValid())
+            return err;
+
+        int tagId = sql.tagId; //NOTE: Ignore garbage value warning
         auto tagItr = mTagMap.constFind(tagId);
         if(tagItr != mTagMap.constEnd())
         {
             auto tag = *tagItr;
-            gtb.wTag(tag->category, tag->primaryAlias);
+            wipTags.addTag(tag->category, tag->primaryAlias);
         }
         else
-            qWarning("Table %s contains invalid tag ID %d for game %s", qPrintable(Table_Game_Tags_Tag::NAME), tagId, qPrintable(gameId.toString()));
+            qWarning("Table %s contains invalid tag ID %d for game %s", qPrintable(GameTagsTagSqlQ::_.toString()), tagId, qPrintable(gameId.toString()));
     }
-    tags = gtb.build();
+    tags = wipTags;
+
+    return DbError();
+}
+
+DbError Db::getAllGameIds(QList<QUuid>& ids, const Libraries& filter)
+{
+    // Clear buffer
+    ids = {};
+
+    // Make query
+    using namespace QxSql;
+    auto sqlFilter = GameSqlQ::status != sqi(Game::Sql::ENTRY_NOT_WORK);
+    if(filter.testFlag(Library::Game))
+        sqlFilter = sqlFilter && (GameSqlQ::library == sqs(Game::Sql::ENTRY_GAME_LIBRARY));
+    else if(filter.testFlag(Library::Animation))
+        sqlFilter = sqlFilter && (GameSqlQ::library == sqs(Game::Sql::ENTRY_ANIM_LIBRARY));
+
+    return mDatabase.SELECT(GameSqlQ::id)
+                    .FROM<Game::Sql>()
+                    .WHERE(std::as_const(sqlFilter))
+                    .execute(ids);
+}
+
+DbError Db::getAllAddApps(QList<AddApp>& addApps)
+{
+    // Clear buffer
+    addApps = {};
+
+    // Make query
+    //using namespace QxSql;
+    auto addAppsQuery = mDatabase.SELECT<AddApp::Sql>()
+                                 .FROM<AddApp::Sql>();
+    Qx::SqlResult<AddApp::Sql> addAppsQueryRes;
+    if(auto err = addAppsQuery.execute(addAppsQueryRes); err.isValid())
+        return err;
+
+    // Parse query
+    while(addAppsQueryRes.next())
+    {
+        AddApp::Sql sql;
+        if(auto err = addAppsQueryRes.value(sql); err.isValid())
+            return err;
+
+        addApps.append(std::move(sql));
+    }
 
     return DbError();
 }
 
 DbError Db::updateGameDataOnDiskState(QList<int> packIds, bool onDisk)
 {
-    // Get database
-    QSqlDatabase fpDb;
-    QSqlError dbError = getThreadConnection(fpDb);
-    if(dbError.isValid())
-        return DbError::fromSqlError(dbError);
-
     // Make query
-    QString filter = Qx::String::join(packIds, [](int i){ return QString::number(i); }, u","_s);
-    QString dataUpdateCommand = u"UPDATE "_s + Table_Game_Data::NAME + u" SET "_s + Table_Game_Data::COL_PRES_ON_DISK + u" = "_s + QString::number(onDisk) +
-                                u" WHERE "_s + Table_Game_Data::COL_ID + u" IN ("_s + filter + ')';
-
-    QSqlQuery packUpdateQuery(fpDb);
-    packUpdateQuery.setForwardOnly(true);
-    packUpdateQuery.prepare(dataUpdateCommand);
-
-    // Execute query and return if error occurs
-    if(!packUpdateQuery.exec())
-        return DbError::fromSqlError(packUpdateQuery.lastError());
+    auto updateQuery = mDatabase.UPDATE<GameData::Sql>()
+                                .SET(GameDataSqlQ::presentOnDisk == onDisk)
+                                .WHERE(GameDataSqlQ::id).IN(packIds);
+    int tagQueryAffected;
+    if(auto err = updateQuery.execute(tagQueryAffected); err.isValid())
+        return err;
 
     // Check that expected count was affected
     int expected = packIds.size();
-    int affected = packUpdateQuery.numRowsAffected();
-    if(affected != expected)
-        return DbError(DbError::UpdateRowMismatch, Table_Game_Data::NAME + u" SET "_s + Table_Game_Data::COL_PRES_ON_DISK, u"%1 instead of %2"_s.arg(affected, expected));
+    if(tagQueryAffected != expected)
+        return DbError(DbError::UpdateRowMismatch, GameDataSqlQ::_.toString() + u" SET "_s + GameDataSqlQ::presentOnDisk.toString(), u"%1 instead of %2"_s.arg(tagQueryAffected, expected));
 
     return DbError();
 }
@@ -970,24 +880,10 @@ DbError Db::updateGameDataOnDiskState(QList<int> packIds, bool onDisk)
 /* TODO: Technically this is a shortcut. The regular launcher will check for Game Redirects in all cases where an ID is searched
  * for, often using coalesce (see https://github.com/FlashpointProject/FPA-Rust/blob/03a4ddc4af9ae0b2773c5f678268cb9c944d893f/crates/flashpoint-archive/src/game/mod.rs#L323).
  * This makes sense if anyone is using this lib for any reason (which although that is the intention, currently no one is); but in the case of CLIFp/FIL, where
- * IDs are only sought out directly, or in bulk, we can just swap the target ID (if a direct is present) before even hitting the database with it.
+ * IDs are only sought out directly, or in bulk, we can just swap the target ID (if a redirect is present) before even hitting the database with it.
  * Just keep in mind the ideal long term thing to do is have the redirects considered whenever checking the database for a game ID at all. This could
  * also be an issue if a source ID is still used somewhere else in the DB, for example add_app or game_data, but that does not seem to be the case currently.
  */
 QUuid Db::handleGameRedirects(const QUuid& gameId) { return mGameRedirects.value(gameId, gameId); }
-
-//-Slots ------------------------------------------------------------------------------------------------------
-//Private:
-void Db::connectedThreadDestroyed(QObject* thread)
-{
-    QThread* pThread = qobject_cast<QThread*>(thread);
-
-    // Ensure the signal that triggered this slot belongs to the above class by checking for null pointer
-    if(pThread == nullptr)
-        qFatal("Pointer conversion to thread failed");
-
-    // Close connection
-    closeConnection(pThread);
-}
 
 }
