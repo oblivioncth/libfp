@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.23.0...3.26.0)
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
 project(libfp
-    VERSION 0.5.6
+    VERSION 0.6
     LANGUAGES CXX
     DESCRIPTION "C++ support library for Flashpoint Archive"
 )
@@ -53,7 +53,7 @@ set(LIBFP_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "35191e7f6d4be5b50cd225366bc7350666722157"
+    REF "v0.7"
     COMPONENTS
         ${LIBFP_QX_COMPONENTS}
 )
