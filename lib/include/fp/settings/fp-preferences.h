@@ -44,6 +44,8 @@ struct FP_FP_EXPORT Preferences : public Settings
     std::optional<QString> fpfssBaseUrl;
     std::optional<QHash<QString, GameDataSource>> gameDataSources;
     std::optional<QHash<QString, GameMetadataSource>> gameMetadataSources;
+    bool enablePlaytimeTracking;
+    bool enablePlaytimeTrackingExtreme;
     QString imageFolderPath;
     QString logoFolderPath;
     QString playlistFolderPath;
