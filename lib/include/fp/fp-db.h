@@ -234,6 +234,7 @@ public:
 
     // Write
     DbError updateGameDataOnDiskState(QList<int> packIds, bool onDisk);
+    DbError updateGamePlayRecords(const QUuid& gameId, qint64 additionalSeconds);
 
     // Helper
     DbError entryUsesDataPack(bool& resultBuffer, const QUuid& gameId);
