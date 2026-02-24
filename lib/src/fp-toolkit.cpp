@@ -1,6 +1,12 @@
 // Unit Includes
 #include "fp/fp-toolkit.h"
 
+// Standard Library Includes
+#include <ranges>
+
+// Qx Includes
+#include <qx/utility/qx-helpers.h>
+
 // Project Includes
 #include "fp/fp-install.h"
 
@@ -13,7 +19,7 @@ namespace Fp
 
 //-Constructor------------------------------------------------------------------------------------------------
 //Public:
-Toolkit::Toolkit(const Install& install, const Key&) :
+Toolkit::Toolkit(Install& install, const Key&) :
     mInstall(install)
 {
     // Setup (if this class grows expansive enough, these should be shifted towards RAII instead of doing it all at construction
@@ -217,5 +223,84 @@ bool Toolkit::datapackIsPresent(const Fp::GameData& gameData) const
 
     return true;
 }
+
+bool Toolkit::entryIsExtreme(const QUuid& id) const
+{
+    /* Going from an ID here to the Entry version, which just goes back to
+     * an ID seems wasteful, but we don't know if `id` belongs to a game or
+     * additional app, and in the case of an additional app we'd need to
+     * retreive it's data anyway to get `parentGameId`, so this is really only
+     * slightly wasteful in the case where `id` is a valid game id.
+     */
+
+    // Maybe this should return an error, but for now a warning is fine if the.
+    Entry e;
+    if(auto err = mInstall.database()->getEntry(e, id); err)
+    {
+        qWarning("could not check if %s is extreme, entry not found", qPrintable(id.toString()));
+        return false;
+    }
+
+    return entryIsExtreme(e);
+}
+
+bool Toolkit::entryIsExtreme(const Entry& entry) const
+{
+    QUuid id = entry.visit(qxFuncAggregate{
+        [](const Game& g) { return g.id(); },
+        [](const AddApp& aa) { return aa.parentGameId(); }
+    });
+
+    // Maybe this should return an error, but for now a warning is fine if the.
+    GameTags gt;
+    if(auto err = mInstall.database()->getGameTags(gt, id); err)
+    {
+        qWarning("could not check if %s is extreme, entry tags not found", qPrintable(id.toString()));
+        return false;
+    }
+    QStringList tags = gt.tags();
+
+    auto& tagFilters = mInstall.preferences().tagFilters;
+
+// Clang++15 does not support range adapters (i.e. which make Qt containers work with ranges)
+#if defined(__clang__) && __clang_major__ <= 15
+    return std::ranges::any_of(tags, [&](const QString& tag) {
+        const auto ttag = tag.trimmed();
+        for(const auto& tf : tagFilters)
+        {
+            if(!tf.extreme)
+                continue;
+
+            for(const QString& extremeTag : tf.tags)
+                if(extremeTag == ttag)
+                    return true;
+        }
+
+        return false;
+    });
+
+#else
+    auto extremeTagsView =
+        //tagFilters |
+        std::ranges::subrange(tagFilters.begin(), tagFilters.end()) |
+        std::views::filter([](const auto& tf) { return tf.extreme; }) |
+        std::views::transform([](const auto& tf) -> const QStringList& {
+            return tf.tags;
+        }) |
+        std::views::join;
+
+    /* TODO: Perhaps the tags in GameTags should be pre-trimmed during construction, but for now we just
+     * trim here as the vanilia launcher does in order to prevent any unexpeted edge cases where needing
+     * to match tags exactly (including errant whitespace) matters.
+     */
+    return std::ranges::any_of(tags, [&](const QString& tag){
+        const auto ttag = tag.trimmed();
+        // TODO: C++23, replace with std::ranges::contains()
+        return std::ranges::find(extremeTagsView, ttag) != std::ranges::end(extremeTagsView);
+    });
+#endif
+}
+
+
 
 }

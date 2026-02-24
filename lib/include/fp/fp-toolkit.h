@@ -47,7 +47,7 @@ public:
 
 //-Instance Variables-----------------------------------------------------------------------------------------------
 private:
-    const Install& mInstall;
+    Install& mInstall;
 
     // Implementation Details
     QString mEntryLocalLogoTemplate;
@@ -59,7 +59,7 @@ private:
 
 //-Constructor-------------------------------------------------------------------------------------------------
 public:
-    Toolkit(const Install& install, const Key&);
+    Toolkit(Install& install, const Key&);
 
  //-Class Functions-----------------------------------------------------------------------------------------------
 private:
@@ -95,6 +95,9 @@ public:
     QUrl datapackUrl(const Fp::GameData& gameData) const;
     bool datapackIsPresent(const Fp::GameData& gameData) const;
 
+    // Tags
+    bool entryIsExtreme(const QUuid& id) const;
+    bool entryIsExtreme(const Entry& entry) const;
 };
 
 }

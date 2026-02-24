@@ -415,7 +415,7 @@ Qx::SqlError Db::populateTags()
             .primaryAlias = tagAliasMap.value(sql.primaryAliasId),
             .category = {}
         };
-        int catId = sql.categoryId;
+        int catId = sql.categoryId; // NOTE: Ignore garbage value warning
         Q_ASSERT(mTagDirectory.contains(catId));
         TagCategory& tc = mTagDirectory[catId];
         tag.category = tc.name; // CoW reduces overhead
