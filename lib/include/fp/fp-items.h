@@ -60,6 +60,8 @@ private:
         QString language;
         QString orderTitle;
         QString library;
+        qint64 playtime;
+        qint64 playCounter;
         QString platformName;
         QString ruffleSupport; // Could be an enum
     };
@@ -97,6 +99,8 @@ public:
     QString language() const;
     QString orderTitle() const;
     Library library() const;
+    qint64 playtime() const;
+    qint64 playCounter() const;
     QString platformName() const;
     QString ruffleSupport() const;
 };

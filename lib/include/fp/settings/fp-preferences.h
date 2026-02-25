@@ -10,6 +10,18 @@
 namespace Fp
 {
 
+struct FP_FP_EXPORT TagFilter
+{
+    QString name;
+    QString description;
+    bool enabled;
+    QStringList tags;
+    QStringList categories;
+    QStringList childFilters;
+    bool extreme;
+    //QByteArray iconBase64;
+};
+
 struct FP_FP_EXPORT AppPathOverride
 {
     QString path;
@@ -41,9 +53,12 @@ struct FP_FP_EXPORT GameMetadataSource
 
 struct FP_FP_EXPORT Preferences : public Settings
 {
+    QList<TagFilter> tagFilters;
     std::optional<QString> fpfssBaseUrl;
     std::optional<QHash<QString, GameDataSource>> gameDataSources;
     std::optional<QHash<QString, GameMetadataSource>> gameMetadataSources;
+    bool enablePlaytimeTracking;
+    bool enablePlaytimeTrackingExtreme;
     QString imageFolderPath;
     QString logoFolderPath;
     QString playlistFolderPath;

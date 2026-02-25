@@ -46,6 +46,8 @@ QDateTime Game::releaseDate() const { return mData.releaseDate; }
 QString Game::version() const { return mData.version; }
 QString Game::originalDescription() const { return mData.originalDescription; }
 QString Game::language() const { return mData.language; }
+qint64 Game::playtime() const { return mData.playtime; }
+qint64 Game::playCounter() const { return mData.playCounter; }
 QString Game::orderTitle() const { return mData.orderTitle; }
 
 Library Game::library() const

@@ -55,7 +55,7 @@ QX_SQL_STRUCT_OUTSIDE_FULL(Fp::Game::Sql, "game", GameSqlQ,
     dateModified, broken, playMode, status, notes, source,
     applicationPath, launchCommand, releaseDate, version,
     originalDescription, language, orderTitle, library,
-    platformName, ruffleSupport
+    playtime, playCounter, platformName, ruffleSupport
 );
 
 QX_SQL_STRUCT_OUTSIDE_FULL(Fp::GameData::Sql, "game_data", GameDataSqlQ,
@@ -415,7 +415,7 @@ Qx::SqlError Db::populateTags()
             .primaryAlias = tagAliasMap.value(sql.primaryAliasId),
             .category = {}
         };
-        int catId = sql.categoryId;
+        int catId = sql.categoryId; // NOTE: Ignore garbage value warning
         Q_ASSERT(mTagDirectory.contains(catId));
         TagCategory& tc = mTagDirectory[catId];
         tag.category = tc.name; // CoW reduces overhead
@@ -873,6 +873,31 @@ DbError Db::updateGameDataOnDiskState(QList<int> packIds, bool onDisk)
     int expected = packIds.size();
     if(tagQueryAffected != expected)
         return DbError(DbError::UpdateRowMismatch, GameDataSqlQ::_.toString() + u" SET "_s + GameDataSqlQ::presentOnDisk.toString(), u"%1 instead of %2"_s.arg(tagQueryAffected, expected));
+
+    return DbError();
+}
+
+DbError Db::updateGamePlayRecords(const QUuid& gameId, qint64 additionalSeconds)
+{
+    // Make query
+    auto updateQuery = mDatabase.UPDATE<Game::Sql>()
+                                .SET(
+                                    GameSqlQ::playtime ^= GameSqlQ::playtime + additionalSeconds,
+                                    GameSqlQ::playCounter ^= GameSqlQ::playCounter + 1
+                                )
+                                .WHERE(GameSqlQ::id == gameId);
+
+    int affected;
+    if(auto err = updateQuery.execute(affected); err.isValid())
+        return err;
+
+    // Check that expected count was affected
+    int expected = 1;
+    if(affected != expected)
+    {
+        return DbError(DbError::UpdateRowMismatch, GameSqlQ::_.toString() + u" SET "_s + GameSqlQ::playtime.toString() + u", "_s + GameSqlQ::playCounter.toString(),
+                       u"%1 instead of %2"_s.arg(affected, expected));
+    }
 
     return DbError();
 }
