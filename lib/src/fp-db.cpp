@@ -591,10 +591,10 @@ template<typename T>
 DbError Db::searchEntryImpl(QList<T>& buffer, const EntryFilter& filter)
 {
     auto checkGames = [&]{
-        return filter.type == EntryType::Game || filter.type == EntryType::GameThenAddApp || filter.type == EntryType::GameAndAddApp;
+        return filter.type == EntryType::Game || filter.type == EntryType::GameAndAddApp || filter.type == EntryType::GameThenAddApp;
     };
     auto checkAddApps = [&]{
-        return filter.type == EntryType::GameAndAddApp || (filter.type == EntryType::GameThenAddApp && buffer.isEmpty());
+        return filter.type == EntryType::AddApp || filter.type == EntryType::GameAndAddApp || (filter.type == EntryType::GameThenAddApp && buffer.isEmpty());
     };
 
     if(checkGames())
