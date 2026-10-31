@@ -6,14 +6,14 @@ cmake_minimum_required(VERSION 3.23.0...3.26.0)
 # Project
 # NOTE: DON'T USE TRAILING ZEROS IN VERSIONS
 project(libfp
-    VERSION 0.6.1.1
+    VERSION 0.6.2
     LANGUAGES CXX
     DESCRIPTION "C++ support library for Flashpoint Archive"
 )
 
 # Get helper scripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FetchOBCMake.cmake)
-fetch_ob_cmake("v0.3.12")
+fetch_ob_cmake("v0.4.0.2")
 
 # Initialize project according to standard rules
 include(OB/Project)
@@ -21,6 +21,7 @@ ob_standard_project_setup(NAMESPACE "Fp")
 
 # Configuration options
 option(BUILD_SHARED_LIBS "Build shared libraries." OFF) # Redundant due to OB, but explicit
+option(LIBFP_INSTALL_MISC "Enable installation of misc components (e.g README.md/LICENSE)" ON)
 
 # C++
 set(CMAKE_CXX_STANDARD 20)
@@ -53,7 +54,7 @@ set(LIBFP_QX_COMPONENTS
 
 include(OB/FetchQx)
 ob_fetch_qx(
-    REF "v0.7.0.3"
+    REF "v0.7.1.1"
     COMPONENTS
         ${LIBFP_QX_COMPONENTS}
 )
@@ -78,7 +79,9 @@ ob_standard_project_package_config(
 
 #================= Top Level Install =======================
 
-ob_standard_project_misc_install()
+if(LIBFP_INSTALL_MISC)
+    ob_standard_project_misc_install()
+endif()
 
 #====================== CPack ==============================
 
