@@ -19,8 +19,3 @@ jobs:
     uses: oblivioncth/actions/.github/workflows/build-cxx-project.yml@v1
     secrets:
       ffynnon_access: ${{ secrets.OBYBOT_FFYNNON_ACCESS }}
-    with:
-      runs_exclude: >
-        [
-            { "compiler": "g++-10" }
-        ]

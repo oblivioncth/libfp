@@ -96,12 +96,7 @@ bool operator== (const StartStop& lhs, const StartStop& rhs) noexcept
 //-Hashing------------------------------------------------------------------------------------------------------
 size_t qHash(const StartStop& key, size_t seed) noexcept
 {
-    QtPrivate::QHashCombine hash;
-    seed = hash(seed, key.path);
-    seed = hash(seed, key.filename);
-    seed = hash(seed, key.arguments);
-
-    return seed;
+    return qHashMulti(seed, key.path, key.filename, key.arguments);
 }
 
 //===============================================================================================================

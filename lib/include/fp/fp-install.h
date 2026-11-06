@@ -8,7 +8,6 @@
 #include <QString>
 #include <QDir>
 #include <QFile>
-#include <QtSql>
 
 // Qx Includes
 #include <qx/core/qx-versionnumber.h>
