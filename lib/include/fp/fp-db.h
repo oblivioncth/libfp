@@ -120,7 +120,7 @@ public:
         QStringList platforms = {};
         QList<int> excludedTagIds = {};
         QList<QUuid> includedIds = {}; // Explicit set of Game IDs to consider
-        bool includeAnimations = {};
+        bool includeAnimations = true;
     };
 
     struct AddAppFilter
@@ -145,7 +145,7 @@ public:
         QStringList platforms = {};
         QList<int> excludedTagIds = {};
         QList<QUuid> includedIds = {}; // Explicit set of Game IDs to consider
-        bool includeAnimations = {};
+        bool includeAnimations = true;
 
         // Add App
         QUuid parent = {};
